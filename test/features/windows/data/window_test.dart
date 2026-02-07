@@ -57,5 +57,45 @@ void main() {
         expect(window.isClosed(now), isTrue);
       },
     );
+
+    test('isBefore returns true when current time is before openTime', () {
+      final now = DateTime.now();
+      final window = FoodWindow(
+        openTime: now.add(const Duration(minutes: 10)),
+        duration: const Duration(minutes: 60),
+      );
+
+      expect(window.isBefore(now), isTrue);
+    });
+
+    test('isBefore returns false when current time is after openTime', () {
+      final now = DateTime.now();
+      final window = FoodWindow(
+        openTime: now.subtract(const Duration(minutes: 10)),
+        duration: const Duration(minutes: 60),
+      );
+
+      expect(window.isBefore(now), isFalse);
+    });
+
+    test('isAfter returns true when current time is after closeTime', () {
+      final now = DateTime.now();
+      final window = FoodWindow(
+        openTime: now.subtract(const Duration(minutes: 90)),
+        duration: const Duration(minutes: 60),
+      );
+
+      expect(window.isAfter(now), isTrue);
+    });
+
+    test('isAfter returns false when current time is before closeTime', () {
+      final now = DateTime.now();
+      final window = FoodWindow(
+        openTime: now.subtract(const Duration(minutes: 30)),
+        duration: const Duration(minutes: 60),
+      );
+
+      expect(window.isAfter(now), isFalse);
+    });
   });
 }

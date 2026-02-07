@@ -17,6 +17,14 @@ class FoodWindow {
     return !isOpen(now);
   }
 
+  bool isBefore(DateTime now) {
+    return now.isBefore(openTime);
+  }
+
+  bool isAfter(DateTime now) {
+    return now.isAfter(closeTime);
+  }
+
   void close() {
     _manuallyClosedTime = DateTime.now();
   }
