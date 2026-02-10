@@ -1,13 +1,14 @@
-class Snack {
+/// Food is an entity that can be eaten
+class Food {
   final String name;
 
   bool get wasEaten => _eatenTime != null;
 
-  DateTime? get eatenTime => _eatenTime;
+  DateTime? get eatenAt => _eatenTime;
 
   DateTime? _eatenTime;
 
-  Snack({required this.name});
+  Food({required this.name});
 
   void eat(DateTime now) {
     _eatenTime = now;
