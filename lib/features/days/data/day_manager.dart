@@ -1,13 +1,13 @@
 import 'package:food_locker/features/days/data/day.dart';
 import 'package:food_locker/features/food/data/food.dart';
-import 'package:food_locker/features/food/data/food_config_manager.dart';
+import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 
 class FoodDayManager {
   FoodDay? _currentDay;
-  final FoodConfigManager _foodConfigManager;
+  final FoodConfigRepository _foodConfigRepository;
 
-  FoodDayManager(this._currentDay, this._foodConfigManager);
+  FoodDayManager(this._currentDay, this._foodConfigRepository);
 
   List<Food> getMeals(DateTime now) {
     _handleDayProgression(now);
@@ -21,8 +21,8 @@ class FoodDayManager {
 
   void _handleDayProgression(DateTime now) {
     if (_shouldStartNewDay(now)) {
-      var meals = _foodConfigManager.getFoodConfigsByType(FoodType.meal);
-      var snacks = _foodConfigManager.getFoodConfigsByType(FoodType.snack);
+      var meals = _foodConfigRepository.getFoodConfigsByType(FoodType.meal);
+      var snacks = _foodConfigRepository.getFoodConfigsByType(FoodType.snack);
       _currentDay = FoodDay(
         date: now,
         meals: meals.map((foodConfig) => Food(name: foodConfig.name)).toList(),

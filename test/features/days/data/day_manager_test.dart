@@ -3,12 +3,13 @@ import 'package:food_locker/features/days/data/day.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
 import 'package:food_locker/features/food/data/food.dart';
 import 'package:food_locker/features/food/data/food_config.dart';
-import 'package:food_locker/features/food/data/food_config_manager.dart';
+import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
+import 'package:food_locker/features/food/data/in_memory_food_config_repository.dart';
 
 void main() {
   late FoodDayManager dayManager;
-  late FoodConfigManager foodConfigManager;
+  late FoodConfigRepository foodConfigRepository;
   late List<FoodConfig> foodConfigs;
 
   setUp(() {
@@ -18,7 +19,7 @@ void main() {
       FoodConfig(name: 'Chicken', type: FoodType.meal),
       FoodConfig(name: 'Rice', type: FoodType.meal),
     ];
-    foodConfigManager = FoodConfigManager(foodConfigs);
+    foodConfigRepository = InMemoryFoodConfigRepository(foodConfigs);
   });
 
   group('FoodDayManager', () {
@@ -29,7 +30,7 @@ void main() {
         meals: [Food(name: 'Pizza')],
         snacks: [],
       );
-      dayManager = FoodDayManager(existingDay, foodConfigManager);
+      dayManager = FoodDayManager(existingDay, foodConfigRepository);
 
       final meals = dayManager.getMeals(now);
 
@@ -44,7 +45,7 @@ void main() {
         meals: [],
         snacks: [Food(name: 'Chips')],
       );
-      dayManager = FoodDayManager(existingDay, foodConfigManager);
+      dayManager = FoodDayManager(existingDay, foodConfigRepository);
 
       final snacks = dayManager.getSnacks(now);
 
@@ -54,7 +55,7 @@ void main() {
 
     test('getMeals initializes new day from config if current day is null', () {
       final now = DateTime(2023, 10, 26, 10, 0);
-      dayManager = FoodDayManager(null, foodConfigManager);
+      dayManager = FoodDayManager(null, foodConfigRepository);
 
       final meals = dayManager.getMeals(now);
 
@@ -69,7 +70,7 @@ void main() {
       'getSnacks initializes new day from config if current day is null',
       () {
         final now = DateTime(2023, 10, 26, 10, 0);
-        dayManager = FoodDayManager(null, foodConfigManager);
+        dayManager = FoodDayManager(null, foodConfigRepository);
 
         final snacks = dayManager.getSnacks(now);
 
@@ -90,7 +91,7 @@ void main() {
           snacks: [],
         );
 
-        dayManager = FoodDayManager(previousDay, foodConfigManager);
+        dayManager = FoodDayManager(previousDay, foodConfigRepository);
 
         // Verify initial state
         expect(dayManager.getMeals(yesterday).first.name, 'Old Meal');
@@ -111,7 +112,7 @@ void main() {
       final morning = DateTime(2023, 10, 26, 8, 0);
       final evening = DateTime(2023, 10, 26, 18, 0);
 
-      dayManager = FoodDayManager(null, foodConfigManager);
+      dayManager = FoodDayManager(null, foodConfigRepository);
 
       // Initialize with morning call
       final morningMeals = dayManager.getMeals(morning);
