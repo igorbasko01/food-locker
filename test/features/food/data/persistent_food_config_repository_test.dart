@@ -72,5 +72,26 @@ void main() {
         expect(repository.foodConfigs.first.type, FoodType.meal);
       },
     );
+
+    test('getFoodConfigsByType returns correct configs', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      repository = PersistentFoodConfigRepository(prefs);
+
+      final meal = FoodConfig(name: 'Burger', type: FoodType.meal);
+      final snack = FoodConfig(name: 'Apple', type: FoodType.snack);
+      repository.add(meal);
+      repository.add(snack);
+
+      final meals = repository.getFoodConfigsByType(FoodType.meal);
+      final snacks = repository.getFoodConfigsByType(FoodType.snack);
+
+      // We check names because getFoodConfigsByType returns new objects from _foodConfigs which are populated from _load or add
+      // Since add puts the object in, equality is fine if reference based.
+      expect(meals.length, 1);
+      expect(meals.first, meal);
+      expect(snacks.length, 1);
+      expect(snacks.first, snack);
+    });
   });
 }
