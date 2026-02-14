@@ -5,7 +5,7 @@ import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class PersistentFoodConfigRepository implements FoodConfigRepository {
+class PersistentFoodConfigRepository extends FoodConfigRepository {
   static const String _storageKey = 'food_configs';
   final SharedPreferences _prefs;
   List<FoodConfig> _foodConfigs = [];
@@ -34,18 +34,21 @@ class PersistentFoodConfigRepository implements FoodConfigRepository {
   void add(FoodConfig foodConfig) {
     _foodConfigs.add(foodConfig);
     _save();
+    notifyListeners();
   }
 
   @override
   void remove(FoodConfig foodConfig) {
     _foodConfigs.remove(foodConfig);
     _save();
+    notifyListeners();
   }
 
   @override
   void clear() {
     _foodConfigs.clear();
     _save();
+    notifyListeners();
   }
 
   @override

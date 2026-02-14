@@ -68,8 +68,21 @@ class _SettingsPageState extends State<SettingsPage> {
               TextButton(
                 onPressed: () {
                   if (name.isNotEmpty) {
-                    _addConfig(name, type);
-                    Navigator.pop(context);
+                    final repo = context.read<FoodConfigRepository>();
+                    final exists = repo.foodConfigs.any(
+                      (c) => c.name == name && c.type == type,
+                    );
+
+                    if (exists) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Food config already exists'),
+                        ),
+                      );
+                    } else {
+                      _addConfig(name, type);
+                      Navigator.pop(context);
+                    }
                   }
                 },
                 child: const Text('Add'),

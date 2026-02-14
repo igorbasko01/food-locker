@@ -160,5 +160,74 @@ void main() {
       expect(eveningMeals.first.wasEaten, isTrue);
       expect(eveningMeals, same(morningMeals));
     });
+
+    test('toggleFoodStatus toggles eaten state and saves day', () async {
+      final now = DateTime(2023, 10, 26, 10, 0);
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+      await dayManager.initialize(now);
+
+      final meal = dayManager.getMeals(now).first;
+      expect(meal.wasEaten, isFalse);
+
+      dayManager.toggleFoodStatus(meal, now);
+
+      expect(meal.wasEaten, isTrue);
+      expect(meal.eatenAt, now);
+
+      // Verify save was called (in memory repo stores it)
+      final savedDay = foodDayRepository.getDay(now);
+      expect(savedDay!.meals.first.wasEaten, isTrue);
+
+      // Toggle back
+      dayManager.toggleFoodStatus(meal, now);
+      expect(meal.wasEaten, isFalse);
+      expect(meal.eatenAt, isNull);
+
+      final savedDay2 = foodDayRepository.getDay(now);
+      expect(savedDay2!.meals.first.wasEaten, isFalse);
+    });
+
+    test('syncs day when config changes', () async {
+      final now = DateTime(2023, 10, 26, 10, 0);
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+      await dayManager.initialize(now);
+
+      // Verify initial state (Chicken, Rice)
+      expect(dayManager.getMeals(now).length, 2);
+      expect(
+        dayManager.getMeals(now).map((m) => m.name),
+        containsAll(['Chicken', 'Rice']),
+      );
+
+      // Add a new meal
+      foodConfigRepository.add(FoodConfig(name: 'Pizza', type: FoodType.meal));
+
+      // Verify new meal is added
+      expect(dayManager.getMeals(now).length, 3);
+      expect(dayManager.getMeals(now).map((m) => m.name), contains('Pizza'));
+
+      // Remove a meal
+      final chickenConfig = foodConfigs.firstWhere((c) => c.name == 'Chicken');
+      foodConfigRepository.remove(chickenConfig);
+
+      // Verify meal is removed
+      expect(dayManager.getMeals(now).length, 2);
+      expect(
+        dayManager.getMeals(now).map((m) => m.name),
+        isNot(contains('Chicken')),
+      );
+
+      // Verify persistence
+      final savedDay = foodDayRepository.getDay(now);
+      expect(savedDay!.meals.length, 2);
+    });
   });
 }
