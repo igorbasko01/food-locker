@@ -20,4 +20,9 @@ class PersistentFoodDayRepository implements FoodDayRepository {
   Future<void> saveDay(FoodDay day) async {
     await _box.put(_getKey(day.date), day);
   }
+
+  @override
+  List<FoodDay> getAllDays() {
+    return _box.values.toList();
+  }
 }

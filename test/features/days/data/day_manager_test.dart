@@ -229,5 +229,40 @@ void main() {
       final savedDay = foodDayRepository.getDay(now);
       expect(savedDay!.meals.length, 2);
     });
+
+    test('history returns sorted days', () async {
+      final day1 = FoodDay(
+        date: DateTime(2023, 10, 26),
+        meals: [],
+        snacks: [],
+      );
+      final day2 = FoodDay(
+        date: DateTime(2023, 10, 27),
+        meals: [],
+        snacks: [],
+      );
+      final day3 = FoodDay(
+        date: DateTime(2023, 10, 25),
+        meals: [],
+        snacks: [],
+      );
+
+      await foodDayRepository.saveDay(day1);
+      await foodDayRepository.saveDay(day2);
+      await foodDayRepository.saveDay(day3);
+
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+
+      final history = dayManager.history;
+
+      expect(history.length, 3);
+      expect(history[0].date, day2.date);
+      expect(history[1].date, day1.date);
+      expect(history[2].date, day3.date);
+    });
   });
 }
