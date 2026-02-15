@@ -61,5 +61,27 @@ void main() {
       final retrievedDay = repository.getDay(now);
       expect(retrievedDay, isNull);
     });
+
+    test('getAllDays returns all days', () async {
+      final day1 = FoodDay(
+        date: DateTime(2023, 10, 26),
+        meals: [],
+        snacks: [],
+      );
+      final day2 = FoodDay(
+        date: DateTime(2023, 10, 27),
+        meals: [],
+        snacks: [],
+      );
+
+      await repository.saveDay(day1);
+      await repository.saveDay(day2);
+
+      final allDays = repository.getAllDays();
+
+      expect(allDays.length, 2);
+      expect(allDays.any((d) => d.date.day == 26), isTrue);
+      expect(allDays.any((d) => d.date.day == 27), isTrue);
+    });
   });
 }

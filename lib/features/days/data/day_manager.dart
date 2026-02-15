@@ -27,6 +27,12 @@ class FoodDayManager extends ChangeNotifier {
 
   FoodDay? get currentDay => _currentDay;
 
+  List<FoodDay> get history {
+    final days = _foodDayRepository.getAllDays();
+    days.sort((a, b) => b.date.compareTo(a.date));
+    return days;
+  }
+
   Future<void> initialize(DateTime now) async {
     _currentDay = _foodDayRepository.getDay(now) ?? _createDay(now);
     _handleDayProgression(now);

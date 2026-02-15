@@ -17,4 +17,9 @@ class InMemoryFoodDayRepository implements FoodDayRepository {
   Future<void> saveDay(FoodDay day) async {
     _days[_getKey(day.date)] = day;
   }
+
+  @override
+  List<FoodDay> getAllDays() {
+    return _days.values.toList();
+  }
 }
