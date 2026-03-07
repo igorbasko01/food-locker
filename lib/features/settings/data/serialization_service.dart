@@ -16,7 +16,17 @@ import 'package:share_plus/share_plus.dart';
 class SerializationService {
   static const String _configFileName = 'config.csv';
   static const String _historyFileName = 'history.csv';
-  static const String _zipFileName = 'backup.zip';
+  @visibleForTesting
+  static String generateZipFileName([DateTime? now]) {
+    final timestamp = now ?? DateTime.now();
+    final formatted = '${timestamp.year}'
+        '${timestamp.month.toString().padLeft(2, '0')}'
+        '${timestamp.day.toString().padLeft(2, '0')}'
+        '${timestamp.hour.toString().padLeft(2, '0')}'
+        '${timestamp.minute.toString().padLeft(2, '0')}'
+        '${timestamp.second.toString().padLeft(2, '0')}';
+    return 'food_locker_$formatted.zip';
+  }
 
   SerializationService();
 
@@ -32,7 +42,7 @@ class SerializationService {
     if (zipData == null) return;
 
     final tempDir = await getTemporaryDirectory();
-    final zipFile = File('${tempDir.path}/$_zipFileName');
+    final zipFile = File('${tempDir.path}/${generateZipFileName()}');
     await zipFile.writeAsBytes(zipData);
 
     // ignore: deprecated_member_use
