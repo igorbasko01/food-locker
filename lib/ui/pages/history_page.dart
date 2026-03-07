@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
 import 'package:provider/provider.dart';
 
-class HistoryPage extends StatelessWidget {
+class HistoryPage extends StatefulWidget {
+  static const int pageSize = 7;
+
   const HistoryPage({super.key});
+
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  int _visibleCount = HistoryPage.pageSize;
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +24,30 @@ class HistoryPage extends StatelessWidget {
           return const Center(child: Text('No history available'));
         }
 
+        final itemsToShow = history.length > _visibleCount
+            ? _visibleCount
+            : history.length;
+        final hasMore = history.length > _visibleCount;
+
         return ListView.builder(
-          itemCount: history.length,
+          itemCount: itemsToShow + (hasMore ? 1 : 0),
           itemBuilder: (context, index) {
+            if (index == itemsToShow) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Center(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _visibleCount += HistoryPage.pageSize;
+                      });
+                    },
+                    child: const Text('Load More'),
+                  ),
+                ),
+              );
+            }
+
             final day = history[index];
             final consumedFoods = [
               ...day.meals.where((f) => f.wasEaten),
