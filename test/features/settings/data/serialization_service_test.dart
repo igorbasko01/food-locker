@@ -88,6 +88,20 @@ void main() {
     });
   });
 
+  group('SerializationService Zip File Name', () {
+    test('generateZipFileName creates timestamped filename', () {
+      final timestamp = DateTime(2026, 3, 7, 21, 59, 30);
+      final fileName = SerializationService.generateZipFileName(timestamp);
+      expect(fileName, 'food_locker_20260307215930.zip');
+    });
+
+    test('generateZipFileName pads single digit values', () {
+      final timestamp = DateTime(2026, 1, 5, 3, 2, 1);
+      final fileName = SerializationService.generateZipFileName(timestamp);
+      expect(fileName, 'food_locker_20260105030201.zip');
+    });
+  });
+
   group('SerializationService End-to-End Logic', () {
     test('export and direct import preserves exact data', () async {
       // 1. Populate initial data
