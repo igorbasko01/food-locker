@@ -5,6 +5,8 @@ import 'package:food_locker/features/days/data/persistent_food_day_repository.da
 import 'package:food_locker/features/food/data/food.dart';
 import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/persistent_food_config_repository.dart';
+import 'package:food_locker/features/days/data/food_day_repository.dart';
+import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/ui/app_shell.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -35,6 +37,8 @@ void main() async {
         ChangeNotifierProvider<FoodConfigRepository>.value(
           value: foodConfigRepository,
         ),
+        Provider<FoodDayRepository>.value(value: foodDayRepository),
+        Provider<SerializationService>(create: (_) => SerializationService()),
         ChangeNotifierProvider<FoodDayManager>.value(value: foodDayManager),
       ],
       child: const MainApp(),

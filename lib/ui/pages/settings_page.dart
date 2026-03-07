@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
+import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -112,6 +113,50 @@ class _SettingsPageState extends State<SettingsPage> {
           _buildHeader(theme, 'Snacks'),
           if (snacks.isEmpty) _buildEmptyState('No snacks defined'),
           ...snacks.map((c) => _buildConfigTile(c)),
+          const SizedBox(height: 24),
+          _buildHeader(theme, 'Data Management'),
+          ListTile(
+            leading: const Icon(Icons.download),
+            title: const Text('Export Data'),
+            onTap: () async {
+              try {
+                await context.read<SerializationService>().exportData(context);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Data exported successfully')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+                }
+              }
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload),
+            title: const Text('Import Data'),
+            onTap: () async {
+              try {
+                await context.read<SerializationService>().importData(context);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Data imported successfully')),
+                  );
+                  // Refresh UI if necessary, though repositories should notify listeners
+                  setState(() {});
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
+                }
+              }
+            },
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

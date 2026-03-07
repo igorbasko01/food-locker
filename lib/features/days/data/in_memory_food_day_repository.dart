@@ -22,4 +22,9 @@ class InMemoryFoodDayRepository implements FoodDayRepository {
   List<FoodDay> getAllDays() {
     return _days.values.toList();
   }
+
+  @override
+  Future<void> clear() async {
+    _days.clear();
+  }
 }

@@ -25,4 +25,9 @@ class PersistentFoodDayRepository implements FoodDayRepository {
   List<FoodDay> getAllDays() {
     return _box.values.toList();
   }
+
+  @override
+  Future<void> clear() async {
+    await _box.clear();
+  }
 }

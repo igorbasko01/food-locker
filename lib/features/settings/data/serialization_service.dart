@@ -1,0 +1,194 @@
+import 'dart:io';
+import 'package:archive/archive.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/widgets.dart';
+import 'package:food_locker/core/csv_serializer.dart';
+import 'package:food_locker/features/days/data/day.dart';
+import 'package:food_locker/features/days/data/food_day_repository.dart';
+import 'package:food_locker/features/food/data/food.dart';
+import 'package:food_locker/features/food/data/food_config.dart';
+import 'package:food_locker/features/food/data/food_config_repository.dart';
+import 'package:food_locker/features/food/data/food_type.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+class SerializationService {
+  static const String _configFileName = 'config.csv';
+  static const String _historyFileName = 'history.csv';
+  static const String _zipFileName = 'backup.zip';
+
+  SerializationService();
+
+  Future<void> exportData(BuildContext context) async {
+    final configRepo = context.read<FoodConfigRepository>();
+    final dayRepo = context.read<FoodDayRepository>();
+
+    final zipData = createExportArchive(
+      configRepo.foodConfigs,
+      dayRepo.getAllDays(),
+    );
+
+    if (zipData == null) return;
+
+    final tempDir = await getTemporaryDirectory();
+    final zipFile = File('${tempDir.path}/$_zipFileName');
+    await zipFile.writeAsBytes(zipData);
+
+    // ignore: deprecated_member_use
+    await Share.shareXFiles([XFile(zipFile.path)], text: 'Food Locker Backup');
+  }
+
+  Future<void> importData(BuildContext context) async {
+    final configRepo = context.read<FoodConfigRepository>();
+    final dayRepo = context.read<FoodDayRepository>();
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
+    );
+    final filePath = result?.files.single.path;
+
+    if (filePath == null) return;
+
+    final file = File(filePath);
+    final bytes = await file.readAsBytes();
+
+    await importFromArchive(bytes, configRepo, dayRepo);
+  }
+
+  @visibleForTesting
+  List<int>? createExportArchive(List<FoodConfig> configs, List<FoodDay> days) {
+    final configCsv = generateConfigCsv(configs);
+    final historyCsv = generateHistoryCsv(days);
+
+    final archive = Archive()
+      ..addFile(
+        ArchiveFile(_configFileName, configCsv.length, configCsv.codeUnits),
+      )
+      ..addFile(
+        ArchiveFile(_historyFileName, historyCsv.length, historyCsv.codeUnits),
+      );
+
+    return ZipEncoder().encode(archive);
+  }
+
+  @visibleForTesting
+  Future<void> importFromArchive(
+    List<int> zipBytes,
+    FoodConfigRepository configRepo,
+    FoodDayRepository dayRepo,
+  ) async {
+    final archive = ZipDecoder().decodeBytes(zipBytes);
+
+    // Clear existing data
+    configRepo.clear();
+    await dayRepo.clear();
+
+    for (final file in archive) {
+      if (file.isFile) {
+        final content = String.fromCharCodes(file.content as List<int>);
+        if (file.name == _configFileName) {
+          importConfigFromCsv(content, configRepo);
+        } else if (file.name == _historyFileName) {
+          importHistoryFromCsv(content, dayRepo);
+        }
+      }
+    }
+  }
+
+  @visibleForTesting
+  String generateConfigCsv(List<FoodConfig> configs) {
+    final items = configs
+        .map((c) => {'name': c.name, 'type': c.type.name})
+        .toList();
+    return CsvSerializer.toCSV(items);
+  }
+
+  @visibleForTesting
+  String generateHistoryCsv(List<FoodDay> days) {
+    final items = <Map<String, dynamic>>[];
+
+    for (final day in days) {
+      final dateStr = day.date.toIso8601String();
+      for (final meal in day.meals) {
+        items.add({
+          'date': dateStr,
+          'type': 'meal',
+          'name': meal.name,
+          'eatenAt': meal.eatenAt?.toIso8601String(),
+        });
+      }
+      for (final snack in day.snacks) {
+        items.add({
+          'date': dateStr,
+          'type': 'snack',
+          'name': snack.name,
+          'eatenAt': snack.eatenAt?.toIso8601String(),
+        });
+      }
+    }
+    return CsvSerializer.toCSV(items);
+  }
+
+  @visibleForTesting
+  void importConfigFromCsv(String csv, FoodConfigRepository repo) {
+    final items = CsvSerializer.fromCSV(csv);
+    for (final item in items) {
+      final name = item['name'] as String?;
+      final typeStr = item['type'] as String?;
+
+      if (name != null && typeStr != null) {
+        try {
+          final type = FoodType.values.byName(typeStr);
+          repo.add(FoodConfig(name: name, type: type));
+        } catch (e) {
+          debugPrint('Error parsing config item: $item, $e');
+        }
+      }
+    }
+  }
+
+  @visibleForTesting
+  void importHistoryFromCsv(String csv, FoodDayRepository repo) {
+    final items = CsvSerializer.fromCSV(csv);
+    final Map<String, FoodDay> daysMap = {};
+
+    for (final item in items) {
+      final dateStr = item['date'] as String?;
+      final type = item['type'] as String?;
+      final name = item['name'] as String?;
+      final eatenAtStr = item['eatenAt'] as String?;
+
+      if (dateStr == null || name == null) continue;
+
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) continue;
+
+      // Normalize date to day
+      final dayDate = DateTime(date.year, date.month, date.day);
+      final dateKey = dayDate.toIso8601String();
+
+      if (!daysMap.containsKey(dateKey)) {
+        daysMap[dateKey] = FoodDay(date: dayDate, meals: [], snacks: []);
+      }
+
+      final day = daysMap[dateKey]!;
+      DateTime? eatenAt;
+      if (eatenAtStr != null && eatenAtStr.isNotEmpty) {
+        eatenAt = DateTime.tryParse(eatenAtStr);
+      }
+
+      final food = Food(name: name, eatenTime: eatenAt);
+      if (type == 'meal') {
+        day.meals.add(food);
+      } else if (type == 'snack') {
+        day.snacks.add(food);
+      }
+    }
+
+    for (final day in daysMap.values) {
+      repo.saveDay(day);
+    }
+  }
+}
