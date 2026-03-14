@@ -18,3 +18,4 @@ jobs:
         with:
           # This configures it to look for a Dart/Flutter project and update pubspec.yaml
           release-type: dart
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
