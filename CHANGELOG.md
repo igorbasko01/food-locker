@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/igorbasko01/food-locker/compare/v1.1.0...v1.1.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* **ci:** grant write permissions to build workflow to allow uploading assets to release ([#13](https://github.com/igorbasko01/food-locker/issues/13)) ([d1410af](https://github.com/igorbasko01/food-locker/commit/d1410af1fe3b86d2d4fa8ea2466cc89a053c207f))
+
 ## [1.1.0](https://github.com/igorbasko01/food-locker/compare/v1.0.1...v1.1.0) (2026-03-14)
 
 
