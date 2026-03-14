@@ -1,0 +1,60 @@
+name: Build Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Configure Keystore
+      if: env.HAS_KEYSTORE == 'true'
+      run: |
+        echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+        echo "storePassword=$KEYSTORE_PASSWORD" > android/key.properties
+        echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+        echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+        echo "storeFile=upload-keystore.jks" >> android/key.properties
+      env:
+        HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+
+    - name: Get Version
+      id: get_version
+      run: |
+        VERSION=$(grep 'version: ' pubspec.yaml | head -1 | awk '{print $2}' | cut -d '+' -f 1)
+        echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Build APK
+      run: flutter build apk --release --build-name=${{ env.APP_VERSION }} --build-number=${{ github.run_number }}
+
+    - name: Rename APK
+      run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/food_locker-${{ env.APP_VERSION }}-${{ github.run_number }}.apk
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: food-locker-v${{ env.APP_VERSION }}-build-${{ github.run_number }}
+        path: build/app/outputs/flutter-apk/food_locker-${{ env.APP_VERSION }}-${{ github.run_number }}.apk

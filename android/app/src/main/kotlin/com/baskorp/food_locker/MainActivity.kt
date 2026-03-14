@@ -1,4 +1,4 @@
-package com.example.food_locker
+package com.baskorp.food_locker
 
 import io.flutter.embedding.android.FlutterActivity
 
