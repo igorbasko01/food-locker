@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
 import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:food_locker/ui/widgets/food_day_view.dart';
+import 'package:food_locker/ui/widgets/streak_banner.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
@@ -69,6 +70,9 @@ class HomePage extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          SliverToBoxAdapter(
+            child: StreakBanner(stats: dayManager.getOvereatingStats()),
           ),
         ],
       ),
