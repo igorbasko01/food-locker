@@ -323,5 +323,61 @@ void main() {
       dayManager.toggleOverate();
       expect(dayManager.overate, isFalse);
     });
+
+    test('toggleHistoricalFoodStatus toggles food status for specific day',
+        () async {
+      final then = DateTime(2023, 10, 20);
+      final food = Food(name: 'Pizza');
+      final historicalDay = FoodDay(
+        date: then,
+        meals: [food],
+        snacks: [],
+      );
+      await foodDayRepository.saveDay(historicalDay);
+
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+
+      final eatenAt = DateTime(2023, 10, 20, 12, 0);
+      dayManager.toggleHistoricalFoodStatus(historicalDay, food, eatenAt);
+
+      expect(food.wasEaten, isTrue);
+      expect(food.eatenAt, eatenAt);
+
+      final savedDay = foodDayRepository.getDay(then);
+      expect(savedDay!.meals.first.wasEaten, isTrue);
+
+      // Toggle off
+      dayManager.toggleHistoricalFoodStatus(historicalDay, food, null);
+      expect(food.wasEaten, isFalse);
+      expect(foodDayRepository.getDay(then)!.meals.first.wasEaten, isFalse);
+    });
+
+    test('toggleHistoricalOverate flips overate for specific day', () async {
+      final then = DateTime(2023, 10, 20);
+      final historicalDay = FoodDay(
+        date: then,
+        meals: [],
+        snacks: [],
+      );
+      await foodDayRepository.saveDay(historicalDay);
+
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+
+      expect(historicalDay.overate, isFalse);
+
+      dayManager.toggleHistoricalOverate(historicalDay);
+      expect(historicalDay.overate, isTrue);
+
+      final savedDay = foodDayRepository.getDay(then);
+      expect(savedDay!.overate, isTrue);
+    });
   });
 }
