@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
-import 'package:food_locker/features/food/data/food.dart';
 import 'package:food_locker/ui/widgets/food_day_view.dart';
 import 'package:provider/provider.dart';
 
