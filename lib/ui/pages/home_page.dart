@@ -39,6 +39,36 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Card(
+                color: dayManager.overate
+                    ? theme.colorScheme.errorContainer
+                    : theme.colorScheme.surfaceContainerHighest,
+                child: SwitchListTile(
+                  title: Text(
+                    'Overate today?',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: dayManager.overate
+                          ? theme.colorScheme.onErrorContainer
+                          : null,
+                    ),
+                  ),
+                  secondary: Icon(
+                    dayManager.overate
+                        ? Icons.warning_rounded
+                        : Icons.check_circle_outline_rounded,
+                    color: dayManager.overate
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.primary,
+                  ),
+                  value: dayManager.overate,
+                  onChanged: (_) => dayManager.toggleOverate(),
+                ),
+              ),
+            ),
+          ),
           if (meals.isEmpty && snacks.isEmpty)
             SliverFillRemaining(
               child: Center(

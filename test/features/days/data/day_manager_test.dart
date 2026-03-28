@@ -264,5 +264,64 @@ void main() {
       expect(history[1].date, day1.date);
       expect(history[2].date, day3.date);
     });
+    test('overate defaults to false', () async {
+      final now = DateTime(2023, 10, 26, 10, 0);
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+      await dayManager.initialize(now);
+
+      expect(dayManager.overate, isFalse);
+    });
+
+    test('overate returns false when currentDay is null', () {
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+
+      expect(dayManager.overate, isFalse);
+    });
+
+    test('toggleOverate flips overate and persists', () async {
+      final now = DateTime(2023, 10, 26, 10, 0);
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+      await dayManager.initialize(now);
+
+      expect(dayManager.overate, isFalse);
+
+      dayManager.toggleOverate();
+      expect(dayManager.overate, isTrue);
+
+      // Verify persistence
+      final savedDay = foodDayRepository.getDay(now);
+      expect(savedDay!.overate, isTrue);
+
+      // Toggle back
+      dayManager.toggleOverate();
+      expect(dayManager.overate, isFalse);
+
+      final savedDay2 = foodDayRepository.getDay(now);
+      expect(savedDay2!.overate, isFalse);
+    });
+
+    test('toggleOverate does nothing when currentDay is null', () {
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+
+      // Should not throw
+      dayManager.toggleOverate();
+      expect(dayManager.overate, isFalse);
+    });
   });
 }

@@ -27,6 +27,8 @@ class FoodDayManager extends ChangeNotifier {
 
   FoodDay? get currentDay => _currentDay;
 
+  bool get overate => _currentDay?.overate ?? false;
+
   List<FoodDay> get history {
     final days = _foodDayRepository.getAllDays();
     days.sort((a, b) => b.date.compareTo(a.date));
@@ -57,6 +59,13 @@ class FoodDayManager extends ChangeNotifier {
     } else {
       food.eat(now);
     }
+    _foodDayRepository.saveDay(_currentDay!);
+    notifyListeners();
+  }
+
+  void toggleOverate() {
+    if (_currentDay == null) return;
+    _currentDay!.overate = !_currentDay!.overate;
     _foodDayRepository.saveDay(_currentDay!);
     notifyListeners();
   }

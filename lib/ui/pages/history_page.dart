@@ -57,7 +57,19 @@ class _HistoryPageState extends State<HistoryPage> {
 
             return ExpansionTile(
               key: ValueKey(day.date),
-              title: Text(_formatDate(day.date)),
+              title: Row(
+                children: [
+                  Text(_formatDate(day.date)),
+                  if (day.overate) ...[
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.warning_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                      size: 20,
+                    ),
+                  ],
+                ],
+              ),
               children: consumedFoods.map((food) {
                 return ListTile(
                   title: Text(food.name),
