@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:food_locker/ui/widgets/food_day_view.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +16,7 @@ class EditDayPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit ${_formatDate(day.date)}'),
+        title: Text('Edit ${DayDateText.format(day.date)}'),
       ),
       body: FoodDayView(
         day: day,
@@ -45,9 +46,4 @@ class EditDayPage extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final weekday = weekdays[date.weekday - 1];
-    return '$weekday, ${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
 }

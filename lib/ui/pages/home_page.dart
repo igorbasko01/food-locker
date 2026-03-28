@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:food_locker/ui/widgets/food_day_view.dart';
 import 'package:provider/provider.dart';
 
@@ -46,8 +47,8 @@ class HomePage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        _formatDate(day.date),
+                      DayDateText(
+                        date: day.date,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -74,9 +75,4 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final weekday = weekdays[date.weekday - 1];
-    return '$weekday, ${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
 }
