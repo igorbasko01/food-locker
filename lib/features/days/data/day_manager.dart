@@ -75,6 +75,22 @@ class FoodDayManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleHistoricalFoodStatus(FoodDay day, Food food, DateTime? eatenAt) {
+    if (eatenAt != null) {
+      food.eat(eatenAt);
+    } else {
+      food.unEat();
+    }
+    _foodDayRepository.saveDay(day);
+    notifyListeners();
+  }
+
+  void toggleHistoricalOverate(FoodDay day) {
+    day.overate = !day.overate;
+    _foodDayRepository.saveDay(day);
+    notifyListeners();
+  }
+
   void _handleDayProgression(DateTime now) {
     if (_shouldStartNewDay(now)) {
       if (_currentDay != null) {

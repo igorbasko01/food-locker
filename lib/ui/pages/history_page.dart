@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/ui/pages/edit_day_page.dart';
 import 'package:provider/provider.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -69,6 +70,17 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                   ],
                 ],
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit_rounded),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditDayPage(day: day),
+                    ),
+                  );
+                },
               ),
               children: consumedFoods.map((food) {
                 return ListTile(
