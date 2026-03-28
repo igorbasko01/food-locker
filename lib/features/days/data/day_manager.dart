@@ -6,6 +6,20 @@ import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 
+class OvereatingStats {
+  final int streakDays;
+  final bool overateYesterday;
+  final int overeatingLast7;
+  final int totalPastDays;
+
+  OvereatingStats({
+    required this.streakDays,
+    required this.overateYesterday,
+    required this.overeatingLast7,
+    required this.totalPastDays,
+  });
+}
+
 class FoodDayManager extends ChangeNotifier {
   FoodDay? _currentDay;
   final FoodConfigRepository _foodConfigRepository;
@@ -33,6 +47,60 @@ class FoodDayManager extends ChangeNotifier {
     final days = _foodDayRepository.getAllDays();
     days.sort((a, b) => b.date.compareTo(a.date));
     return days;
+  }
+
+  OvereatingStats getOvereatingStats() {
+    final allHistory = history;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Filter out today for stats calculation
+    final pastDays = allHistory.where((d) {
+      final dDate = DateTime(d.date.year, d.date.month, d.date.day);
+      return dDate.isBefore(today);
+    }).toList();
+
+    if (pastDays.isEmpty) {
+      return OvereatingStats(
+        streakDays: 0,
+        overateYesterday: false,
+        overeatingLast7: 0,
+        totalPastDays: 0,
+      );
+    }
+
+    bool overateYesterday = false;
+    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterdayDay = pastDays.firstWhere(
+      (d) => DateTime(d.date.year, d.date.month, d.date.day) == yesterday,
+      orElse: () => FoodDay(date: yesterday, meals: [], snacks: []),
+    );
+    overateYesterday = yesterdayDay.overate;
+
+    int streak = 0;
+    for (final day in pastDays) {
+      if (!day.overate) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    int last7Count = 0;
+    final sevenDaysAgo = today.subtract(const Duration(days: 7));
+    for (final day in pastDays) {
+      final dDate = DateTime(day.date.year, day.date.month, day.date.day);
+      if (dDate.isAfter(sevenDaysAgo.subtract(const Duration(seconds: 1))) && day.overate) {
+        last7Count++;
+      }
+    }
+
+    return OvereatingStats(
+      streakDays: streak,
+      overateYesterday: overateYesterday,
+      overeatingLast7: last7Count,
+      totalPastDays: pastDays.length,
+    );
   }
 
   Future<void> initialize(DateTime now) async {
