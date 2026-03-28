@@ -120,4 +120,36 @@ void main() {
     expect(find.byType(ExpansionTile), findsNWidgets(7));
     expect(find.text('Load More'), findsNothing);
   });
+
+  testWidgets('shows warning icon for days marked as overate', (tester) async {
+    // Save a day with overate = true
+    await foodDayRepository.saveDay(
+      FoodDay(
+        date: DateTime(2023, 10, 1),
+        meals: [Food(name: 'Chicken', eatenTime: DateTime(2023, 10, 1))],
+        snacks: [],
+        overate: true,
+      ),
+    );
+    // Save a day with overate = false
+    await foodDayRepository.saveDay(
+      FoodDay(
+        date: DateTime(2023, 10, 2),
+        meals: [Food(name: 'Chicken', eatenTime: DateTime(2023, 10, 2))],
+        snacks: [],
+        overate: false,
+      ),
+    );
+
+    dayManager = FoodDayManager(
+      null,
+      foodConfigRepository,
+      foodDayRepository,
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest());
+
+    // Should find exactly one warning icon (for the overate day)
+    expect(find.byIcon(Icons.warning_rounded), findsOneWidget);
+  });
 }

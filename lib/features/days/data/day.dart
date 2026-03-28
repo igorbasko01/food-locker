@@ -11,6 +11,13 @@ class FoodDay {
   final List<Food> meals;
   @HiveField(2)
   final List<Food> snacks;
+  @HiveField(3)
+  bool overate;
 
-  FoodDay({required this.date, required this.meals, required this.snacks});
+  FoodDay({
+    required this.date,
+    required this.meals,
+    required this.snacks,
+    this.overate = false,
+  });
 }

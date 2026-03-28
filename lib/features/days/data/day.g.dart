@@ -20,19 +20,22 @@ class FoodDayAdapter extends TypeAdapter<FoodDay> {
       date: fields[0] as DateTime,
       meals: (fields[1] as List).cast<Food>(),
       snacks: (fields[2] as List).cast<Food>(),
+      overate: fields[3] == true,
     );
   }
 
   @override
   void write(BinaryWriter writer, FoodDay obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
       ..write(obj.meals)
       ..writeByte(2)
-      ..write(obj.snacks);
+      ..write(obj.snacks)
+      ..writeByte(3)
+      ..write(obj.overate);
   }
 
   @override
