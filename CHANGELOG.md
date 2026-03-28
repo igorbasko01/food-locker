@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0](https://github.com/igorbasko01/food-locker/compare/v1.2.0...v1.3.0) (2026-03-28)
+
+
+### Features
+
+* allow editing historical days with time picker ([#19](https://github.com/igorbasko01/food-locker/issues/19)) ([6ecbc27](https://github.com/igorbasko01/food-locker/commit/6ecbc27c5688211d7f96a6ae9d13e8cfa3fc211d))
+* **days:** add overate tracking per day ([#16](https://github.com/igorbasko01/food-locker/issues/16)) ([e8901ac](https://github.com/igorbasko01/food-locker/commit/e8901acbedf9c51efdec5965c435170c2ec856fb))
+* show food day date and add refresh button on home page ([#18](https://github.com/igorbasko01/food-locker/issues/18)) ([976dcd8](https://github.com/igorbasko01/food-locker/commit/976dcd816387c120d4a1a700d3ae43ce4dc2ca9d))
+
 ## [1.2.0](https://github.com/igorbasko01/food-locker/compare/v1.1.1...v1.2.0) (2026-03-14)
 
 
