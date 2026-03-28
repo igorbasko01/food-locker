@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
 import 'package:food_locker/ui/pages/edit_day_page.dart';
+import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:provider/provider.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -60,7 +61,7 @@ class _HistoryPageState extends State<HistoryPage> {
               key: ValueKey(day.date),
               title: Row(
                 children: [
-                  Text(_formatDate(day.date)),
+                  DayDateText(date: day.date),
                   if (day.overate) ...[
                     const SizedBox(width: 8),
                     Icon(
@@ -95,9 +96,6 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
