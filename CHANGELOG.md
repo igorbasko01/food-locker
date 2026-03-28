@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/igorbasko01/food-locker/compare/v1.3.0...v1.4.0) (2026-03-28)
+
+
+### Features
+
+* add overeating streak banner to home page ([#22](https://github.com/igorbasko01/food-locker/issues/22)) ([1c9c8fc](https://github.com/igorbasko01/food-locker/commit/1c9c8fc010bcc89fb0c6ff78d920ddb2de7bfe7d))
+* **ui:** add weekday indicator to history and home pages ([#20](https://github.com/igorbasko01/food-locker/issues/20)) ([e929acf](https://github.com/igorbasko01/food-locker/commit/e929acf1a63597e85dbdf2ff0ac0902000ae2492))
+
 ## [1.3.0](https://github.com/igorbasko01/food-locker/compare/v1.2.0...v1.3.0) (2026-03-28)
 
 
