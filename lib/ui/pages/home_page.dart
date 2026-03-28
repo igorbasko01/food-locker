@@ -35,6 +35,29 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text('Today\'s Food', style: theme.textTheme.headlineMedium),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _formatDate(dayManager.currentDay?.date ?? now),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded),
+                        onPressed: () => dayManager.refresh(),
+                        tooltip: 'Refresh day',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 20,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -104,6 +127,10 @@ class HomePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   Widget _buildHeader(BuildContext context, String title) {

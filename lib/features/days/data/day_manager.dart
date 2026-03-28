@@ -41,6 +41,11 @@ class FoodDayManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  void refresh() {
+    _handleDayProgression(DateTime.now());
+    notifyListeners();
+  }
+
   List<Food> getMeals(DateTime now) {
     _handleDayProgression(now);
     return _currentDay?.meals ?? [];
