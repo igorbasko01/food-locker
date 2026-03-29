@@ -22,7 +22,7 @@ class StreakBanner extends StatelessWidget {
   Widget? _buildBanner(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (stats.totalPastDays == 0) {
+    if (stats.cleanStreak == 0 && stats.overeatingStreak == 0) {
       return _buildCard(
         context,
         icon: Icons.auto_awesome_rounded,
@@ -32,48 +32,47 @@ class StreakBanner extends StatelessWidget {
       );
     }
     
-    if (stats.overateYesterday) {
+    if (stats.overeatingStreak >= 2) {
+      return _buildCard(
+        context,
+        icon: Icons.warning_rounded,
+        color: theme.colorScheme.error,
+        title: '${stats.overeatingStreak}-Day Overeating Streak',
+        subtitle: 'You\'ve been overeating lately. Break the cycle today!',
+      );
+    }
+
+    if (stats.overeatingStreak == 1) {
       return _buildCard(
         context,
         icon: Icons.refresh_rounded,
         color: theme.colorScheme.tertiary,
         title: 'Fresh Start!',
-        subtitle: 'You overate yesterday. Today is a brand new day to win!',
-      );
-    }
-    
-    if (stats.overeatingLast7 >= 3) {
-      return _buildCard(
-        context,
-        icon: Icons.warning_amber_rounded,
-        color: theme.colorScheme.error,
-        title: 'Heads Up!',
-        subtitle: 'You overate ${stats.overeatingLast7} times in the last 7 days. Stay strong today!',
+        subtitle: 'You overate last time. Today is a brand new day to win!',
       );
     }
 
-    if (stats.streakDays >= 2) {
+    if (stats.cleanStreak >= 2) {
       return _buildCard(
         context,
         icon: Icons.local_fire_department_rounded,
         color: Colors.orange,
-        title: '${stats.streakDays}-Day Streak!',
+        title: '${stats.cleanStreak}-Day Streak!',
         subtitle: 'You are doing great! Keep the momentum going.',
       );
     }
 
-    // Default or minimal streak case
-    if (stats.streakDays == 1) {
+    if (stats.cleanStreak == 1) {
        return _buildCard(
         context,
         icon: Icons.check_circle_outline_rounded,
         color: theme.colorScheme.primary,
         title: 'Good Job!',
-        subtitle: 'You finished yesterday strong. Let\'s keep it going today!',
+        subtitle: 'You finished last time strong. Let\'s keep it going today!',
       );
     }
 
-    return null;
+    return const SizedBox.shrink();
   }
 
   Widget _buildCard(

@@ -7,16 +7,12 @@ import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 
 class OvereatingStats {
-  final int streakDays;
-  final bool overateYesterday;
-  final int overeatingLast7;
-  final int totalPastDays;
+  final int cleanStreak;
+  final int overeatingStreak;
 
   OvereatingStats({
-    required this.streakDays,
-    required this.overateYesterday,
-    required this.overeatingLast7,
-    required this.totalPastDays,
+    required this.cleanStreak,
+    required this.overeatingStreak,
   });
 }
 
@@ -62,44 +58,26 @@ class FoodDayManager extends ChangeNotifier {
 
     if (pastDays.isEmpty) {
       return OvereatingStats(
-        streakDays: 0,
-        overateYesterday: false,
-        overeatingLast7: 0,
-        totalPastDays: 0,
+        cleanStreak: 0,
+        overeatingStreak: 0,
       );
     }
 
-    bool overateYesterday = false;
-    final yesterday = today.subtract(const Duration(days: 1));
-    final yesterdayDay = pastDays.firstWhere(
-      (d) => DateTime(d.date.year, d.date.month, d.date.day) == yesterday,
-      orElse: () => FoodDay(date: yesterday, meals: [], snacks: []),
-    );
-    overateYesterday = yesterdayDay.overate;
-
-    int streak = 0;
+    int cleanStreak = 0;
+    int overeatingStreak = 0;
     for (final day in pastDays) {
       if (!day.overate) {
-        streak++;
+        if (overeatingStreak > 0) break;
+        cleanStreak++;
       } else {
-        break;
-      }
-    }
-
-    int last7Count = 0;
-    final sevenDaysAgo = today.subtract(const Duration(days: 7));
-    for (final day in pastDays) {
-      final dDate = DateTime(day.date.year, day.date.month, day.date.day);
-      if (dDate.isAfter(sevenDaysAgo.subtract(const Duration(seconds: 1))) && day.overate) {
-        last7Count++;
+        if (cleanStreak > 0) break;
+        overeatingStreak++;
       }
     }
 
     return OvereatingStats(
-      streakDays: streak,
-      overateYesterday: overateYesterday,
-      overeatingLast7: last7Count,
-      totalPastDays: pastDays.length,
+      cleanStreak: cleanStreak,
+      overeatingStreak: overeatingStreak,
     );
   }
 
