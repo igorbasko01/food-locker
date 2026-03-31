@@ -20,8 +20,7 @@ class FoodDayAdapter extends TypeAdapter<FoodDay> {
       date: fields[0] as DateTime,
       meals: (fields[1] as List).cast<Food>(),
       snacks: (fields[2] as List).cast<Food>(),
-      overate: fields[3] as bool,
-    );
+    ).._overate = fields[3] as bool?;
   }
 
   @override
@@ -35,7 +34,7 @@ class FoodDayAdapter extends TypeAdapter<FoodDay> {
       ..writeByte(2)
       ..write(obj.snacks)
       ..writeByte(3)
-      ..write(obj.overate);
+      ..write(obj._overate);
   }
 
   @override
