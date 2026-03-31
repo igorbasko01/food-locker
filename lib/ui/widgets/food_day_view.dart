@@ -6,6 +6,7 @@ class FoodDayView extends StatelessWidget {
   final FoodDay day;
   final VoidCallback onOverateToggled;
   final Future<void> Function(Food) onFoodToggled;
+  final Future<void> Function(Food)? onFoodLongPressed;
   final List<Widget>? sliversBefore;
   final List<Widget>? sliversAfter;
 
@@ -14,6 +15,7 @@ class FoodDayView extends StatelessWidget {
     required this.day,
     required this.onOverateToggled,
     required this.onFoodToggled,
+    this.onFoodLongPressed,
     this.sliversBefore,
     this.sliversAfter,
   });
@@ -115,7 +117,8 @@ class FoodDayView extends StatelessWidget {
           ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
           : theme.colorScheme.surface,
       child: InkWell(
-        onLongPress: () => onFoodToggled(food),
+        onTap: () => onFoodToggled(food),
+        onLongPress: onFoodLongPressed != null ? () => onFoodLongPressed!(food) : null,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),

@@ -87,6 +87,23 @@ class _HistoryPageState extends State<HistoryPage> {
                 return ListTile(
                   title: Text(food.name),
                   trailing: Text(_formatTime(food.eatenAt!)),
+                  onLongPress: () async {
+                    final pickedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(food.eatenAt!),
+                    );
+
+                    if (pickedTime != null) {
+                      final eatenAt = DateTime(
+                        day.date.year,
+                        day.date.month,
+                        day.date.day,
+                        pickedTime.hour,
+                        pickedTime.minute,
+                      );
+                      manager.toggleHistoricalFoodStatus(day, food, eatenAt);
+                    }
+                  },
                 );
               }).toList(),
             );

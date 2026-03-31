@@ -42,6 +42,25 @@ class EditDayPage extends StatelessWidget {
             }
           }
         },
+        onFoodLongPressed: (food) async {
+          if (!food.wasEaten) return;
+
+          final pickedTime = await showTimePicker(
+            context: context,
+            initialTime: TimeOfDay.fromDateTime(food.eatenAt!),
+          );
+
+          if (pickedTime != null) {
+            final eatenAt = DateTime(
+              day.date.year,
+              day.date.month,
+              day.date.day,
+              pickedTime.hour,
+              pickedTime.minute,
+            );
+            dayManager.toggleHistoricalFoodStatus(day, food, eatenAt);
+          }
+        },
       ),
     );
   }
