@@ -9,6 +9,18 @@ class WeightManager extends ChangeNotifier {
 
   WeightManager(this._weightRepository);
 
+  Weight? getWeightForDate(DateTime date) {
+    try {
+      return _weights.firstWhere((w) {
+        return w.date.year == date.year &&
+            w.date.month == date.month &&
+            w.date.day == date.day;
+      });
+    } catch (_) {
+      return null;
+    }
+  }
+
   List<Weight> get history {
     final sortedWeights = List<Weight>.from(_weights);
     sortedWeights.sort((a, b) => b.date.compareTo(a.date));

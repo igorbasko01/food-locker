@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/edit_day_page.dart';
 import 'package:food_locker/ui/utils/food_time_picker.dart';
 import 'package:food_locker/ui/widgets/day_date_text.dart';
@@ -31,6 +32,7 @@ class _HistoryPageState extends State<HistoryPage> {
             ? _visibleCount
             : history.length;
         final hasMore = history.length > _visibleCount;
+        final weightManager = context.watch<WeightManager>();
 
         return ListView.builder(
           itemCount: itemsToShow + (hasMore ? 1 : 0),
@@ -71,6 +73,21 @@ class _HistoryPageState extends State<HistoryPage> {
                       size: 20,
                     ),
                   ],
+                  const Spacer(),
+                  () {
+                    final weight = weightManager.getWeightForDate(day.date);
+                    if (weight != null) {
+                      return Text(
+                        '${weight.value.toStringAsFixed(1)} kg',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.outline,
+                          fontSize: 14,
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }(),
+                  const SizedBox(width: 8),
                 ],
               ),
               trailing: IconButton(
