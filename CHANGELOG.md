@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/igorbasko01/food-locker/compare/v1.5.0...v1.5.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* handle null overate in FoodDay for backward compatibility ([#27](https://github.com/igorbasko01/food-locker/issues/27)) ([ca75423](https://github.com/igorbasko01/food-locker/commit/ca754235ba7185746b31a84db89d4f2f5fd69a95))
+
 ## [1.5.0](https://github.com/igorbasko01/food-locker/compare/v1.4.0...v1.5.0) (2026-03-31)
 
 
