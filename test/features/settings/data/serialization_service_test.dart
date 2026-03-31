@@ -6,15 +6,19 @@ import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 import 'package:food_locker/features/food/data/in_memory_food_config_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 
 void main() {
   late SerializationService service;
   late InMemoryFoodConfigRepository configRepo;
   late InMemoryFoodDayRepository dayRepo;
+  late InMemoryWeightRepository weightRepo;
 
   setUp(() {
     configRepo = InMemoryFoodConfigRepository([]);
     dayRepo = InMemoryFoodDayRepository();
+    weightRepo = InMemoryWeightRepository();
     service = SerializationService(
       // Mocking context/file picking/sharing is not needed for CSV logic tests
       // exportData and importData will be tested partially via unit logic tests
@@ -111,6 +115,28 @@ void main() {
       expect(days.length, 1);
       expect(days.first.overate, isFalse);
     });
+
+    test('generateWeightCsv creates valid CSV', () {
+      final date = DateTime(2023, 10, 27);
+      final weight = Weight(date: date, value: 75.5, unit: WeightUnit.kilograms);
+      weightRepo.saveWeight(weight);
+
+      final csv = service.generateWeightCsv(weightRepo.getAllWeights());
+
+      expect(csv, contains('date,value,unit'));
+      expect(csv, contains('2023-10-27T00:00:00.000,75.5,kilograms'));
+    });
+
+    test('importWeightFromCsv parses CSV and populates repo', () {
+      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,kilograms';
+      service.importWeightFromCsv(csv, weightRepo);
+
+      final weights = weightRepo.getAllWeights();
+      expect(weights.length, 1);
+      expect(weights.first.date, DateTime(2023, 10, 27));
+      expect(weights.first.value, 75.5);
+      expect(weights.first.unit, WeightUnit.kilograms);
+    });
   });
 
   group('SerializationService Zip File Name', () {
@@ -153,10 +179,19 @@ void main() {
       await initialDayRepo.saveDay(day1);
       await initialDayRepo.saveDay(day2);
 
+      final initialWeightRepo = InMemoryWeightRepository();
+      await initialWeightRepo.saveWeight(
+        Weight(date: DateTime(2023, 10, 27), value: 75.5),
+      );
+      await initialWeightRepo.saveWeight(
+        Weight(date: DateTime(2023, 10, 28), value: 75.0),
+      );
+
       // 2. Perform export
       final zipBytes = service.createExportArchive(
         initialConfigRepo.foodConfigs,
         initialDayRepo.getAllDays(),
+        initialWeightRepo.getAllWeights(),
       );
 
       expect(zipBytes, isNotNull);
@@ -165,16 +200,19 @@ void main() {
       // 3. Prepare fresh repositories for import
       final importConfigRepo = InMemoryFoodConfigRepository([]);
       final importDayRepo = InMemoryFoodDayRepository();
+      final importWeightRepo = InMemoryWeightRepository();
 
       // Ensure they are truly clean
       expect(importConfigRepo.foodConfigs.isEmpty, isTrue);
       expect(importDayRepo.getAllDays().isEmpty, isTrue);
+      expect(importWeightRepo.getAllWeights().isEmpty, isTrue);
 
       // 4. Perform import
       await service.importFromArchive(
         zipBytes,
         importConfigRepo,
         importDayRepo,
+        importWeightRepo,
       );
 
       // 5. Assertions on restored Configs
@@ -215,6 +253,20 @@ void main() {
       expect(importedDay2.snacks.first.name, 'Banana');
       expect(importedDay2.snacks.first.eatenAt, DateTime(2023, 10, 28, 15, 0));
       expect(importedDay2.overate, isFalse);
+
+      // 7. Assertions on restored Weight
+      final importedWeights = importWeightRepo.getAllWeights();
+      expect(importedWeights.length, 2);
+
+      final weight1 = importedWeights.firstWhere(
+        (w) => w.date == DateTime(2023, 10, 27),
+      );
+      expect(weight1.value, 75.5);
+
+      final weight2 = importedWeights.firstWhere(
+        (w) => w.date == DateTime(2023, 10, 28),
+      );
+      expect(weight2.value, 75.0);
     });
   });
 }

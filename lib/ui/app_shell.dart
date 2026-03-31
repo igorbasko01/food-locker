@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/ui/pages/history_page.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
+import 'package:food_locker/ui/pages/weight_page.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -15,11 +16,12 @@ class _AppShellState extends State<AppShell> {
 
   static const List<Widget> _pages = [
     HomePage(),
+    WeightPage(),
     HistoryPage(),
     SettingsPage(),
   ];
 
-  static const List<String> _titles = ['Home', 'History', 'Settings'];
+  static const List<String> _titles = ['Home', 'Weight', 'History', 'Settings'];
 
   void _onTabTapped(int index) {
     setState(() {
@@ -40,6 +42,11 @@ class _AppShellState extends State<AppShell> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.monitor_weight_outlined),
+            activeIcon: Icon(Icons.monitor_weight_rounded),
+            label: 'Weight',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),

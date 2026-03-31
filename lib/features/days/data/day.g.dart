@@ -20,7 +20,7 @@ class FoodDayAdapter extends TypeAdapter<FoodDay> {
       date: fields[0] as DateTime,
       meals: (fields[1] as List).cast<Food>(),
       snacks: (fields[2] as List).cast<Food>(),
-      overate: fields[3] == true,
+      overate: fields[3] as bool,
     );
   }
 

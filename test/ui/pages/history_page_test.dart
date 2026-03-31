@@ -7,6 +7,8 @@ import 'package:food_locker/features/food/data/food.dart';
 import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 import 'package:food_locker/features/food/data/in_memory_food_config_repository.dart';
+import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/history_page.dart';
 import 'package:provider/provider.dart';
 
@@ -14,17 +16,24 @@ void main() {
   late FoodDayManager dayManager;
   late InMemoryFoodDayRepository foodDayRepository;
   late InMemoryFoodConfigRepository foodConfigRepository;
+  late WeightManager weightManager;
+  late InMemoryWeightRepository weightRepository;
 
   setUp(() {
     foodConfigRepository = InMemoryFoodConfigRepository([
       FoodConfig(name: 'Chicken', type: FoodType.meal),
     ]);
     foodDayRepository = InMemoryFoodDayRepository();
+    weightRepository = InMemoryWeightRepository();
+    weightManager = WeightManager(weightRepository);
   });
 
   Widget createWidgetUnderTest() {
-    return ChangeNotifierProvider<FoodDayManager>.value(
-      value: dayManager,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<FoodDayManager>.value(value: dayManager),
+        ChangeNotifierProvider<WeightManager>.value(value: weightManager),
+      ],
       child: const MaterialApp(home: Scaffold(body: HistoryPage())),
     );
   }
