@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/igorbasko01/food-locker/compare/v1.4.0...v1.5.0) (2026-03-31)
+
+
+### Features
+
+* add body weight tracking feature with fl_chart visualization ([9836314](https://github.com/igorbasko01/food-locker/commit/98363145e72b70803ab76232a10652abe5c0c546))
+* allow adjusting meal/snack time via long press ([#24](https://github.com/igorbasko01/food-locker/issues/24)) ([165d486](https://github.com/igorbasko01/food-locker/commit/165d486e6b2cf6581a5c433c68ce77aa210767af))
+
 ## [1.4.0](https://github.com/igorbasko01/food-locker/compare/v1.3.0...v1.4.0) (2026-03-28)
 
 
