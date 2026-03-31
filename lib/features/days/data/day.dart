@@ -12,12 +12,15 @@ class FoodDay {
   @HiveField(2)
   final List<Food> snacks;
   @HiveField(3)
-  bool overate;
+  bool? _overate;
+
+  bool get overate => _overate ?? false;
+  set overate(bool value) => _overate = value;
 
   FoodDay({
     required this.date,
     required this.meals,
     required this.snacks,
-    this.overate = false,
-  });
+    bool? overate,
+  }) : _overate = overate ?? false;
 }
