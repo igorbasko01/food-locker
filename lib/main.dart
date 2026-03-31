@@ -7,6 +7,10 @@ import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/persistent_food_config_repository.dart';
 import 'package:food_locker/features/days/data/food_day_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/ui/app_shell.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,11 +22,15 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(FoodAdapter());
   Hive.registerAdapter(FoodDayAdapter());
+  Hive.registerAdapter(WeightAdapter());
+  Hive.registerAdapter(WeightUnitAdapter());
   final foodDayBox = await Hive.openBox<FoodDay>('food_days');
+  final weightBox = await Hive.openBox<Weight>('weights');
 
   final prefs = await SharedPreferences.getInstance();
   final foodConfigRepository = PersistentFoodConfigRepository(prefs);
   final foodDayRepository = PersistentFoodDayRepository(foodDayBox);
+  final weightRepository = PersistentWeightRepository(weightBox);
 
   final foodDayManager = FoodDayManager(
     null,
@@ -31,6 +39,9 @@ void main() async {
   );
   await foodDayManager.initialize(DateTime.now());
 
+  final weightManager = WeightManager(weightRepository);
+  await weightManager.initialize();
+
   runApp(
     MultiProvider(
       providers: [
@@ -38,8 +49,10 @@ void main() async {
           value: foodConfigRepository,
         ),
         Provider<FoodDayRepository>.value(value: foodDayRepository),
+        Provider<WeightRepository>.value(value: weightRepository),
         Provider<SerializationService>(create: (_) => SerializationService()),
         ChangeNotifierProvider<FoodDayManager>.value(value: foodDayManager),
+        ChangeNotifierProvider<WeightManager>.value(value: weightManager),
       ],
       child: const MainApp(),
     ),
