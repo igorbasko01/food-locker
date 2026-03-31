@@ -31,6 +31,9 @@ class HomePage extends StatelessWidget {
         onFoodToggled: (food) async {
           dayManager.toggleFoodStatus(food, DateTime.now());
         },
+        onFoodTimeAdjusted: (food, eatenAt) {
+          dayManager.toggleHistoricalFoodStatus(day, food, eatenAt);
+        },
         sliversBefore: [
           SliverToBoxAdapter(
             child: Padding(

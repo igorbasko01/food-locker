@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
 import 'package:food_locker/ui/pages/edit_day_page.dart';
+import 'package:food_locker/ui/utils/food_time_picker.dart';
 import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:provider/provider.dart';
 
@@ -87,6 +88,12 @@ class _HistoryPageState extends State<HistoryPage> {
                 return ListTile(
                   title: Text(food.name),
                   trailing: Text(_formatTime(food.eatenAt!)),
+                  onLongPress: () async {
+                    final eatenAt = await pickFoodTime(context, day, food);
+                    if (eatenAt != null) {
+                      manager.toggleHistoricalFoodStatus(day, food, eatenAt);
+                    }
+                  },
                 );
               }).toList(),
             );
