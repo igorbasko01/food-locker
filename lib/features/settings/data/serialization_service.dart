@@ -9,6 +9,8 @@ import 'package:food_locker/features/food/data/food.dart';
 import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -16,6 +18,7 @@ import 'package:share_plus/share_plus.dart';
 class SerializationService {
   static const String _configFileName = 'config.csv';
   static const String _historyFileName = 'history.csv';
+  static const String _weightFileName = 'weight.csv';
   @visibleForTesting
   static String generateZipFileName([DateTime? now]) {
     final timestamp = now ?? DateTime.now();
@@ -33,10 +36,12 @@ class SerializationService {
   Future<void> exportData(BuildContext context) async {
     final configRepo = context.read<FoodConfigRepository>();
     final dayRepo = context.read<FoodDayRepository>();
+    final weightRepo = context.read<WeightRepository>();
 
     final zipData = createExportArchive(
       configRepo.foodConfigs,
       dayRepo.getAllDays(),
+      weightRepo.getAllWeights(),
     );
 
     if (zipData == null) return;
@@ -52,6 +57,7 @@ class SerializationService {
   Future<void> importData(BuildContext context) async {
     final configRepo = context.read<FoodConfigRepository>();
     final dayRepo = context.read<FoodDayRepository>();
+    final weightRepo = context.read<WeightRepository>();
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -64,13 +70,15 @@ class SerializationService {
     final file = File(filePath);
     final bytes = await file.readAsBytes();
 
-    await importFromArchive(bytes, configRepo, dayRepo);
+    await importFromArchive(bytes, configRepo, dayRepo, weightRepo);
   }
 
   @visibleForTesting
-  List<int>? createExportArchive(List<FoodConfig> configs, List<FoodDay> days) {
+  List<int>? createExportArchive(
+      List<FoodConfig> configs, List<FoodDay> days, List<Weight> weights) {
     final configCsv = generateConfigCsv(configs);
     final historyCsv = generateHistoryCsv(days);
+    final weightCsv = generateWeightCsv(weights);
 
     final archive = Archive()
       ..addFile(
@@ -78,6 +86,9 @@ class SerializationService {
       )
       ..addFile(
         ArchiveFile(_historyFileName, historyCsv.length, historyCsv.codeUnits),
+      )
+      ..addFile(
+        ArchiveFile(_weightFileName, weightCsv.length, weightCsv.codeUnits),
       );
 
     return ZipEncoder().encode(archive);
@@ -88,12 +99,14 @@ class SerializationService {
     List<int> zipBytes,
     FoodConfigRepository configRepo,
     FoodDayRepository dayRepo,
+    WeightRepository weightRepo,
   ) async {
     final archive = ZipDecoder().decodeBytes(zipBytes);
 
     // Clear existing data
     configRepo.clear();
     await dayRepo.clear();
+    await weightRepo.clear();
 
     for (final file in archive) {
       if (file.isFile) {
@@ -102,6 +115,8 @@ class SerializationService {
           importConfigFromCsv(content, configRepo);
         } else if (file.name == _historyFileName) {
           importHistoryFromCsv(content, dayRepo);
+        } else if (file.name == _weightFileName) {
+          importWeightFromCsv(content, weightRepo);
         }
       }
     }
@@ -140,6 +155,18 @@ class SerializationService {
         });
       }
     }
+    return CsvSerializer.toCSV(items);
+  }
+
+  @visibleForTesting
+  String generateWeightCsv(List<Weight> weights) {
+    final items = weights
+        .map((w) => {
+              'date': w.date.toIso8601String(),
+              'value': w.value,
+              'unit': w.unit.name,
+            })
+        .toList();
     return CsvSerializer.toCSV(items);
   }
 
@@ -208,6 +235,33 @@ class SerializationService {
 
     for (final day in daysMap.values) {
       repo.saveDay(day);
+    }
+  }
+
+  @visibleForTesting
+  void importWeightFromCsv(String csv, WeightRepository repo) {
+    final items = CsvSerializer.fromCSV(csv);
+    for (final item in items) {
+      final dateStr = item['date'] as String?;
+      final valueStr = item['value']?.toString();
+      final unitStr = item['unit'] as String?;
+
+      if (dateStr == null || valueStr == null) continue;
+
+      final date = DateTime.tryParse(dateStr);
+      final value = double.tryParse(valueStr);
+
+      if (date != null && value != null) {
+        WeightUnit unit = WeightUnit.kilograms;
+        if (unitStr != null) {
+          try {
+            unit = WeightUnit.values.byName(unitStr);
+          } catch (e) {
+            debugPrint('Error parsing weight unit: $unitStr, $e');
+          }
+        }
+        repo.saveWeight(Weight(date: date, value: value, unit: unit));
+      }
     }
   }
 }
