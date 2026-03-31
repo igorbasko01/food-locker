@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day.dart';
 import 'package:food_locker/features/food/data/food.dart';
+import 'package:food_locker/ui/utils/food_time_picker.dart';
 
 class FoodDayView extends StatelessWidget {
   final FoodDay day;
   final VoidCallback onOverateToggled;
   final Future<void> Function(Food) onFoodToggled;
-  final Future<void> Function(Food)? onFoodLongPressed;
+  final void Function(Food, DateTime)? onFoodTimeAdjusted;
   final List<Widget>? sliversBefore;
   final List<Widget>? sliversAfter;
 
@@ -15,7 +16,7 @@ class FoodDayView extends StatelessWidget {
     required this.day,
     required this.onOverateToggled,
     required this.onFoodToggled,
-    this.onFoodLongPressed,
+    this.onFoodTimeAdjusted,
     this.sliversBefore,
     this.sliversAfter,
   });
@@ -118,7 +119,14 @@ class FoodDayView extends StatelessWidget {
           : theme.colorScheme.surface,
       child: InkWell(
         onTap: () => onFoodToggled(food),
-        onLongPress: onFoodLongPressed != null ? () => onFoodLongPressed!(food) : null,
+        onLongPress: onFoodTimeAdjusted != null
+            ? () async {
+                final eatenAt = await pickFoodTime(context, day, food);
+                if (eatenAt != null) {
+                  onFoodTimeAdjusted!(food, eatenAt);
+                }
+              }
+            : null,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
