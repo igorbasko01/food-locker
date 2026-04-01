@@ -57,4 +57,15 @@ class WeightManager extends ChangeNotifier {
     });
     notifyListeners();
   }
+
+  Future<void> updateWeight(DateTime oldDate, DateTime newDate, double newValue, {WeightUnit unit = WeightUnit.kilograms}) async {
+    final oldDateOnly = DateTime(oldDate.year, oldDate.month, oldDate.day);
+    final newDateOnly = DateTime(newDate.year, newDate.month, newDate.day);
+
+    if (oldDateOnly != newDateOnly) {
+      await deleteWeight(oldDate);
+    }
+    
+    await addWeight(newDate, newValue, unit: unit);
+  }
 }

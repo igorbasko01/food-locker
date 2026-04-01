@@ -79,10 +79,22 @@ class WeightPage extends StatelessWidget {
                             dateStr,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          trailing: Text(
-                            '${item.value.toStringAsFixed(1)} kg',
-                            style: const TextStyle(fontSize: 16.0),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${item.value.toStringAsFixed(1)} kg',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                            ],
                           ),
+                          onTap: () => _showAddWeightDialog(context, weightManager, weight: item),
                         ),
                       );
                     },
@@ -99,18 +111,30 @@ class WeightPage extends StatelessWidget {
     );
   }
 
-  void _showAddWeightDialog(BuildContext context, WeightManager manager) async {
+  void _showAddWeightDialog(BuildContext context, WeightManager manager, {Weight? weight}) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AddWeightDialog(initialDate: DateTime.now()),
+      builder: (context) => AddWeightDialog(
+        initialDate: weight?.date ?? DateTime.now(),
+        initialWeight: weight?.value,
+      ),
     );
 
     if (result != null) {
+      if (result['delete'] == true && weight != null) {
+        manager.deleteWeight(weight.date);
+        return;
+      }
+
       final date = result['date'] as DateTime;
       final value = result['value'] as double;
       final unit = result['unit'] as WeightUnit;
       
-      manager.addWeight(date, value, unit: unit);
+      if (weight != null) {
+        manager.updateWeight(weight.date, date, value, unit: unit);
+      } else {
+        manager.addWeight(date, value, unit: unit);
+      }
     }
   }
 }
