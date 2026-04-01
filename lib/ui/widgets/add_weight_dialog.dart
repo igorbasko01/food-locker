@@ -3,8 +3,13 @@ import 'package:food_locker/features/weight/data/weight.dart';
 
 class AddWeightDialog extends StatefulWidget {
   final DateTime initialDate;
+  final double? initialWeight;
 
-  const AddWeightDialog({super.key, required this.initialDate});
+  const AddWeightDialog({
+    super.key,
+    required this.initialDate,
+    this.initialWeight,
+  });
 
   @override
   State<AddWeightDialog> createState() => _AddWeightDialogState();
@@ -18,6 +23,9 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate;
+    if (widget.initialWeight != null) {
+      _weightController.text = widget.initialWeight!.toStringAsFixed(1);
+    }
   }
 
   @override
@@ -41,7 +49,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Log Weight'),
+      title: Text(widget.initialWeight == null ? 'Log Weight' : 'Edit Weight'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -82,6 +90,14 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
         ],
       ),
       actions: [
+        if (widget.initialWeight != null)
+          TextButton(
+            onPressed: () => Navigator.of(context).pop({'delete': true}),
+            child: Text(
+              'Delete',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
