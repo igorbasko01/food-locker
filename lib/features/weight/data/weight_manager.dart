@@ -36,25 +36,16 @@ class WeightManager extends ChangeNotifier {
     final entry = Weight(date: date, value: value, unit: unit);
     await _weightRepository.saveWeight(entry);
     
-    // Update local list
-    final existingIndex = _weights.indexWhere((w) {
-      return w.date.year == date.year && w.date.month == date.month && w.date.day == date.day;
-    });
-
-    if (existingIndex >= 0) {
-      _weights[existingIndex] = entry;
-    } else {
-      _weights.add(entry);
-    }
-    
+    // Refresh from repository to ensure consistency
+    _weights = _weightRepository.getAllWeights();
     notifyListeners();
   }
 
   Future<void> deleteWeight(DateTime date) async {
     await _weightRepository.deleteWeight(date);
-    _weights.removeWhere((w) {
-      return w.date.year == date.year && w.date.month == date.month && w.date.day == date.day;
-    });
+    
+    // Refresh from repository to ensure consistency
+    _weights = _weightRepository.getAllWeights();
     notifyListeners();
   }
 
@@ -63,9 +54,18 @@ class WeightManager extends ChangeNotifier {
     final newDateOnly = DateTime(newDate.year, newDate.month, newDate.day);
 
     if (oldDateOnly != newDateOnly) {
-      await deleteWeight(oldDate);
+      await _weightRepository.deleteWeight(oldDate);
     }
     
-    await addWeight(newDate, newValue, unit: unit);
+    final entry = Weight(date: newDate, value: newValue, unit: unit);
+    await _weightRepository.saveWeight(entry);
+    
+    // Refresh from repository to ensure consistency
+    _weights = _weightRepository.getAllWeights();
+    notifyListeners();
   }
+
+  double? get lowestAllTime => _weightRepository.getLowestWeight();
+  double? get lowestLast30Days => _weightRepository.getLowestWeight(since: DateTime.now().subtract(const Duration(days: 30)));
+  double? get lowestLast7Days => _weightRepository.getLowestWeight(since: DateTime.now().subtract(const Duration(days: 7)));
 }

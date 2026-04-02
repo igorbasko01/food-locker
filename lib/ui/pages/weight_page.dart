@@ -33,9 +33,33 @@ class WeightPage extends StatelessWidget {
                   ),
                 ),
               ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      _buildStatCard(
+                        context,
+                        'All Time',
+                        weightManager.lowestAllTime,
+                      ),
+                      _buildStatCard(
+                        context,
+                        '30 Days',
+                        weightManager.lowestLast30Days,
+                      ),
+                      _buildStatCard(
+                        context,
+                        '7 Days',
+                        weightManager.lowestLast7Days,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
                   child: Text(
                     'History',
                     style: TextStyle(
@@ -136,5 +160,47 @@ class WeightPage extends StatelessWidget {
         manager.addWeight(date, value, unit: unit);
       }
     }
+  }
+
+  Widget _buildStatCard(BuildContext context, String title, double? value) {
+    return Expanded(
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value != null ? value.toStringAsFixed(1) : '--',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              if (value != null)
+                Text(
+                  'kg',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
