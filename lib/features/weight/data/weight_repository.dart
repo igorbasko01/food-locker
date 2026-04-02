@@ -6,4 +6,8 @@ abstract class WeightRepository {
   List<Weight> getAllWeights();
   Future<void> deleteWeight(DateTime date);
   Future<void> clear();
+  
+  /// Returns the lowest weight recorded since [since] (inclusive).
+  /// If [since] is null, returns the all-time lowest weight.
+  double? getLowestWeight({DateTime? since});
 }
