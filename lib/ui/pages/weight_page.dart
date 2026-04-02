@@ -166,7 +166,7 @@ class WeightPage extends StatelessWidget {
     return Expanded(
       child: Card(
         elevation: 0,
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
