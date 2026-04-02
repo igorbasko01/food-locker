@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/igorbasko01/food-locker/compare/v1.5.1...v1.6.0) (2026-04-02)
+
+
+### Features
+
+* **weight:** add lowest weight statistics for all-time, 30d, 7d with… ([#31](https://github.com/igorbasko01/food-locker/issues/31)) ([838eae2](https://github.com/igorbasko01/food-locker/commit/838eae255f83c6f6148350ab95730dbdc028a21a))
+* **weight:** add support for editing and deleting weight entries ([#29](https://github.com/igorbasko01/food-locker/issues/29)) ([fb46285](https://github.com/igorbasko01/food-locker/commit/fb46285e77886d63ad3eb11c09998dfb3420ea5e))
+
 ## [1.5.1](https://github.com/igorbasko01/food-locker/compare/v1.5.0...v1.5.1) (2026-03-31)
 
 
