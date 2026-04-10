@@ -85,3 +85,9 @@ This script will:
 - Extract the current version from `pubspec.yaml`.
 - Build the APK without a debug banner.
 - Auto-install it to a connected physical or virtual Android device.
+
+## 6. Troubleshooting
+
+### Forgot Conventional Commits?
+If you merged a Pull Request that didn't follow the Conventional Commits standard, Release Please might not trigger a new release or update the changelog correctly.
+To fix this, you can push a new commit with the correct prefix (e.g., `feat:`, `fix:`, or `chore:`) to trigger the pipeline again.
