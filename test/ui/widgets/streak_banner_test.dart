@@ -16,6 +16,7 @@ void main() {
     final stats = OvereatingStats(
       cleanStreak: 0,
       overeatingStreak: 0,
+      longestCleanStreak: 0,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -26,6 +27,7 @@ void main() {
     final stats = OvereatingStats(
       cleanStreak: 0,
       overeatingStreak: 3,
+      longestCleanStreak: 3,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -36,6 +38,7 @@ void main() {
     final stats = OvereatingStats(
       cleanStreak: 0,
       overeatingStreak: 1,
+      longestCleanStreak: 0,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -46,6 +49,7 @@ void main() {
     final stats = OvereatingStats(
       cleanStreak: 5,
       overeatingStreak: 0,
+      longestCleanStreak: 5,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -56,6 +60,7 @@ void main() {
     final stats = OvereatingStats(
       cleanStreak: 1,
       overeatingStreak: 0,
+      longestCleanStreak: 1,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
