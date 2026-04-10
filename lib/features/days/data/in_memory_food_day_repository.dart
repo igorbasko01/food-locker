@@ -27,4 +27,9 @@ class InMemoryFoodDayRepository implements FoodDayRepository {
   Future<void> clear() async {
     _days.clear();
   }
+  
+  @override
+  Future<void> deleteDay(DateTime date) async {
+    _days.remove(_getKey(date));
+  }
 }

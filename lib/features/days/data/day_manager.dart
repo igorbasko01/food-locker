@@ -191,6 +191,20 @@ class FoodDayManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteDay(FoodDay day) async {
+    await _foodDayRepository.deleteDay(day.date);
+
+    // If we deleted the current day, we need to re-initialize it
+    if (_currentDay != null &&
+        _currentDay!.date.year == day.date.year &&
+        _currentDay!.date.month == day.date.month &&
+        _currentDay!.date.day == day.date.day) {
+      _currentDay = _foodDayRepository.getDay(day.date) ?? _createDay(day.date);
+    }
+
+    notifyListeners();
+  }
+
   void _handleDayProgression(DateTime now) {
     if (_shouldStartNewDay(now)) {
       if (_currentDay != null) {

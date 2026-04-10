@@ -7,4 +7,5 @@ abstract class FoodDayRepository {
   List<FoodDay> getAllDays();
 
   Future<void> clear();
+  Future<void> deleteDay(DateTime date);
 }

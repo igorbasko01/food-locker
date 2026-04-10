@@ -30,4 +30,9 @@ class PersistentFoodDayRepository implements FoodDayRepository {
   Future<void> clear() async {
     await _box.clear();
   }
+  
+  @override
+  Future<void> deleteDay(DateTime date) async {
+    await _box.delete(_getKey(date));
+  }
 }
