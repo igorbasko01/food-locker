@@ -379,5 +379,47 @@ void main() {
       final savedDay = foodDayRepository.getDay(then);
       expect(savedDay!.overate, isTrue);
     });
+    test('deleteDay removes day from history and persists', () async {
+      final then = DateTime(2023, 10, 20);
+      final historicalDay = FoodDay(
+        date: then,
+        meals: [],
+        snacks: [],
+      );
+      await foodDayRepository.saveDay(historicalDay);
+
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+
+      expect(dayManager.history.length, 1);
+
+      await dayManager.deleteDay(historicalDay);
+
+      expect(dayManager.history.length, 0);
+      expect(foodDayRepository.getDay(then), isNull);
+    });
+
+    test('deleteDay re-initializes current day if it was deleted', () async {
+      final now = DateTime(2023, 10, 26);
+      dayManager = FoodDayManager(
+        null,
+        foodConfigRepository,
+        foodDayRepository,
+      );
+      await dayManager.initialize(now);
+      
+      final currentDayBefore = dayManager.currentDay!;
+      currentDayBefore.overate = true;
+      await foodDayRepository.saveDay(currentDayBefore);
+
+      await dayManager.deleteDay(currentDayBefore);
+
+      expect(dayManager.currentDay, isNotNull);
+      expect(dayManager.currentDay!.overate, isFalse); // Should be a new day
+      expect(dayManager.currentDay, isNot(same(currentDayBefore)));
+    });
   });
 }

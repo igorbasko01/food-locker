@@ -9,10 +9,20 @@ import 'package:food_locker/features/food/data/food_type.dart';
 class OvereatingStats {
   final int cleanStreak;
   final int overeatingStreak;
+  final int longestCleanStreak;
+  final DateTime? longestStreakStart;
+  final DateTime? longestStreakEnd;
+  final DateTime? currentStreakStart;
+  final DateTime? currentStreakEnd;
 
   OvereatingStats({
     required this.cleanStreak,
     required this.overeatingStreak,
+    required this.longestCleanStreak,
+    this.longestStreakStart,
+    this.longestStreakEnd,
+    this.currentStreakStart,
+    this.currentStreakEnd,
   });
 }
 
@@ -60,24 +70,68 @@ class FoodDayManager extends ChangeNotifier {
       return OvereatingStats(
         cleanStreak: 0,
         overeatingStreak: 0,
+        longestCleanStreak: 0,
       );
     }
 
     int cleanStreak = 0;
     int overeatingStreak = 0;
-    for (final day in pastDays) {
+    DateTime? currentStreakStart;
+    DateTime? currentStreakEnd;
+    
+    // Calculate current streaks
+    for (int i = 0; i < pastDays.length; i++) {
+      final day = pastDays[i];
       if (!day.overate) {
         if (overeatingStreak > 0) break;
+        if (cleanStreak == 0) currentStreakEnd = day.date;
         cleanStreak++;
+        currentStreakStart = day.date;
       } else {
         if (cleanStreak > 0) break;
+        if (overeatingStreak == 0) currentStreakEnd = day.date;
         overeatingStreak++;
+        currentStreakStart = day.date;
+      }
+    }
+
+    // Calculate longest clean streak
+    int longestCleanStreak = 0;
+    DateTime? longestStreakStart;
+    DateTime? longestStreakEnd;
+
+    int currentCleanStreakTemp = 0;
+    DateTime? currentStreakStartTemp;
+
+    // We need to iterate over all past days from oldest to newest or newest to oldest.
+    // pastDays is sorted newest to oldest because history is "date.compareTo(a.date)".
+    // Let's reverse it to iterate oldest to newest, which is easier for calculating streaks.
+    final oldestToNewest = pastDays.reversed.toList();
+    for (final day in oldestToNewest) {
+      if (!day.overate) {
+        if (currentCleanStreakTemp == 0) {
+          currentStreakStartTemp = day.date;
+        }
+        currentCleanStreakTemp++;
+        if (currentCleanStreakTemp > longestCleanStreak) {
+          longestCleanStreak = currentCleanStreakTemp;
+          longestStreakStart = currentStreakStartTemp;
+          longestStreakEnd = day.date;
+        }
+      } else {
+        currentCleanStreakTemp = 0;
+        currentStreakStartTemp = null;
       }
     }
 
     return OvereatingStats(
       cleanStreak: cleanStreak,
       overeatingStreak: overeatingStreak,
+      longestCleanStreak: longestCleanStreak,
+      longestStreakStart: longestStreakStart,
+      longestStreakEnd: longestStreakEnd,
+      currentStreakStart: currentStreakStart,
+      currentStreakEnd: currentStreakEnd,
     );
   }
 
@@ -134,6 +188,20 @@ class FoodDayManager extends ChangeNotifier {
   void toggleHistoricalOverate(FoodDay day) {
     day.overate = !day.overate;
     _foodDayRepository.saveDay(day);
+    notifyListeners();
+  }
+
+  Future<void> deleteDay(FoodDay day) async {
+    await _foodDayRepository.deleteDay(day.date);
+
+    // If we deleted the current day, we need to re-initialize it
+    if (_currentDay != null &&
+        _currentDay!.date.year == day.date.year &&
+        _currentDay!.date.month == day.date.month &&
+        _currentDay!.date.day == day.date.day) {
+      _currentDay = _foodDayRepository.getDay(day.date) ?? _createDay(day.date);
+    }
+
     notifyListeners();
   }
 

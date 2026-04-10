@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/days/data/day_manager.dart';
 import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:food_locker/ui/widgets/food_day_view.dart';
+import 'package:food_locker/ui/widgets/longest_streak_banner.dart';
 import 'package:food_locker/ui/widgets/streak_banner.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,7 @@ class HomePage extends StatelessWidget {
     // Ensure current day is properly loaded (triggers progression)
     dayManager.getMeals(now);
     final day = dayManager.currentDay;
+    final stats = dayManager.getOvereatingStats();
 
     if (day == null) {
       return const Scaffold(
@@ -75,7 +77,12 @@ class HomePage extends StatelessWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: StreakBanner(stats: dayManager.getOvereatingStats()),
+            child: Column(
+              children: [
+                StreakBanner(stats: stats),
+                LongestStreakBanner(stats: stats),
+              ],
+            ),
           ),
         ],
       ),
