@@ -4,6 +4,7 @@ import 'package:food_locker/ui/widgets/day_date_text.dart';
 import 'package:food_locker/ui/widgets/food_day_view.dart';
 import 'package:food_locker/ui/widgets/longest_streak_banner.dart';
 import 'package:food_locker/ui/widgets/streak_banner.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
@@ -14,11 +15,12 @@ class HomePage extends StatelessWidget {
     final theme = Theme.of(context);
     final dayManager = context.watch<FoodDayManager>();
     final now = DateTime.now();
+    final weightManager = context.watch<WeightManager>();
     
     // Ensure current day is properly loaded (triggers progression)
     dayManager.getMeals(now);
     final day = dayManager.currentDay;
-    final stats = dayManager.getOvereatingStats();
+    final stats = dayManager.getOvereatingStats(weightManager);
 
     if (day == null) {
       return const Scaffold(
@@ -29,7 +31,6 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       body: FoodDayView(
         day: day,
-        onOverateToggled: () => dayManager.toggleOverate(),
         onFoodToggled: (food) async {
           dayManager.toggleFoodStatus(food, DateTime.now());
         },

@@ -11,7 +11,7 @@ import 'package:food_locker/features/weight/data/in_memory_weight_repository.dar
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/history_page.dart';
 import 'package:provider/provider.dart';
-
+import 'package:food_locker/features/weight/data/weight.dart';
 void main() {
   late FoodDayManager dayManager;
   late InMemoryFoodDayRepository foodDayRepository;
@@ -131,30 +131,32 @@ void main() {
   });
 
   testWidgets('shows warning icon for days marked as overate', (tester) async {
-    // Save a day with overate = true
     await foodDayRepository.saveDay(
       FoodDay(
         date: DateTime(2023, 10, 1),
         meals: [Food(name: 'Chicken', eatenTime: DateTime(2023, 10, 1))],
         snacks: [],
-        overate: true,
       ),
     );
-    // Save a day with overate = false
     await foodDayRepository.saveDay(
       FoodDay(
         date: DateTime(2023, 10, 2),
         meals: [Food(name: 'Chicken', eatenTime: DateTime(2023, 10, 2))],
         snacks: [],
-        overate: false,
       ),
     );
+
+    // Setup weights to simulate overeating on 10/1 and not on 10/2
+    await weightRepository.saveWeight(Weight(date: DateTime(2023, 10, 1), value: 70.0, unit: WeightUnit.kilograms));
+    await weightRepository.saveWeight(Weight(date: DateTime(2023, 10, 2), value: 71.0, unit: WeightUnit.kilograms)); // Weight increased: 10/1 is overeaten
+    await weightRepository.saveWeight(Weight(date: DateTime(2023, 10, 3), value: 70.0, unit: WeightUnit.kilograms)); // Weight decreased: 10/2 is not overeaten
 
     dayManager = FoodDayManager(
       null,
       foodConfigRepository,
       foodDayRepository,
     );
+    await weightManager.initialize();
 
     await tester.pumpWidget(createWidgetUnderTest());
 

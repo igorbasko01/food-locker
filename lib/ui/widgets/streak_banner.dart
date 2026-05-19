@@ -23,13 +23,23 @@ class StreakBanner extends StatelessWidget {
     final theme = Theme.of(context);
 
     if (stats.cleanStreak == 0 && stats.overeatingStreak == 0) {
-      return _buildCard(
-        context,
-        icon: Icons.auto_awesome_rounded,
-        color: theme.colorScheme.primary,
-        title: 'Welcome!',
-        subtitle: 'Eat mindfully today. This is your first day of tracking!',
-      );
+      if (!stats.hasHistory) {
+        return _buildCard(
+          context,
+          icon: Icons.auto_awesome_rounded,
+          color: theme.colorScheme.primary,
+          title: 'Welcome!',
+          subtitle: 'Eat mindfully today. This is your first day of tracking!',
+        );
+      } else {
+        return _buildCard(
+          context,
+          icon: Icons.history_rounded,
+          color: theme.colorScheme.primary,
+          title: 'Start a new streak!',
+          subtitle: 'Log your weight daily to build your momentum.',
+        );
+      }
     }
     
     if (stats.overeatingStreak >= 2) {

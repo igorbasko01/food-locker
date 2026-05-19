@@ -264,65 +264,7 @@ void main() {
       expect(history[1].date, day1.date);
       expect(history[2].date, day3.date);
     });
-    test('overate defaults to false', () async {
-      final now = DateTime(2023, 10, 26, 10, 0);
-      dayManager = FoodDayManager(
-        null,
-        foodConfigRepository,
-        foodDayRepository,
-      );
-      await dayManager.initialize(now);
 
-      expect(dayManager.overate, isFalse);
-    });
-
-    test('overate returns false when currentDay is null', () {
-      dayManager = FoodDayManager(
-        null,
-        foodConfigRepository,
-        foodDayRepository,
-      );
-
-      expect(dayManager.overate, isFalse);
-    });
-
-    test('toggleOverate flips overate and persists', () async {
-      final now = DateTime(2023, 10, 26, 10, 0);
-      dayManager = FoodDayManager(
-        null,
-        foodConfigRepository,
-        foodDayRepository,
-      );
-      await dayManager.initialize(now);
-
-      expect(dayManager.overate, isFalse);
-
-      dayManager.toggleOverate();
-      expect(dayManager.overate, isTrue);
-
-      // Verify persistence
-      final savedDay = foodDayRepository.getDay(now);
-      expect(savedDay!.overate, isTrue);
-
-      // Toggle back
-      dayManager.toggleOverate();
-      expect(dayManager.overate, isFalse);
-
-      final savedDay2 = foodDayRepository.getDay(now);
-      expect(savedDay2!.overate, isFalse);
-    });
-
-    test('toggleOverate does nothing when currentDay is null', () {
-      dayManager = FoodDayManager(
-        null,
-        foodConfigRepository,
-        foodDayRepository,
-      );
-
-      // Should not throw
-      dayManager.toggleOverate();
-      expect(dayManager.overate, isFalse);
-    });
 
     test('toggleHistoricalFoodStatus toggles food status for specific day',
         () async {
@@ -356,29 +298,7 @@ void main() {
       expect(foodDayRepository.getDay(then)!.meals.first.wasEaten, isFalse);
     });
 
-    test('toggleHistoricalOverate flips overate for specific day', () async {
-      final then = DateTime(2023, 10, 20);
-      final historicalDay = FoodDay(
-        date: then,
-        meals: [],
-        snacks: [],
-      );
-      await foodDayRepository.saveDay(historicalDay);
 
-      dayManager = FoodDayManager(
-        null,
-        foodConfigRepository,
-        foodDayRepository,
-      );
-
-      expect(historicalDay.overate, isFalse);
-
-      dayManager.toggleHistoricalOverate(historicalDay);
-      expect(historicalDay.overate, isTrue);
-
-      final savedDay = foodDayRepository.getDay(then);
-      expect(savedDay!.overate, isTrue);
-    });
     test('deleteDay removes day from history and persists', () async {
       final then = DateTime(2023, 10, 20);
       final historicalDay = FoodDay(
@@ -412,13 +332,11 @@ void main() {
       await dayManager.initialize(now);
       
       final currentDayBefore = dayManager.currentDay!;
-      currentDayBefore.overate = true;
       await foodDayRepository.saveDay(currentDayBefore);
 
       await dayManager.deleteDay(currentDayBefore);
 
       expect(dayManager.currentDay, isNotNull);
-      expect(dayManager.currentDay!.overate, isFalse); // Should be a new day
       expect(dayManager.currentDay, isNot(same(currentDayBefore)));
     });
   });

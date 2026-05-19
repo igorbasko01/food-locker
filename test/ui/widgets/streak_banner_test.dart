@@ -17,10 +17,23 @@ void main() {
       cleanStreak: 0,
       overeatingStreak: 0,
       longestCleanStreak: 0,
+      hasHistory: false,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
     expect(find.text('Welcome!'), findsOneWidget);
+  });
+
+  testWidgets('shows Start a new streak! when both streaks are 0 and hasHistory is true', (tester) async {
+    final stats = OvereatingStats(
+      cleanStreak: 0,
+      overeatingStreak: 0,
+      longestCleanStreak: 0,
+      hasHistory: true,
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest(stats));
+    expect(find.text('Start a new streak!'), findsOneWidget);
   });
 
   testWidgets('shows Overeating Streak when overeatingStreak >= 2', (tester) async {
@@ -28,6 +41,7 @@ void main() {
       cleanStreak: 0,
       overeatingStreak: 3,
       longestCleanStreak: 3,
+      hasHistory: true,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -39,6 +53,7 @@ void main() {
       cleanStreak: 0,
       overeatingStreak: 1,
       longestCleanStreak: 0,
+      hasHistory: true,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -50,6 +65,7 @@ void main() {
       cleanStreak: 5,
       overeatingStreak: 0,
       longestCleanStreak: 5,
+      hasHistory: true,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -61,6 +77,7 @@ void main() {
       cleanStreak: 1,
       overeatingStreak: 0,
       longestCleanStreak: 1,
+      hasHistory: true,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));

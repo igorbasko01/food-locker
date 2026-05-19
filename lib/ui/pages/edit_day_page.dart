@@ -21,7 +21,6 @@ class EditDayPage extends StatelessWidget {
       ),
       body: FoodDayView(
         day: day,
-        onOverateToggled: () => dayManager.toggleHistoricalOverate(day),
         onFoodToggled: (food) async {
           if (food.wasEaten) {
             dayManager.toggleHistoricalFoodStatus(day, food, null);
