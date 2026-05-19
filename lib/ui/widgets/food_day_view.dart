@@ -25,7 +25,7 @@ class FoodDayView extends StatelessWidget {
 
     return CustomScrollView(
       slivers: [
-        if (sliversBefore != null) ...sliversBefore!,
+        ...?sliversBefore,
         if (day.meals.isEmpty && day.snacks.isEmpty)
           SliverFillRemaining(
             child: Center(
@@ -55,7 +55,7 @@ class FoodDayView extends StatelessWidget {
             ),
           ),
         ],
-        if (sliversAfter != null) ...sliversAfter!,
+        ...?sliversAfter,
         const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
       ],
     );
