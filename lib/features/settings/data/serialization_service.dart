@@ -142,7 +142,6 @@ class SerializationService {
           'type': 'meal',
           'name': meal.name,
           'eatenAt': meal.eatenAt?.toIso8601String(),
-          'overate': day.overate,
         });
       }
       for (final snack in day.snacks) {
@@ -151,7 +150,6 @@ class SerializationService {
           'type': 'snack',
           'name': snack.name,
           'eatenAt': snack.eatenAt?.toIso8601String(),
-          'overate': day.overate,
         });
       }
     }
@@ -198,7 +196,6 @@ class SerializationService {
       final type = item['type'] as String?;
       final name = item['name'] as String?;
       final eatenAtStr = item['eatenAt'] as String?;
-      final overateStr = item['overate']?.toString();
 
       if (dateStr == null || name == null) continue;
 
@@ -210,12 +207,10 @@ class SerializationService {
       final dateKey = dayDate.toIso8601String();
 
       if (!daysMap.containsKey(dateKey)) {
-        final overate = overateStr == 'true';
         daysMap[dateKey] = FoodDay(
           date: dayDate,
           meals: [],
           snacks: [],
-          overate: overate,
         );
       }
 

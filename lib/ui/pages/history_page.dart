@@ -65,7 +65,7 @@ class _HistoryPageState extends State<HistoryPage> {
               title: Row(
                 children: [
                   DayDateText(date: day.date),
-                  if (day.overate) ...[
+                  if (manager.isOvereaten(day.date, weightManager) == true) ...[
                     const SizedBox(width: 8),
                     Icon(
                       Icons.warning_rounded,

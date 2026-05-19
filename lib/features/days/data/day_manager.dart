@@ -5,7 +5,7 @@ import 'package:food_locker/features/food/data/food.dart';
 import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
-
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 class OvereatingStats {
   final int cleanStreak;
   final int overeatingStreak;
@@ -14,6 +14,7 @@ class OvereatingStats {
   final DateTime? longestStreakEnd;
   final DateTime? currentStreakStart;
   final DateTime? currentStreakEnd;
+  final bool hasHistory;
 
   OvereatingStats({
     required this.cleanStreak,
@@ -23,6 +24,7 @@ class OvereatingStats {
     this.longestStreakEnd,
     this.currentStreakStart,
     this.currentStreakEnd,
+    required this.hasHistory,
   });
 }
 
@@ -47,15 +49,13 @@ class FoodDayManager extends ChangeNotifier {
 
   FoodDay? get currentDay => _currentDay;
 
-  bool get overate => _currentDay?.overate ?? false;
-
   List<FoodDay> get history {
     final days = _foodDayRepository.getAllDays();
     days.sort((a, b) => b.date.compareTo(a.date));
     return days;
   }
 
-  OvereatingStats getOvereatingStats() {
+  OvereatingStats getOvereatingStats(WeightManager weightManager) {
     final allHistory = history;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -66,11 +66,14 @@ class FoodDayManager extends ChangeNotifier {
       return dDate.isBefore(today);
     }).toList();
 
-    if (pastDays.isEmpty) {
+    final hasHistory = pastDays.isNotEmpty || weightManager.history.any((w) => w.date.isBefore(today));
+
+    if (pastDays.isEmpty && weightManager.history.isEmpty) {
       return OvereatingStats(
         cleanStreak: 0,
         overeatingStreak: 0,
         longestCleanStreak: 0,
+        hasHistory: false,
       );
     }
 
@@ -82,7 +85,11 @@ class FoodDayManager extends ChangeNotifier {
     // Calculate current streaks
     for (int i = 0; i < pastDays.length; i++) {
       final day = pastDays[i];
-      if (!day.overate) {
+      final overeaten = isOvereaten(day.date, weightManager);
+      
+      if (overeaten == null) {
+        break; // N/A state breaks the continuous streak
+      } else if (!overeaten) {
         if (overeatingStreak > 0) break;
         if (cleanStreak == 0) currentStreakEnd = day.date;
         cleanStreak++;
@@ -108,7 +115,9 @@ class FoodDayManager extends ChangeNotifier {
     // Let's reverse it to iterate oldest to newest, which is easier for calculating streaks.
     final oldestToNewest = pastDays.reversed.toList();
     for (final day in oldestToNewest) {
-      if (!day.overate) {
+      final overeaten = isOvereaten(day.date, weightManager);
+      
+      if (overeaten == false) {
         if (currentCleanStreakTemp == 0) {
           currentStreakStartTemp = day.date;
         }
@@ -132,6 +141,7 @@ class FoodDayManager extends ChangeNotifier {
       longestStreakEnd: longestStreakEnd,
       currentStreakStart: currentStreakStart,
       currentStreakEnd: currentStreakEnd,
+      hasHistory: hasHistory,
     );
   }
 
@@ -139,6 +149,16 @@ class FoodDayManager extends ChangeNotifier {
     _currentDay = _foodDayRepository.getDay(now) ?? _createDay(now);
     _handleDayProgression(now);
     notifyListeners();
+  }
+
+  bool? isOvereaten(DateTime date, WeightManager weightManager) {
+    final weightOnDay = weightManager.getWeightForDate(date);
+    final weightNextDay = weightManager.getWeightForDate(date.add(const Duration(days: 1)));
+
+    if (weightOnDay != null && weightNextDay != null) {
+      return weightNextDay.value > weightOnDay.value;
+    }
+    return null;
   }
 
   void refresh() {
@@ -168,25 +188,12 @@ class FoodDayManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleOverate() {
-    if (_currentDay == null) return;
-    _currentDay!.overate = !_currentDay!.overate;
-    _foodDayRepository.saveDay(_currentDay!);
-    notifyListeners();
-  }
-
   void toggleHistoricalFoodStatus(FoodDay day, Food food, DateTime? eatenAt) {
     if (eatenAt != null) {
       food.eat(eatenAt);
     } else {
       food.unEat();
     }
-    _foodDayRepository.saveDay(day);
-    notifyListeners();
-  }
-
-  void toggleHistoricalOverate(FoodDay day) {
-    day.overate = !day.overate;
     _foodDayRepository.saveDay(day);
     notifyListeners();
   }

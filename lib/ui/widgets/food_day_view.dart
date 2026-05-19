@@ -5,7 +5,6 @@ import 'package:food_locker/ui/utils/food_time_picker.dart';
 
 class FoodDayView extends StatelessWidget {
   final FoodDay day;
-  final VoidCallback onOverateToggled;
   final Future<void> Function(Food) onFoodToggled;
   final void Function(Food, DateTime)? onFoodTimeAdjusted;
   final List<Widget>? sliversBefore;
@@ -14,7 +13,6 @@ class FoodDayView extends StatelessWidget {
   const FoodDayView({
     super.key,
     required this.day,
-    required this.onOverateToggled,
     required this.onFoodToggled,
     this.onFoodTimeAdjusted,
     this.sliversBefore,
@@ -28,36 +26,6 @@ class FoodDayView extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         if (sliversBefore != null) ...sliversBefore!,
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Card(
-              color: day.overate
-                  ? theme.colorScheme.errorContainer
-                  : theme.colorScheme.surfaceContainerHighest,
-              child: SwitchListTile(
-                title: Text(
-                  'Overate?',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: day.overate
-                        ? theme.colorScheme.onErrorContainer
-                        : null,
-                  ),
-                ),
-                secondary: Icon(
-                  day.overate
-                      ? Icons.warning_rounded
-                      : Icons.check_circle_outline_rounded,
-                  color: day.overate
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.primary,
-                ),
-                value: day.overate,
-                onChanged: (_) => onOverateToggled(),
-              ),
-            ),
-          ),
-        ),
         if (day.meals.isEmpty && day.snacks.isEmpty)
           SliverFillRemaining(
             child: Center(

@@ -49,14 +49,14 @@ void main() {
 
       final csv = service.generateHistoryCsv(dayRepo.getAllDays());
 
-      expect(csv, contains('date,type,name,eatenAt,overate'));
+      expect(csv, contains('date,type,name,eatenAt'));
       expect(
         csv,
         contains(
-          '2023-10-27T00:00:00.000,meal,Chicken,2023-10-27T12:00:00.000,false',
+          '2023-10-27T00:00:00.000,meal,Chicken,2023-10-27T12:00:00.000',
         ),
       );
-      expect(csv, contains('2023-10-27T00:00:00.000,snack,Apple,,false'));
+      expect(csv, contains('2023-10-27T00:00:00.000,snack,Apple,'));
     });
 
     test('importConfigFromCsv parses CSV and populates repo', () {
@@ -72,9 +72,9 @@ void main() {
 
     test('importHistoryFromCsv parses CSV and populates repo', () {
       const csv =
-          'date,type,name,eatenAt,overate\r\n'
-          '2023-10-27T00:00:00.000,meal,Fish,2023-10-27T13:00:00.000,false\r\n'
-          '2023-10-27T00:00:00.000,snack,Cookie,,false';
+          'date,type,name,eatenAt\r\n'
+          '2023-10-27T00:00:00.000,meal,Fish,2023-10-27T13:00:00.000\r\n'
+          '2023-10-27T00:00:00.000,snack,Cookie,';
 
       service.importHistoryFromCsv(csv, dayRepo);
 
@@ -89,32 +89,9 @@ void main() {
       expect(day.snacks.length, 1);
       expect(day.snacks[0].name, 'Cookie');
       expect(day.snacks[0].eatenAt, null);
-      expect(day.overate, isFalse);
     });
 
-    test('importHistoryFromCsv parses overate=true correctly', () {
-      const csv =
-          'date,type,name,eatenAt,overate\r\n'
-          '2023-10-27T00:00:00.000,meal,Fish,2023-10-27T13:00:00.000,true';
 
-      service.importHistoryFromCsv(csv, dayRepo);
-
-      final days = dayRepo.getAllDays();
-      expect(days.length, 1);
-      expect(days.first.overate, isTrue);
-    });
-
-    test('importHistoryFromCsv handles old CSV without overate column', () {
-      const csv =
-          'date,type,name,eatenAt\r\n'
-          '2023-10-27T00:00:00.000,meal,Fish,2023-10-27T13:00:00.000';
-
-      service.importHistoryFromCsv(csv, dayRepo);
-
-      final days = dayRepo.getAllDays();
-      expect(days.length, 1);
-      expect(days.first.overate, isFalse);
-    });
 
     test('generateWeightCsv creates valid CSV', () {
       final date = DateTime(2023, 10, 27);
@@ -167,7 +144,6 @@ void main() {
           Food(name: 'Chicken', eatenTime: DateTime(2023, 10, 27, 12, 0)),
         ],
         snacks: [Food(name: 'Apple')],
-        overate: true,
       );
       final day2 = FoodDay(
         date: DateTime(2023, 10, 28),
@@ -243,7 +219,6 @@ void main() {
       expect(importedDay1.snacks.length, 1);
       expect(importedDay1.snacks.first.name, 'Apple');
       expect(importedDay1.snacks.first.eatenAt, isNull);
-      expect(importedDay1.overate, isTrue);
 
       final importedDay2 = importedDays.firstWhere(
         (d) => d.date == DateTime(2023, 10, 28),
@@ -252,7 +227,6 @@ void main() {
       expect(importedDay2.snacks.length, 1);
       expect(importedDay2.snacks.first.name, 'Banana');
       expect(importedDay2.snacks.first.eatenAt, DateTime(2023, 10, 28, 15, 0));
-      expect(importedDay2.overate, isFalse);
 
       // 7. Assertions on restored Weight
       final importedWeights = importWeightRepo.getAllWeights();

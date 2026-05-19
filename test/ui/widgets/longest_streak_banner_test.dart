@@ -17,6 +17,7 @@ void main() {
       cleanStreak: 1,
       overeatingStreak: 0,
       longestCleanStreak: 1,
+      hasHistory: true,
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -30,6 +31,7 @@ void main() {
       cleanStreak: 2,
       overeatingStreak: 0,
       longestCleanStreak: 5,
+      hasHistory: true,
       longestStreakStart: startDate,
       longestStreakEnd: endDate,
     );
