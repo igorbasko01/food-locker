@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/igorbasko01/food-locker/compare/v1.7.0...v1.7.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* break overeating streak when food tracking day is missing ([#36](https://github.com/igorbasko01/food-locker/issues/36)) ([1831743](https://github.com/igorbasko01/food-locker/commit/183174309b43c00457c58f3249fc1119b16a8270))
+
 ## [1.7.0](https://github.com/igorbasko01/food-locker/compare/v1.6.0...v1.7.0) (2026-05-19)
 
 
