@@ -8,6 +8,8 @@ import 'package:food_locker/features/food/data/food_config.dart';
 import 'package:food_locker/features/food/data/food_config_repository.dart';
 import 'package:food_locker/features/food/data/food_type.dart';
 import 'package:food_locker/features/food/data/in_memory_food_config_repository.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
+import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 
 void main() {
   late FoodDayManager dayManager;
@@ -338,6 +340,137 @@ void main() {
 
       expect(dayManager.currentDay, isNotNull);
       expect(dayManager.currentDay, isNot(same(currentDayBefore)));
+    });
+
+    group('getOvereatingStats', () {
+      late WeightManager weightManager;
+      late InMemoryWeightRepository weightRepository;
+
+      setUp(() {
+        weightRepository = InMemoryWeightRepository();
+        weightManager = WeightManager(weightRepository);
+        dayManager = FoodDayManager(
+          null,
+          foodConfigRepository,
+          foodDayRepository,
+        );
+      });
+
+      Future<void> createFoodDay(DateTime date) async {
+        await foodDayRepository.saveDay(FoodDay(
+          date: date,
+          meals: [],
+          snacks: [],
+        ));
+      }
+
+      test('continuous weight loss increases clean streak', () async {
+        final today = DateTime.now();
+        final yesterday = today.subtract(const Duration(days: 1));
+        final dayBefore = today.subtract(const Duration(days: 2));
+        final threeDaysAgo = today.subtract(const Duration(days: 3));
+
+        await createFoodDay(threeDaysAgo);
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        await createFoodDay(today);
+
+        await weightManager.addWeight(threeDaysAgo, 80.0);
+        await weightManager.addWeight(dayBefore, 79.0);
+        await weightManager.addWeight(yesterday, 78.0);
+        await weightManager.addWeight(today, 77.0);
+
+        final stats = dayManager.getOvereatingStats(weightManager);
+        
+        expect(stats.cleanStreak, 3);
+        expect(stats.overeatingStreak, 0);
+        expect(stats.longestCleanStreak, 3);
+      });
+
+      test('continuous weight gain increases overeating streak', () async {
+        final today = DateTime.now();
+        final yesterday = today.subtract(const Duration(days: 1));
+        final dayBefore = today.subtract(const Duration(days: 2));
+        final threeDaysAgo = today.subtract(const Duration(days: 3));
+
+        await createFoodDay(threeDaysAgo);
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        await createFoodDay(today);
+
+        await weightManager.addWeight(threeDaysAgo, 80.0);
+        await weightManager.addWeight(dayBefore, 81.0);
+        await weightManager.addWeight(yesterday, 82.0);
+        await weightManager.addWeight(today, 83.0);
+
+        final stats = dayManager.getOvereatingStats(weightManager);
+        
+        expect(stats.cleanStreak, 0);
+        expect(stats.overeatingStreak, 3);
+        expect(stats.longestCleanStreak, 0);
+      });
+
+      test('same weight is considered a clean day', () async {
+        final today = DateTime.now();
+        final yesterday = today.subtract(const Duration(days: 1));
+        final dayBefore = today.subtract(const Duration(days: 2));
+        
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        await createFoodDay(today);
+
+        await weightManager.addWeight(dayBefore, 80.0);
+        await weightManager.addWeight(yesterday, 80.0);
+        await weightManager.addWeight(today, 80.0);
+
+        final stats = dayManager.getOvereatingStats(weightManager);
+        
+        expect(stats.cleanStreak, 2);
+        expect(stats.overeatingStreak, 0);
+        expect(stats.longestCleanStreak, 2);
+      });
+
+      test('missing today breaks the current streak', () async {
+        final today = DateTime.now();
+        final yesterday = today.subtract(const Duration(days: 1));
+        final dayBefore = today.subtract(const Duration(days: 2));
+        
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        // today food day is missing!
+
+        await weightManager.addWeight(dayBefore, 80.0);
+        await weightManager.addWeight(yesterday, 79.0);
+        // today weight is missing!
+
+        final stats = dayManager.getOvereatingStats(weightManager);
+        
+        expect(stats.cleanStreak, 0);
+        // Longest clean streak is still 1 from dayBefore -> yesterday
+        expect(stats.longestCleanStreak, 1);
+      });
+      
+      test('missing a day in the middle breaks longest streak', () async {
+        final today = DateTime.now();
+        final twoDaysAgo = today.subtract(const Duration(days: 2));
+        final threeDaysAgo = today.subtract(const Duration(days: 3));
+        
+        await createFoodDay(threeDaysAgo);
+        await createFoodDay(twoDaysAgo);
+        // yesterday food day is missing!
+        await createFoodDay(today);
+
+        await weightManager.addWeight(threeDaysAgo, 80.0);
+        await weightManager.addWeight(twoDaysAgo, 79.0);
+        // yesterday is missing!
+        await weightManager.addWeight(today, 78.0);
+
+        final stats = dayManager.getOvereatingStats(weightManager);
+        
+        expect(stats.cleanStreak, 0);
+        // The streak from 3 days ago to 2 days ago is 1.
+        expect(stats.longestCleanStreak, 1);
+      });
     });
   });
 }
