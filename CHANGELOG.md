@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/igorbasko01/food-locker/compare/v1.6.0...v1.7.0) (2026-05-19)
+
+
+### Features
+
+* remove manual overate toggle and derive it dynamically from weight ([#34](https://github.com/igorbasko01/food-locker/issues/34)) ([7340ebb](https://github.com/igorbasko01/food-locker/commit/7340ebb226c5815ab8c863384784e18f6060fe8c))
+
 ## [1.6.0](https://github.com/igorbasko01/food-locker/compare/v1.5.1...v1.6.0) (2026-04-02)
 
 
