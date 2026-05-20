@@ -356,7 +356,7 @@ void main() {
         );
       });
 
-      Future<void> _createFoodDay(DateTime date) async {
+      Future<void> createFoodDay(DateTime date) async {
         await foodDayRepository.saveDay(FoodDay(
           date: date,
           meals: [],
@@ -370,10 +370,10 @@ void main() {
         final dayBefore = today.subtract(const Duration(days: 2));
         final threeDaysAgo = today.subtract(const Duration(days: 3));
 
-        await _createFoodDay(threeDaysAgo);
-        await _createFoodDay(dayBefore);
-        await _createFoodDay(yesterday);
-        await _createFoodDay(today);
+        await createFoodDay(threeDaysAgo);
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        await createFoodDay(today);
 
         await weightManager.addWeight(threeDaysAgo, 80.0);
         await weightManager.addWeight(dayBefore, 79.0);
@@ -393,10 +393,10 @@ void main() {
         final dayBefore = today.subtract(const Duration(days: 2));
         final threeDaysAgo = today.subtract(const Duration(days: 3));
 
-        await _createFoodDay(threeDaysAgo);
-        await _createFoodDay(dayBefore);
-        await _createFoodDay(yesterday);
-        await _createFoodDay(today);
+        await createFoodDay(threeDaysAgo);
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        await createFoodDay(today);
 
         await weightManager.addWeight(threeDaysAgo, 80.0);
         await weightManager.addWeight(dayBefore, 81.0);
@@ -415,9 +415,9 @@ void main() {
         final yesterday = today.subtract(const Duration(days: 1));
         final dayBefore = today.subtract(const Duration(days: 2));
         
-        await _createFoodDay(dayBefore);
-        await _createFoodDay(yesterday);
-        await _createFoodDay(today);
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
+        await createFoodDay(today);
 
         await weightManager.addWeight(dayBefore, 80.0);
         await weightManager.addWeight(yesterday, 80.0);
@@ -435,8 +435,8 @@ void main() {
         final yesterday = today.subtract(const Duration(days: 1));
         final dayBefore = today.subtract(const Duration(days: 2));
         
-        await _createFoodDay(dayBefore);
-        await _createFoodDay(yesterday);
+        await createFoodDay(dayBefore);
+        await createFoodDay(yesterday);
         // today food day is missing!
 
         await weightManager.addWeight(dayBefore, 80.0);
@@ -452,14 +452,13 @@ void main() {
       
       test('missing a day in the middle breaks longest streak', () async {
         final today = DateTime.now();
-        final yesterday = today.subtract(const Duration(days: 1));
         final twoDaysAgo = today.subtract(const Duration(days: 2));
         final threeDaysAgo = today.subtract(const Duration(days: 3));
         
-        await _createFoodDay(threeDaysAgo);
-        await _createFoodDay(twoDaysAgo);
+        await createFoodDay(threeDaysAgo);
+        await createFoodDay(twoDaysAgo);
         // yesterday food day is missing!
-        await _createFoodDay(today);
+        await createFoodDay(today);
 
         await weightManager.addWeight(threeDaysAgo, 80.0);
         await weightManager.addWeight(twoDaysAgo, 79.0);
