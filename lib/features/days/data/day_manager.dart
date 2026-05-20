@@ -161,6 +161,9 @@ class FoodDayManager extends ChangeNotifier {
   }
 
   bool? isOvereaten(DateTime date, WeightManager weightManager) {
+    final hasFoodDay = _foodDayRepository.getDay(date) != null;
+    if (!hasFoodDay) return null;
+
     final weightOnDay = weightManager.getWeightForDate(date);
     final weightNextDay = weightManager.getWeightForDate(DateTime(date.year, date.month, date.day + 1));
 
