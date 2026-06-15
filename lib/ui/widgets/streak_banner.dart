@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 
 class StreakBanner extends StatelessWidget {
   final OvereatingStats stats;
@@ -21,68 +21,56 @@ class StreakBanner extends StatelessWidget {
 
   Widget? _buildBanner(BuildContext context) {
     final theme = Theme.of(context);
+    final type = stats.currentStreakType;
+    final length = stats.currentStreakLength;
 
-    if (stats.cleanStreak == 0 && stats.overeatingStreak == 0) {
-      if (!stats.hasHistory) {
+    if (type == null || length == 0) {
+      return _buildCard(
+        context,
+        icon: Icons.history_rounded,
+        color: theme.colorScheme.primary,
+        title: 'Start a new streak!',
+        subtitle: 'Log your weight daily to build your momentum.',
+      );
+    }
+    
+    if (type == StreakType.overeating) {
+      if (length >= 2) {
         return _buildCard(
           context,
-          icon: Icons.auto_awesome_rounded,
-          color: theme.colorScheme.primary,
-          title: 'Welcome!',
-          subtitle: 'Eat mindfully today. This is your first day of tracking!',
+          icon: Icons.warning_rounded,
+          color: theme.colorScheme.error,
+          title: '$length-Day Overeating Streak',
+          subtitle: 'You\'ve been overeating lately. Break the cycle today!',
         );
       } else {
         return _buildCard(
           context,
-          icon: Icons.history_rounded,
+          icon: Icons.refresh_rounded,
+          color: theme.colorScheme.tertiary,
+          title: 'Fresh Start!',
+          subtitle: 'You overate last time. Today is a brand new day to win!',
+        );
+      }
+    } else {
+      if (length >= 2) {
+        return _buildCard(
+          context,
+          icon: Icons.local_fire_department_rounded,
+          color: Colors.orange,
+          title: '$length-Day Streak!',
+          subtitle: 'You are doing great! Keep the momentum going.',
+        );
+      } else {
+        return _buildCard(
+          context,
+          icon: Icons.check_circle_outline_rounded,
           color: theme.colorScheme.primary,
-          title: 'Start a new streak!',
-          subtitle: 'Log your weight daily to build your momentum.',
+          title: 'Good Job!',
+          subtitle: 'You finished last time strong. Let\'s keep it going today!',
         );
       }
     }
-    
-    if (stats.overeatingStreak >= 2) {
-      return _buildCard(
-        context,
-        icon: Icons.warning_rounded,
-        color: theme.colorScheme.error,
-        title: '${stats.overeatingStreak}-Day Overeating Streak',
-        subtitle: 'You\'ve been overeating lately. Break the cycle today!',
-      );
-    }
-
-    if (stats.overeatingStreak == 1) {
-      return _buildCard(
-        context,
-        icon: Icons.refresh_rounded,
-        color: theme.colorScheme.tertiary,
-        title: 'Fresh Start!',
-        subtitle: 'You overate last time. Today is a brand new day to win!',
-      );
-    }
-
-    if (stats.cleanStreak >= 2) {
-      return _buildCard(
-        context,
-        icon: Icons.local_fire_department_rounded,
-        color: Colors.orange,
-        title: '${stats.cleanStreak}-Day Streak!',
-        subtitle: 'You are doing great! Keep the momentum going.',
-      );
-    }
-
-    if (stats.cleanStreak == 1) {
-       return _buildCard(
-        context,
-        icon: Icons.check_circle_outline_rounded,
-        color: theme.colorScheme.primary,
-        title: 'Good Job!',
-        subtitle: 'You finished last time strong. Let\'s keep it going today!',
-      );
-    }
-
-    return const SizedBox.shrink();
   }
 
   Widget _buildCard(

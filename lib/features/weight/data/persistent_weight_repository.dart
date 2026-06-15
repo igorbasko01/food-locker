@@ -82,4 +82,12 @@ class PersistentWeightRepository implements WeightRepository {
     _lowestWeightCache[cacheKey] = result;
     return result;
   }
+
+  @override
+  DateTime? getOldestWeightDate() {
+    if (_box.isEmpty) return null;
+    return _box.values
+        .map((w) => w.date)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+  }
 }

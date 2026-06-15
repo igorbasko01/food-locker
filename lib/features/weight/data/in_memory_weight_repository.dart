@@ -79,4 +79,12 @@ class InMemoryWeightRepository implements WeightRepository {
     _lowestWeightCache[cacheKey] = result;
     return result;
   }
+
+  @override
+  DateTime? getOldestWeightDate() {
+    if (_weights.isEmpty) return null;
+    return _weights.values
+        .map((w) => w.date)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+  }
 }

@@ -1,1 +1,0 @@
-enum FoodType { meal, snack }
