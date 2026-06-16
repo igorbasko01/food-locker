@@ -89,42 +89,47 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          if (latest7.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
-                child: Center(
-                  child: Text(
-                    'No weight entries yet.\nTap "Log Weight" above to get started!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, height: 1.5),
-                  ),
-                ),
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = latest7[index];
-                  // Compute difference with previous day (which is at index + 1 in sorted descending list)
-                  double? diff;
-                  if (index + 1 < history.length) {
-                    diff = item.value - history[index + 1].value;
-                  }
-
-                  return WeightHistoryTile(
-                    item: item,
-                    diff: diff,
-                  );
-                },
-                childCount: latest7.length,
-              ),
-            ),
+          _buildHistorySection(latest7, history),
           const SliverToBoxAdapter(
             child: SizedBox(height: 40),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHistorySection(List<Weight> latest7, List<Weight> history) {
+    if (latest7.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
+          child: Center(
+            child: Text(
+              'No weight entries yet.\nTap "Log Weight" above to get started!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, height: 1.5),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final item = latest7[index];
+          // Compute difference with previous day (which is at index + 1 in sorted descending list)
+          double? diff;
+          if (index + 1 < history.length) {
+            diff = item.value - history[index + 1].value;
+          }
+
+          return WeightHistoryTile(
+            item: item,
+            diff: diff,
+          );
+        },
+        childCount: latest7.length,
       ),
     );
   }
