@@ -10,22 +10,6 @@ import 'package:provider/provider.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  void _showAddWeightDialog(BuildContext context, WeightManager manager) async {
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => AddWeightDialog(
-        initialDate: DateTime.now(),
-      ),
-    );
-
-    if (result != null) {
-      final date = result['date'] as DateTime;
-      final value = result['value'] as double;
-      final unit = result['unit'] as WeightUnit;
-      manager.addWeight(date, value, unit: unit);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -96,6 +80,22 @@ class HomePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showAddWeightDialog(BuildContext context, WeightManager manager) async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AddWeightDialog(
+        initialDate: DateTime.now(),
+      ),
+    );
+
+    if (result != null) {
+      final date = result['date'] as DateTime;
+      final value = result['value'] as double;
+      final unit = result['unit'] as WeightUnit;
+      manager.addWeight(date, value, unit: unit);
+    }
   }
 
   Widget _buildHistorySection(List<Weight> latest7, List<Weight> history) {
