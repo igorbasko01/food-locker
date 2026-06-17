@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/igorbasko01/food-locker/compare/v1.7.1...v1.8.0) (2026-06-17)
+
+
+### Features
+
+* remove food tracking and transition to weight-only tracking ([#38](https://github.com/igorbasko01/food-locker/issues/38)) ([5356406](https://github.com/igorbasko01/food-locker/commit/5356406ea93aa6dc63d5ba5e668d49a244931fdf))
+
 ## [1.7.1](https://github.com/igorbasko01/food-locker/compare/v1.7.0...v1.7.1) (2026-05-20)
 
 
