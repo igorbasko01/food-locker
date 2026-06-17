@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 
 class WeightChangeIndicator extends StatelessWidget {
   final double? diff;
+  final WeightUnit unit;
 
   const WeightChangeIndicator({
     super.key,
     required this.diff,
+    required this.unit,
   });
 
   @override
@@ -40,7 +43,7 @@ class WeightChangeIndicator extends StatelessWidget {
             Icon(Icons.arrow_upward_rounded, size: 12, color: theme.colorScheme.error),
             const SizedBox(width: 2),
             Text(
-              '+${currentDiff.toStringAsFixed(1)} kg',
+              '+${currentDiff.toStringAsFixed(1)} ${unit.symbol}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.error,
                 fontWeight: FontWeight.bold,
@@ -62,7 +65,7 @@ class WeightChangeIndicator extends StatelessWidget {
             const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.green),
             const SizedBox(width: 2),
             Text(
-              '${currentDiff.toStringAsFixed(1)} kg',
+              '${currentDiff.toStringAsFixed(1)} ${unit.symbol}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -84,7 +87,7 @@ class WeightChangeIndicator extends StatelessWidget {
             Icon(Icons.remove_rounded, size: 12, color: theme.colorScheme.outline),
             const SizedBox(width: 2),
             Text(
-              '0.0 kg',
+              '0.0 ${unit.symbol}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.outline,
                 fontWeight: FontWeight.bold,

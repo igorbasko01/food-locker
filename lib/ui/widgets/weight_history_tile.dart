@@ -42,13 +42,16 @@ class WeightHistoryTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${item.value.toStringAsFixed(1)} kg',
+              '${item.value.toStringAsFixed(1)} ${item.unit.symbol}',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(width: 12),
-            WeightChangeIndicator(diff: diff),
+            WeightChangeIndicator(
+              diff: diff,
+              unit: item.unit,
+            ),
           ],
         ),
       ),

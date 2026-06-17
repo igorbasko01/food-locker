@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
 void main() {
-  Widget createWidgetUnderTest(double? diff) {
+  Widget createWidgetUnderTest(double? diff, [WeightUnit unit = WeightUnit.kilograms]) {
     return MaterialApp(
       home: Scaffold(
-        body: WeightChangeIndicator(diff: diff),
+        body: WeightChangeIndicator(diff: diff, unit: unit),
       ),
     );
   }
@@ -34,5 +35,11 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest(0.0));
     expect(find.text('0.0 kg'), findsOneWidget);
     expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
+  });
+
+  testWidgets('shows pounds suffix when WeightUnit.pounds is passed', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest(2.4, WeightUnit.pounds));
+    expect(find.text('+2.4 lbs'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
   });
 }
