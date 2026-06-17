@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class SerializationService {
-  static const String _weightFileName = 'weight.csv';
   @visibleForTesting
   static String generateZipFileName([DateTime? now]) {
     final timestamp = now ?? DateTime.now();

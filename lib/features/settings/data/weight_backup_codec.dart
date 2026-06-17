@@ -16,7 +16,7 @@ class WeightBackupCodec {
         ArchiveFile(_weightFileName, csvContent.length, csvContent.codeUnits),
       );
 
-    return ZipEncoder().encode(archive) ?? [];
+    return ZipEncoder().encode(archive);
   }
 
   List<Weight> decode(List<int> zipBytes) {
