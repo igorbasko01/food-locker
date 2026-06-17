@@ -16,86 +16,60 @@ class WeightChangeIndicator extends StatelessWidget {
     final theme = Theme.of(context);
     final currentDiff = diff;
 
+    final Color backgroundColor;
+    final Color textColor;
+    final IconData? icon;
+    final String text;
+    final FontWeight fontWeight;
+
     if (currentDiff == null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'Baseline',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
+      backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+      textColor = theme.colorScheme.onSurfaceVariant;
+      icon = null;
+      text = 'Baseline';
+      fontWeight = FontWeight.normal;
     } else if (currentDiff > 0) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.arrow_upward_rounded, size: 12, color: theme.colorScheme.error),
-            const SizedBox(width: 2),
-            Text(
-              '+${currentDiff.toStringAsFixed(1)} ${unit.symbol}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.error,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      );
+      backgroundColor = theme.colorScheme.errorContainer.withValues(alpha: 0.5);
+      textColor = theme.colorScheme.error;
+      icon = Icons.arrow_upward_rounded;
+      text = '+${currentDiff.toStringAsFixed(1)} ${unit.symbol}';
+      fontWeight = FontWeight.bold;
     } else if (currentDiff < 0) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.green),
-            const SizedBox(width: 2),
-            Text(
-              '${currentDiff.toStringAsFixed(1)} ${unit.symbol}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      );
+      backgroundColor = Colors.green.withValues(alpha: 0.15);
+      textColor = Colors.green;
+      icon = Icons.arrow_downward_rounded;
+      text = '${currentDiff.toStringAsFixed(1)} ${unit.symbol}';
+      fontWeight = FontWeight.bold;
     } else {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.remove_rounded, size: 12, color: theme.colorScheme.outline),
-            const SizedBox(width: 2),
-            Text(
-              '0.0 ${unit.symbol}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.outline,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      );
+      backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+      textColor = theme.colorScheme.outline;
+      icon = Icons.remove_rounded;
+      text = '0.0 ${unit.symbol}';
+      fontWeight = FontWeight.bold;
     }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: textColor),
+            const SizedBox(width: 2),
+          ],
+          Text(
+            text,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: textColor,
+              fontWeight: fontWeight,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
