@@ -10,4 +10,7 @@ abstract class WeightRepository {
   /// Returns the lowest weight recorded since [since] (inclusive).
   /// If [since] is null, returns the all-time lowest weight.
   double? getLowestWeight({DateTime? since});
+
+  /// Returns the date of the oldest weight record, or null if empty.
+  DateTime? getOldestWeightDate();
 }

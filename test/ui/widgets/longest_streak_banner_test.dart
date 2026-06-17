@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/longest_streak_banner.dart';
 
 void main() {
@@ -14,10 +14,8 @@ void main() {
 
   testWidgets('LongestStreakBanner is hidden if streak < 2', (tester) async {
     final stats = OvereatingStats(
-      cleanStreak: 1,
-      overeatingStreak: 0,
-      longestCleanStreak: 1,
-      hasHistory: true,
+      longestStreakStart: DateTime(2023, 10, 1),
+      longestStreakEnd: DateTime(2023, 10, 1),
     );
 
     await tester.pumpWidget(createWidgetUnderTest(stats));
@@ -28,10 +26,6 @@ void main() {
     final startDate = DateTime(2023, 10, 1);
     final endDate = DateTime(2023, 10, 5);
     final stats = OvereatingStats(
-      cleanStreak: 2,
-      overeatingStreak: 0,
-      longestCleanStreak: 5,
-      hasHistory: true,
       longestStreakStart: startDate,
       longestStreakEnd: endDate,
     );

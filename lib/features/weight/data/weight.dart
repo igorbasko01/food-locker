@@ -27,3 +27,8 @@ class Weight {
     this.unit = WeightUnit.kilograms,
   });
 }
+
+extension WeightUnitDisplay on WeightUnit {
+  String get symbol => this == WeightUnit.pounds ? 'lbs' : 'kg';
+}
+

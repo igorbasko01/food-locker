@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:food_locker/features/days/data/day_manager.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/day_date_text.dart';
 
 class LongestStreakBanner extends StatelessWidget {
@@ -9,7 +9,8 @@ class LongestStreakBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (stats.longestCleanStreak < 2) {
+    final length = stats.longestCleanStreakLength;
+    if (length < 2) {
       return const SizedBox.shrink();
     }
 
@@ -41,7 +42,7 @@ class LongestStreakBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'All-Time Best: ${stats.longestCleanStreak} Days',
+                    'All-Time Best: $length Days',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: color,
                       fontWeight: FontWeight.bold,
