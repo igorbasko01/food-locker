@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echo "Running pre-push checks..."
+
+# Run Flutter Analyzer
+echo "--> Running flutter analyze..."
+flutter analyze
+if [ $? -ne 0 ]; then
+  echo "Error: flutter analyze failed. Push aborted."
+  exit 1
+fi
+
+# Run Flutter Tests
+echo "--> Running flutter test..."
+flutter test
+if [ $? -ne 0 ]; then
+  echo "Error: flutter tests failed. Push aborted."
+  exit 1
+fi
+
+echo "Pre-push checks passed successfully!"
+exit 0
