@@ -209,9 +209,9 @@ tooling swap, not a data migration.
 - [x] Run codegen; confirm the DB opens and a row round-trips
 
 **Phase 2 — `pacing_config` table + default**
-- [ ] Define `pacing_config`: `effective_ms`, `b1_s`, `b2_s`
-- [ ] Seed a default row on first run (`b1 = 15`, `b2 = 30`)
-- [ ] Add a helper to read the config effective at a given instant
+- [x] Define `pacing_config`: `effective_ms`, `b1_s`, `b2_s`
+- [x] Seed a default row on first run (`b1 = 15`, `b2 = 30`)
+- [x] Add a helper to read the config effective at a given instant
 
 **Phase 3 — `BiteRepository`**
 - [ ] Define the interface: `logBite`, `lastBite`, `bitesInRange`, `biteCount`, `setPacingConfig`
