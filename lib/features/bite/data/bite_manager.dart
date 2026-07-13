@@ -82,6 +82,11 @@ class BiteManager extends ChangeNotifier {
   Duration get _b1 => Duration(seconds: _pacingConfig?.b1S ?? _fallbackB1.inSeconds);
   Duration get _b2 => Duration(seconds: _pacingConfig?.b2S ?? _fallbackB2.inSeconds);
 
+  /// The effective `b2` boundary — the gap since the last bite at which the
+  /// next bite is recommended (the [PacingZone.inTheClear] point). Exposed so
+  /// the screen can hold the display awake across the whole pacing interval.
+  Duration get b2 => _b2;
+
   /// Loads today's count and the effective pacing config, and seeds the pacing
   /// reference from the last stored bite so the screen opens with the right
   /// number and state even after an app restart. If that last bite is still

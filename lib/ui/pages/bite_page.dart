@@ -16,11 +16,13 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 ///
 /// Logging a meal is a stop-start affair — you eat a bite, tap, wait, eat
 /// again — and those gaps can be longer than the system screen timeout, which
-/// would blank the screen mid-meal. So each tap keeps the screen awake for a
-/// rolling [_keepAwakeWindow]; once that window lapses with no new bite the
-/// wake-lock is released and the OS's normal sleep behaviour resumes. The lock
-/// is also released whenever the tab is hidden, the app is backgrounded, or
-/// this page is disposed, so it never leaks beyond this screen.
+/// would blank the screen mid-meal. So each tap keeps the screen awake across
+/// the whole pacing interval — until the `b2` boundary (when the next bite is
+/// recommended) plus a [_clearGrace] cushion — resetting that window on every
+/// bite. Once it lapses with no new bite the wake-lock is released and the
+/// OS's normal sleep behaviour resumes. The lock is also released whenever the
+/// tab is hidden, the app is backgrounded, or this page is disposed, so it
+/// never leaks beyond this screen.
 class BitePage extends StatefulWidget {
   const BitePage({super.key, this.isActive = true});
 
@@ -33,8 +35,9 @@ class BitePage extends StatefulWidget {
 }
 
 class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
-  /// How long after the last bite the screen is kept awake.
-  static const Duration _keepAwakeWindow = Duration(seconds: 15);
+  /// Extra time the screen is held awake past the `b2` boundary, so it does not
+  /// blank the instant the next bite becomes due.
+  static const Duration _clearGrace = Duration(seconds: 15);
 
   Timer? _releaseTimer;
   bool _wakeEnabled = false;
@@ -64,16 +67,19 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
   }
 
   Future<void> _handleBite() async {
-    await context.read<BiteManager>().logBite();
-    _keepAwakeForWindow();
+    final biteManager = context.read<BiteManager>();
+    await biteManager.logBite();
+    // Hold the screen on for the whole pacing interval (b2) plus a grace
+    // cushion, measured from this bite; the next bite re-arms it.
+    _keepAwakeForWindow(biteManager.b2 + _clearGrace);
   }
 
   /// Enables the wake-lock (if not already held) and (re)arms the release
-  /// timer so the screen stays on for [_keepAwakeWindow] from now.
-  void _keepAwakeForWindow() {
+  /// timer so the screen stays on for [window] from now.
+  void _keepAwakeForWindow(Duration window) {
     if (!widget.isActive) return;
     _releaseTimer?.cancel();
-    _releaseTimer = Timer(_keepAwakeWindow, _releaseWakelock);
+    _releaseTimer = Timer(window, _releaseWakelock);
     if (!_wakeEnabled) {
       _wakeEnabled = true;
       WakelockPlus.enable();
