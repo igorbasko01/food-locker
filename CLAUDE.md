@@ -44,6 +44,6 @@ Dates are treated as day-granular throughout: repository keys and equality norma
 
 Tests mirror `lib/` under `test/`. Prefer `InMemoryWeightRepository` over Hive in unit tests. `test/features/weight/hive_ce_migration_test.dart` guards persistence/migration behavior — treat it as a compatibility contract when touching models or `typeId`s.
 
-## Releases
+## Commit Messages & Releases
 
-Versioning is automated via release-please (`.github/workflows/release-please.yml`); use Conventional Commit messages (`feat:`, `fix:`, etc.) since they drive the changelog and version bump. `RELEASING.md` documents the full flow and `build_install_release.sh` builds/installs a release APK.
+This project uses **Conventional Commits** — always prefix commit messages and PR titles with `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, etc. On every push to `main`, the **release-please** CI workflow (`.github/workflows/release-please.yml`) reads these commits to calculate the next version, bump `pubspec.yaml`, and update `CHANGELOG.md` via a release PR — so the prefix directly drives versioning (`feat:` → minor, `fix:` → patch, `!`/`BREAKING CHANGE:` → major). Do not bump the version manually. `RELEASING.md` documents the full flow and `build_install_release.sh` builds/installs a release APK.
