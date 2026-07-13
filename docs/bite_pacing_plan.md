@@ -223,10 +223,10 @@ tooling swap, not a data migration.
 - [x] Today's count (`biteCount` for the current local day), re-queried after each tap
 
 **Phase 5 — Pacing visualization (on the same screen as the tap button)**
-- [ ] Local ticker (`Timer.periodic`, ~200–500 ms), started on tap, reading last-bite time from memory
-- [ ] Current zone from `now − lastBite` against `b1`/`b2`; colours + messages as app constants (too soon/red, hold on/amber, clear/green)
-- [ ] On reaching `b2`: haptic, freeze on the static "in the clear" state, cancel the ticker
-- [ ] Next tap resets the reference and restarts the ticker; on open with no recent bite, show the static clear state (no ticker)
+- [x] Local ticker (`Timer.periodic`, ~200–500 ms), started on tap, reading last-bite time from memory
+- [x] Current zone from `now − lastBite` against `b1`/`b2`; colours + messages as app constants (too soon/red, hold on/amber, clear/green)
+- [x] On reaching `b2`: haptic, freeze on the static "in the clear" state, cancel the ticker
+- [x] Next tap resets the reference and restarts the ticker; on open with no recent bite, show the static clear state (no ticker)
 
 **Phase 6 — CSV export**
 - [ ] Extend the existing CSV export to include the bite data
