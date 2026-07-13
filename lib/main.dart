@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
+import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
@@ -26,6 +27,9 @@ void main() async {
 
   final biteRepository = DriftBiteRepository(BiteDatabase());
 
+  final biteManager = BiteManager(biteRepository);
+  await biteManager.initialize();
+
   runApp(
     MultiProvider(
       providers: [
@@ -33,6 +37,7 @@ void main() async {
         Provider<BiteRepository>.value(value: biteRepository),
         Provider<SerializationService>(create: (_) => SerializationService()),
         ChangeNotifierProvider<WeightManager>.value(value: weightManager),
+        ChangeNotifierProvider<BiteManager>.value(value: biteManager),
       ],
       child: const MainApp(),
     ),

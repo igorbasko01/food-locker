@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/ui/pages/bite_page.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
@@ -14,12 +15,13 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
   static const List<Widget> _pages = [
+    BitePage(),
     HomePage(),
     WeightPage(),
     SettingsPage(),
   ];
 
-  static const List<String> _titles = ['Home', 'Weight', 'Settings'];
+  static const List<String> _titles = ['Bite', 'Home', 'Weight', 'Settings'];
 
   void _onTabTapped(int index) {
     setState(() {
@@ -33,9 +35,15 @@ class _AppShellState extends State<AppShell> {
       appBar: AppBar(title: Text(_titles[_currentIndex])),
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant_outlined),
+            activeIcon: Icon(Icons.restaurant_rounded),
+            label: 'Bite',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home_rounded),
