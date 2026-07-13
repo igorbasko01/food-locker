@@ -1,18 +1,17 @@
 # FoodLocker
 
-A Flutter application designed to track food intake and manage daily nutritional goals efficiently. This project leverages `Hive CE` for fast local data storage and `Provider` for state management.
+A Flutter application for tracking your daily weight and understanding your progress over time. FoodLocker stores everything locally using `Hive CE` and uses `Provider` for state management.
 
 ## Features
 
-- **Daily Food Tracking**: Log your daily food consumption easily.
-- **Persistent Storage**: Data is saved locally using [Hive CE](https://pub.dev/packages/hive_ce) and [SharedPreferences](https://pub.dev/packages/shared_preferences), ensuring your records are kept safe even after the app is closed.
-- **Food Configuration**: Manage and customize your food items and their nutritional values.
-- **Theming**: Includes a custom app theme for a consistent and pleasant user interface.
-- **State Management**: Utilizes the `Provider` package for efficient state management across the application.
+- **Daily Weight Tracking**: Log one weight entry per day, in kilograms or pounds.
+- **Analytics & Insights**: See your lowest weight all-time and over the last 7 / 30 days, plus "clean" vs. "overeating" streaks derived from day-over-day changes.
+- **Weight History & Chart**: Browse past entries and visualize trends with a chart (`fl_chart`).
+- **Backup & Restore**: Export your data to a zip file and import it back later from the Settings tab.
+- **Persistent Storage**: Data is saved locally using [Hive CE](https://pub.dev/packages/hive_ce), so your records survive app restarts.
+- **State Management**: Uses the [Provider](https://pub.dev/packages/provider) package for state management across the app.
 
 ## Getting Started
-
-This project is a starting point for a Flutter application.
 
 ### Prerequisites
 
@@ -24,8 +23,8 @@ This project is a starting point for a Flutter application.
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/yourusername/food_locker.git
-    cd food_locker
+    git clone https://github.com/igorbasko01/food-locker.git
+    cd food-locker
     ```
 
 2.  **Install dependencies:**
@@ -34,7 +33,13 @@ This project is a starting point for a Flutter application.
     flutter pub get
     ```
 
-3.  **Run the application:**
+3.  **(Optional) Set up git hooks** to run `flutter analyze` and `flutter test` before every push:
+
+    ```bash
+    ./setup.sh
+    ```
+
+4.  **Run the application:**
 
     ```bash
     flutter run
@@ -42,17 +47,22 @@ This project is a starting point for a Flutter application.
 
 ### Code Generation
 
-This project uses `build_runner` for code generation (e.g., for Hive CE adapters). If you make changes to models that require code generation, run:
+This project uses `build_runner` for code generation (e.g. for Hive CE adapters). If you change a model that requires code generation, regenerate the `*.g.dart` files:
 
 ```bash
-flutter pub run build_runner build
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 ## Project Structure
 
-- `lib/features`: Contains feature-specific code (e.g., `days`, `food`).
-- `lib/ui`: UI components and pages.
-- `lib/main.dart`: Application entry point.
+- `lib/features`: Feature-specific domain and persistence code (e.g. `weight`, `settings`).
+- `lib/ui`: UI pages, widgets, the app shell, and theme.
+- `lib/core`: Shared helpers (CSV serialization, query utilities).
+- `lib/main.dart`: Application entry point and dependency wiring.
+
+## Contributing
+
+This project uses **Conventional Commits** and **release-please** to automate versioning and changelog generation. Prefix commits / PR titles with `feat:`, `fix:`, `chore:`, etc. See [RELEASING.md](RELEASING.md) for details.
 
 ## License
 
