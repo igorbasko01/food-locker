@@ -292,3 +292,36 @@ historical bite's zone can no longer be reconstructed (§2b). Extend the backup 
       preserve the null-vs-empty semantics for older archives that lack the entry (leave existing
       config untouched when absent)
 - [ ] Ensure a default config still seeds correctly when restoring a pre-config backup
+
+**Phase 12 — Fold the pacing feedback into the button**
+
+Today the pacing zone shows as a separate banner (`PacingIndicator`, Phase 5) sitting above the
+tap button, while the button itself is a static teal circle labelled "Bite". Merge the two: the
+**button** becomes the pacing surface — its fill takes the current zone colour (red / amber /
+green) and a short one-or-two-word label inside it names the zone — and the standalone banner is
+removed. Fewer things on screen, and the feedback lives right where your thumb already is.
+
+This restyles the Phase 5 visualization surface; it does **not** change the pacing behaviour,
+timing, or `§0` principles. In particular: logging stays **feedback, not lockout** — the button
+is fully tappable in every zone, including red, and a tap always logs a bite immediately. The
+colour still never green-lights an early bite (red/amber mean "still costly"), and reaching `b2`
+remains the only readiness cue.
+
+- [ ] Add a short `label` to the per-zone constants (e.g. `Too soon` / `Hold on` / `Clear`),
+      alongside the existing colour/icon/message, keeping them fixed app constants (not theme
+      teal) so the red/amber/green semantics stay stable — reuse the zone styling that currently
+      lives in `PacingIndicator` rather than duplicating the colour values
+- [ ] Drive `_BiteButton`'s fill from the current `PacingZone` colour instead of
+      `colorScheme.primary`, animating the colour change (the existing ~250 ms ease already used
+      by the banner) so zone transitions don't snap
+- [ ] Replace the button's static "Bite" text with the zone label, keeping the icon and ensuring
+      the on-colour text/icon stay legible against all three fills (contrast check on amber in
+      particular); the button keeps its `Semantics(button: true, label: 'Log a bite')` so the
+      action is still announced independently of the visual zone label
+- [ ] Remove the standalone `PacingIndicator` from the Bite screen (and delete the widget if it
+      has no other use), reflowing the column now that the banner is gone
+- [ ] Confirm the static clear state on open (no recent bite) shows a green "Clear" button with no
+      ticker running, and that a tap immediately flips it to the red "Too soon" state
+- [ ] Keep this consistent with Phase 10 if implemented — the elapsed-time readout still hides at
+      `b2`; decide whether it sits under the button or inside it now that the button carries the
+      zone label
