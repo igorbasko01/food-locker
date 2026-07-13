@@ -1,7 +1,12 @@
 import 'dart:io';
+import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
+import 'package:food_locker/features/bite/data/bite_database.dart';
+import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -24,12 +29,14 @@ class SerializationService {
 
   Future<void> exportData(BuildContext context) async {
     final weightRepo = context.read<WeightRepository>();
+    final biteRepo = context.read<BiteRepository>();
 
-    final zipData = const WeightBackupCodec().encode(
-      weightRepo.getAllWeights(),
-    );
+    final weights = weightRepo.getAllWeights();
+    final bites = await _allBites(biteRepo);
 
-    if (zipData.isEmpty) return;
+    if (weights.isEmpty && bites.isEmpty) return;
+
+    final zipData = encodeBackup(weights, bites);
 
     final tempDir = await getTemporaryDirectory();
     final zipFile = File('${tempDir.path}/${generateZipFileName()}');
@@ -37,6 +44,28 @@ class SerializationService {
 
     // ignore: deprecated_member_use
     await Share.shareXFiles([XFile(zipFile.path)], text: 'Food Locker Backup');
+  }
+
+  /// Packs both datasets into a single backup zip. Each store owns its own
+  /// codec (§1c two-store tax); the coordination — one archive, one file per
+  /// dataset — lives here so a single export call spans both stores.
+  @visibleForTesting
+  List<int> encodeBackup(List<Weight> weights, List<Bite> bites) {
+    final archive = Archive()
+      ..addFile(const WeightBackupCodec().toArchiveFile(weights))
+      ..addFile(const BiteBackupCodec().toArchiveFile(bites));
+    return ZipEncoder().encode(archive);
+  }
+
+  /// Every logged bite, read through the repository seam. The bite interface
+  /// exposes ranges rather than a bulk getter, so a full-history export is a
+  /// range from the epoch to a far-future bound (half-open, so the upper bound
+  /// stays safely past any real timestamp).
+  Future<List<Bite>> _allBites(BiteRepository biteRepo) {
+    return biteRepo.bitesInRange(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.utc(9999),
+    );
   }
 
   Future<void> importData(BuildContext context) async {
