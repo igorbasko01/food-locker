@@ -219,8 +219,8 @@ tooling swap, not a data migration.
 - [x] Expose it through `provider`
 
 **Phase 4 — Bite logging screen (the main screen)**
-- [ ] Tap button → `logBite(DateTime.now())`, recorded immediately, never blocked
-- [ ] Today's count (`biteCount` for the current local day), re-queried after each tap
+- [x] Tap button → `logBite(DateTime.now())`, recorded immediately, never blocked
+- [x] Today's count (`biteCount` for the current local day), re-queried after each tap
 
 **Phase 5 — Pacing visualization (on the same screen as the tap button)**
 - [ ] Local ticker (`Timer.periodic`, ~200–500 ms), started on tap, reading last-bite time from memory
