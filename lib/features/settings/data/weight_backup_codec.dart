@@ -4,27 +4,34 @@ import 'package:food_locker/core/csv_serializer.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 class WeightBackupCodec {
-  static const String _weightFileName = 'weight.csv';
+  /// The weight dataset's entry inside a backup zip. Public so the two-store
+  /// coordinator (`SerializationService`) can pack it alongside the bite entry
+  /// in a single archive.
+  static const String weightFileName = 'weight.csv';
 
   const WeightBackupCodec();
 
   List<int> encode(List<Weight> weights) {
-    final csvContent = generateWeightCsv(weights);
-
-    final archive = Archive()
-      ..addFile(
-        ArchiveFile(_weightFileName, csvContent.length, csvContent.codeUnits),
-      );
-
-    return ZipEncoder().encode(archive);
+    return ZipEncoder().encode(Archive()..addFile(toArchiveFile(weights)));
   }
 
   List<Weight> decode(List<int> zipBytes) {
-    final archive = ZipDecoder().decodeBytes(zipBytes);
-    final List<Weight> weights = [];
+    return fromArchive(ZipDecoder().decodeBytes(zipBytes));
+  }
 
+  /// The weight CSV packaged as a single [ArchiveFile], so it can be added to a
+  /// shared archive that also carries other datasets (§1c two-store backup).
+  ArchiveFile toArchiveFile(List<Weight> weights) {
+    final csvContent = generateWeightCsv(weights);
+    return ArchiveFile(weightFileName, csvContent.length, csvContent.codeUnits);
+  }
+
+  /// Reads the weights out of a decoded [archive], ignoring any other datasets
+  /// packed alongside them (e.g. the bite CSV).
+  List<Weight> fromArchive(Archive archive) {
+    final List<Weight> weights = [];
     for (final file in archive) {
-      if (file.isFile && file.name == _weightFileName) {
+      if (file.isFile && file.name == weightFileName) {
         final content = String.fromCharCodes(file.content as List<int>);
         weights.addAll(parseWeightCsv(content));
       }

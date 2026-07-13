@@ -229,9 +229,9 @@ tooling swap, not a data migration.
 - [x] Next tap resets the reference and restarts the ticker; on open with no recent bite, show the static clear state (no ticker)
 
 **Phase 6 — CSV export**
-- [ ] Extend the existing CSV export to include the bite data
-- [ ] Route it through the repository seam so one call spans both stores
+- [x] Extend the existing CSV export to include the bite data
+- [x] Route it through the repository seam so one call spans both stores
 
 **Phase 7 — CSV import**
-- [ ] Parse the bite CSV back into the SQLite (Drift) store
-- [ ] Route through the repository seam; validate / dedupe on import
+- [x] Parse the bite CSV back into the SQLite (Drift) store
+- [x] Route through the repository seam; validate / dedupe on import

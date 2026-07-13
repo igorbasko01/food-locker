@@ -1,4 +1,8 @@
+import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/features/bite/data/bite_database.dart';
+import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
@@ -22,6 +26,44 @@ class _RecordingWeightRepository extends InMemoryWeightRepository {
   }
 }
 
+/// Records the bite mutations a restore performs, so the clear-then-restore
+/// sequence and dedup behaviour are assertable without a real Drift store. Only
+/// the restore path's methods do anything; the rest aren't exercised here.
+class _RecordingBiteRepository implements BiteRepository {
+  final List<String> operations = [];
+  final List<int> loggedMs = [];
+
+  @override
+  Future<void> clearBites() async {
+    operations.add('clear');
+    loggedMs.clear();
+  }
+
+  @override
+  Future<void> logBite(DateTime at) async {
+    operations.add('log');
+    loggedMs.add(at.millisecondsSinceEpoch);
+  }
+
+  @override
+  Future<Bite?> lastBite() => throw UnimplementedError();
+
+  @override
+  Future<List<Bite>> bitesInRange(DateTime from, DateTime to) =>
+      throw UnimplementedError();
+
+  @override
+  Future<int> biteCount(DateTime from, DateTime to) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> setPacingConfig(PacingConfig cfg) => throw UnimplementedError();
+
+  @override
+  Future<PacingConfig?> pacingConfigAt(DateTime instant) =>
+      throw UnimplementedError();
+}
+
 void main() {
   group('SerializationService Zip File Name', () {
     test('generateZipFileName creates timestamped filename', () {
@@ -34,6 +76,53 @@ void main() {
       final timestamp = DateTime(2026, 1, 5, 3, 2, 1);
       final fileName = SerializationService.generateZipFileName(timestamp);
       expect(fileName, 'food_locker_20260105030201.zip');
+    });
+  });
+
+  group('SerializationService encodeBackup', () {
+    final service = SerializationService();
+
+    List<int> contentOf(Archive archive, String name) =>
+        archive.files.firstWhere((f) => f.name == name).content as List<int>;
+
+    test('packs both datasets into one zip, one file each', () {
+      final zip = service.encodeBackup(
+        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [const Bite(id: 1, atMs: 1000)],
+      );
+
+      final archive = ZipDecoder().decodeBytes(zip);
+      final names = archive.files.map((f) => f.name).toSet();
+      expect(names, containsAll([
+        WeightBackupCodec.weightFileName,
+        BiteBackupCodec.biteFileName,
+      ]));
+    });
+
+    test('the weight entry stays decodable by WeightBackupCodec', () {
+      // Backward compatibility: adding the bite CSV must not disturb the
+      // weight restore path, which reads weight.csv out of the same zip.
+      final zip = service.encodeBackup(
+        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [const Bite(id: 1, atMs: 1000)],
+      );
+
+      final weights = const WeightBackupCodec().decode(zip);
+      expect(weights.single.value, 75.5);
+    });
+
+    test('the bite entry holds the exported at_ms values', () {
+      final zip = service.encodeBackup(
+        const [],
+        [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 31000)],
+      );
+
+      final archive = ZipDecoder().decodeBytes(zip);
+      final csv = String.fromCharCodes(
+        contentOf(archive, BiteBackupCodec.biteFileName),
+      );
+      expect(csv, contains('1000'));
+      expect(csv, contains('31000'));
     });
   });
 
@@ -50,7 +139,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, backup);
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup);
 
       final restored = repo.getAllWeights();
       expect(restored.map((w) => w.value), containsAll([75.5, 75.0]));
@@ -69,7 +158,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, backup);
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup);
 
       // clear must come first, then one save per restored weight.
       expect(repo.operations, ['clear', 'save', 'save']);
@@ -79,9 +168,81 @@ void main() {
       final repo = InMemoryWeightRepository();
       await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
 
-      await service.restoreFromBackup(repo, codec.encode([]));
+      await service.restoreFromBackup(
+        repo,
+        _RecordingBiteRepository(),
+        codec.encode([]),
+      );
 
       expect(repo.getAllWeights(), isEmpty);
+    });
+
+    test('restores bites from a two-store backup, clearing first', () async {
+      final biteRepo = _RecordingBiteRepository();
+      final backup = service.encodeBackup(
+        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 31000)],
+      );
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      // clear must come first, then one log per restored bite.
+      expect(biteRepo.operations, ['clear', 'log', 'log']);
+      expect(biteRepo.loggedMs, [1000, 31000]);
+    });
+
+    test('dedupes repeated bite instants on import', () async {
+      final biteRepo = _RecordingBiteRepository();
+      // Two rows share an at_ms — a re-import artifact; only one bite survives.
+      final backup = service.encodeBackup(
+        const [],
+        [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 1000)],
+      );
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      expect(biteRepo.loggedMs, [1000]);
+    });
+
+    test('a present-but-empty bite entry clears existing bites', () async {
+      final biteRepo = _RecordingBiteRepository();
+      final backup = service.encodeBackup(
+        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        const [],
+      );
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      // The bite log is a real (empty) snapshot: cleared, nothing logged.
+      expect(biteRepo.operations, ['clear']);
+    });
+
+    test('leaves bites untouched for a weight-only (pre-bite) backup', () async {
+      final biteRepo = _RecordingBiteRepository();
+      // A legacy zip with no bites.csv must not wipe the existing bite log.
+      final backup = codec.encode([
+        Weight(date: DateTime(2023, 10, 27), value: 75.5),
+      ]);
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      expect(biteRepo.operations, isEmpty);
     });
   });
 }
