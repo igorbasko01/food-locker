@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/features/bite/data/bite_database.dart';
+import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
@@ -21,10 +24,13 @@ void main() async {
   final weightManager = WeightManager(weightRepository);
   await weightManager.initialize();
 
+  final biteRepository = DriftBiteRepository(BiteDatabase());
+
   runApp(
     MultiProvider(
       providers: [
         Provider<WeightRepository>.value(value: weightRepository),
+        Provider<BiteRepository>.value(value: biteRepository),
         Provider<SerializationService>(create: (_) => SerializationService()),
         ChangeNotifierProvider<WeightManager>.value(value: weightManager),
       ],

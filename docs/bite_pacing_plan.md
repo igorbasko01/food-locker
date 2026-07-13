@@ -214,9 +214,9 @@ tooling swap, not a data migration.
 - [x] Add a helper to read the config effective at a given instant
 
 **Phase 3 — `BiteRepository`**
-- [ ] Define the interface: `logBite`, `lastBite`, `bitesInRange`, `biteCount`, `setPacingConfig`
-- [ ] Implement it against Drift
-- [ ] Expose it through `provider`
+- [x] Define the interface: `logBite`, `lastBite`, `bitesInRange`, `biteCount`, `setPacingConfig`
+- [x] Implement it against Drift
+- [x] Expose it through `provider`
 
 **Phase 4 — Bite logging screen (the main screen)**
 - [ ] Tap button → `logBite(DateTime.now())`, recorded immediately, never blocked
