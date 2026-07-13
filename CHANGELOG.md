@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.0](https://github.com/igorbasko01/food-locker/compare/v1.8.0...v1.9.0) (2026-07-13)
+
+
+### Features
+
+* add bite logging screen with today's count (bite-pacing Phase 4) ([#54](https://github.com/igorbasko01/food-locker/issues/54)) ([3e1a0c2](https://github.com/igorbasko01/food-locker/commit/3e1a0c22774328b241ff01080579c80c2665ad18))
+* add BiteRepository seam over Drift (bite-pacing Phase 3) ([#53](https://github.com/igorbasko01/food-locker/issues/53)) ([361c3b9](https://github.com/igorbasko01/food-locker/commit/361c3b9bf1588db2fc17e5de30dc69e4f493b8f8))
+* add Drift bite log store (bite-pacing Phase 1) ([#51](https://github.com/igorbasko01/food-locker/issues/51)) ([24d2af6](https://github.com/igorbasko01/food-locker/commit/24d2af6a09590bd285e05848645d05603573aad6))
+* add flutter-emulator-run skill ([#47](https://github.com/igorbasko01/food-locker/issues/47)) ([#48](https://github.com/igorbasko01/food-locker/issues/48)) ([e54f4e4](https://github.com/igorbasko01/food-locker/commit/e54f4e4002623dfd77c48dab323616cbbce114e2))
+* add pacing visualization to bite screen (bite-pacing Phase 5) ([#55](https://github.com/igorbasko01/food-locker/issues/55)) ([395fabf](https://github.com/igorbasko01/food-locker/commit/395fabffa0bdec0d796c3febef8a2cf118165d0a))
+* add pacing_config table with default seed (bite-pacing Phase 2) ([#52](https://github.com/igorbasko01/food-locker/issues/52)) ([bbb82a1](https://github.com/igorbasko01/food-locker/commit/bbb82a1b7865b2e8e0c69ba669540ca1375b55b2))
+* add resolve-github-issue skill ([#44](https://github.com/igorbasko01/food-locker/issues/44)) ([#45](https://github.com/igorbasko01/food-locker/issues/45)) ([63ffd48](https://github.com/igorbasko01/food-locker/commit/63ffd486ddc5425697e0781e15b25f16d18c9710))
+* two-store CSV backup for the bite log (bite-pacing Phases 6 & 7) ([#56](https://github.com/igorbasko01/food-locker/issues/56)) ([4c6f573](https://github.com/igorbasko01/food-locker/commit/4c6f5738fc72c5d3e0f18046f814171fb9e7761e))
+
 ## [1.8.0](https://github.com/igorbasko01/food-locker/compare/v1.7.1...v1.8.0) (2026-06-17)
 
 
