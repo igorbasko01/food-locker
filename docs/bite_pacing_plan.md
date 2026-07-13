@@ -272,11 +272,11 @@ The Bite screen content is currently left-justified; it should be horizontally c
 Alongside the pacing zone message, show a live timer counting the time elapsed since the current
 bite started, running up until the "in the clear" (`b2`) threshold is reached — at which point the
 timer disappears.
-- [ ] Render an elapsed-time readout next to the pacing message, driven by the same clock ticker
-      (`now − lastBite`) already rebuilding the zone
-- [ ] Count up from the bite instant; hide the timer once the gap reaches `b2` (the "all good"
-      threshold), consistent with the ticker freezing/cancelling at `b2`
-- [ ] On screen open with no recent bite (already past `b2`, or none), show no timer
+- [x] Render a live readout driven by the same clock ticker already rebuilding the zone (shipped as
+      a countdown folded inside the tap button — see Phase 12)
+- [x] Count down toward the `b2` threshold; hide the readout once the gap reaches `b2` (the "all
+      good" threshold), consistent with the ticker freezing/cancelling at `b2`
+- [x] On screen open with no recent bite (already past `b2`, or none), show no timer
 
 **Phase 11 — Export/import the `pacing_config` table**
 
@@ -307,21 +307,19 @@ is fully tappable in every zone, including red, and a tap always logs a bite imm
 colour still never green-lights an early bite (red/amber mean "still costly"), and reaching `b2`
 remains the only readiness cue.
 
-- [ ] Add a short `label` to the per-zone constants (e.g. `Too soon` / `Hold on` / `Clear`),
-      alongside the existing colour/icon/message, keeping them fixed app constants (not theme
-      teal) so the red/amber/green semantics stay stable — reuse the zone styling that currently
-      lives in `PacingIndicator` rather than duplicating the colour values
-- [ ] Drive `_BiteButton`'s fill from the current `PacingZone` colour instead of
-      `colorScheme.primary`, animating the colour change (the existing ~250 ms ease already used
-      by the banner) so zone transitions don't snap
-- [ ] Replace the button's static "Bite" text with the zone label, keeping the icon and ensuring
-      the on-colour text/icon stay legible against all three fills (contrast check on amber in
-      particular); the button keeps its `Semantics(button: true, label: 'Log a bite')` so the
+- [x] Add a short `label` to the per-zone constants (`Too soon` / `Hold on` / `Clear`), kept as
+      fixed app constants (not theme teal) in a shared `PacingZoneStyle` promoted out of
+      `PacingIndicator`, plus a per-zone on-fill colour for legibility (icon/message dropped — the
+      button keeps its own icon and the message is no longer shown)
+- [x] Drive `_BiteButton`'s fill from the current `PacingZone` colour instead of
+      `colorScheme.primary`, animating the colour change (~250 ms ease) so zone transitions don't snap
+- [x] Keep the button's "Bite" action label and add the zone word beneath it, keeping the icon and
+      ensuring the on-colour text/icon stay legible against all three fills (contrast check on amber
+      in particular); the button keeps its `Semantics(button: true, label: 'Log a bite')` so the
       action is still announced independently of the visual zone label
-- [ ] Remove the standalone `PacingIndicator` from the Bite screen (and delete the widget if it
-      has no other use), reflowing the column now that the banner is gone
-- [ ] Confirm the static clear state on open (no recent bite) shows a green "Clear" button with no
+- [x] Remove the standalone `PacingIndicator` from the Bite screen and delete the widget, reflowing
+      the column now that the banner is gone
+- [x] Confirm the static clear state on open (no recent bite) shows a green "Clear" button with no
       ticker running, and that a tap immediately flips it to the red "Too soon" state
-- [ ] Keep this consistent with Phase 10 if implemented — the elapsed-time readout still hides at
-      `b2`; decide whether it sits under the button or inside it now that the button carries the
-      zone label
+- [x] Keep this consistent with Phase 10 — the countdown readout still hides at `b2`, and sits
+      inside the button now that the button carries the zone label
