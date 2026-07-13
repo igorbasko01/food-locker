@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/igorbasko01/food-locker/compare/v1.10.0...v1.11.0) (2026-07-13)
+
+
+### Features
+
+* bite pacing countdown timer and pacing-coloured tap button ([#62](https://github.com/igorbasko01/food-locker/issues/62)) ([38059fb](https://github.com/igorbasko01/food-locker/commit/38059fb896027d74fea6da66f52b2275fbb9eb02))
+
+
+### Bug Fixes
+
+* center bite screen content on full screen width ([#60](https://github.com/igorbasko01/food-locker/issues/60)) ([82ff30e](https://github.com/igorbasko01/food-locker/commit/82ff30e1784f120b975648edb53f2d3a2be50a57))
+
 ## [1.10.0](https://github.com/igorbasko01/food-locker/compare/v1.9.0...v1.10.0) (2026-07-13)
 
 
