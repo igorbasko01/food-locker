@@ -235,3 +235,37 @@ tooling swap, not a data migration.
 **Phase 7 — CSV import**
 - [x] Parse the bite CSV back into the SQLite (Drift) store
 - [x] Route through the repository seam; validate / dedupe on import
+
+---
+
+## 5. Follow-up tasks
+
+Refinements to the shipped feature, ordered independently — each is a small, self-contained
+change to the existing Bite screen and app shell.
+
+**Phase 8 — Reorder the Bite tab**
+
+The Bite tab currently sits first in the bottom navigation. Move it so the tab order reads
+**Home, Weight, Bite, Settings** — Bite becomes the third tab.
+- [ ] Reorder the tabs in `AppShell` so Bite is third (Home, Weight, Bite, Settings)
+- [ ] Update the matching `IndexedStack` children and any tab-index constants/defaults so the
+      selected index still maps to the right page
+- [ ] Confirm the default landing tab is still the intended one after the reorder
+
+**Phase 9 — Center the Bite screen content**
+
+The Bite screen content is currently left-justified; it should be horizontally centered.
+- [ ] Center the Bite screen's content horizontally (cross-axis alignment on the column /
+      wrap in a `Center`), matching the layout intent of the other tabs
+- [ ] Verify the tap button, count, and pacing message all read as centered
+
+**Phase 10 — Elapsed-time timer up to the clear threshold**
+
+Alongside the pacing zone message, show a live timer counting the time elapsed since the current
+bite started, running up until the "in the clear" (`b2`) threshold is reached — at which point the
+timer disappears.
+- [ ] Render an elapsed-time readout next to the pacing message, driven by the same clock ticker
+      (`now − lastBite`) already rebuilding the zone
+- [ ] Count up from the bite instant; hide the timer once the gap reaches `b2` (the "all good"
+      threshold), consistent with the ticker freezing/cancelling at `b2`
+- [ ] On screen open with no recent bite (already past `b2`, or none), show no timer
