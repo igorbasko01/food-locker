@@ -111,41 +111,49 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Spacer(),
-              Text(
-                "Today's Bites",
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.5,
+          // Force full width so the centered column spans the whole screen.
+          // Unlike the other tabs (scroll views that fill width), this page is
+          // a bare Column; inside the app shell's IndexedStack (loose sizing,
+          // topStart alignment) it would otherwise shrink to the button's width
+          // and pin left, leaving the content off-centre from the app-bar title.
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Spacer(),
+                Text(
+                  "Today's Bites",
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${biteManager.todayCount}',
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+                const SizedBox(height: 8),
+                Text(
+                  '${biteManager.todayCount}',
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              PacingIndicator(zone: biteManager.pacingZone),
-              const SizedBox(height: 24),
-              _BiteButton(onTap: _handleBite),
-              const Spacer(),
-              Text(
-                'Tap for each bite',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                const Spacer(),
+                PacingIndicator(zone: biteManager.pacingZone),
+                const SizedBox(height: 24),
+                _BiteButton(onTap: _handleBite),
+                const Spacer(),
+                Text(
+                  'Tap for each bite',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
