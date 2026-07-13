@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/igorbasko01/food-locker/compare/v1.9.0...v1.10.0) (2026-07-13)
+
+
+### Features
+
+* keep screen awake for 15s after each bite ([#59](https://github.com/igorbasko01/food-locker/issues/59)) ([e847371](https://github.com/igorbasko01/food-locker/commit/e84737133b1cd78677def45a3196bde404cb4dcf))
+* reorder bite tab, center bite screen, and plan follow-ups ([#57](https://github.com/igorbasko01/food-locker/issues/57)) ([680948e](https://github.com/igorbasko01/food-locker/commit/680948ed0479e25633e9b4a00b7bb570c4400765))
+
 ## [1.9.0](https://github.com/igorbasko01/food-locker/compare/v1.8.0...v1.9.0) (2026-07-13)
 
 
