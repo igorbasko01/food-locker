@@ -14,13 +14,6 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    BitePage(),
-    HomePage(),
-    WeightPage(),
-    SettingsPage(),
-  ];
-
   static const List<String> _titles = ['Bite', 'Home', 'Weight', 'Settings'];
 
   void _onTabTapped(int index) {
@@ -33,7 +26,17 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(_titles[_currentIndex])),
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // The Bite tab keeps the screen awake while logging; tell it whether
+          // it is the visible tab so it can release the wake-lock when hidden.
+          BitePage(isActive: _currentIndex == 0),
+          const HomePage(),
+          const WeightPage(),
+          const SettingsPage(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
