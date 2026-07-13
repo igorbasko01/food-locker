@@ -247,17 +247,19 @@ change to the existing Bite screen and app shell.
 
 The Bite tab currently sits first in the bottom navigation. Move it so the tab order reads
 **Home, Weight, Bite, Settings** — Bite becomes the third tab.
-- [ ] Reorder the tabs in `AppShell` so Bite is third (Home, Weight, Bite, Settings)
-- [ ] Update the matching `IndexedStack` children and any tab-index constants/defaults so the
+- [x] Reorder the tabs in `AppShell` so Bite is third (Home, Weight, Bite, Settings)
+- [x] Update the matching `IndexedStack` children and any tab-index constants/defaults so the
       selected index still maps to the right page
-- [ ] Confirm the default landing tab is still the intended one after the reorder
+- [x] Confirm the default landing tab is still the intended one after the reorder (now Home —
+      index 0 — matching the pre-bite landing tab)
 
 **Phase 9 — Center the Bite screen content**
 
 The Bite screen content is currently left-justified; it should be horizontally centered.
-- [ ] Center the Bite screen's content horizontally (cross-axis alignment on the column /
-      wrap in a `Center`), matching the layout intent of the other tabs
-- [ ] Verify the tap button, count, and pacing message all read as centered
+- [x] Center the Bite screen's content horizontally (explicit `CrossAxisAlignment.center` on the
+      column plus `TextAlign.center` on the loose labels), matching the layout intent of the
+      other tabs
+- [x] Verify the tap button, count, and pacing message all read as centered
 
 **Phase 10 — Elapsed-time timer up to the clear threshold**
 
