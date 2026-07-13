@@ -1,11 +1,11 @@
 # FoodLocker
 
-A Flutter application designed to track food intake and manage daily nutritional goals efficiently. This project leverages `Hive` for fast local data storage and `Provider` for state management.
+A Flutter application designed to track food intake and manage daily nutritional goals efficiently. This project leverages `Hive CE` for fast local data storage and `Provider` for state management.
 
 ## Features
 
 - **Daily Food Tracking**: Log your daily food consumption easily.
-- **Persistent Storage**: Data is saved locally using [Hive](https://docs.hivedb.dev/) and [SharedPreferences](https://pub.dev/packages/shared_preferences), ensuring your records are kept safe even after the app is closed.
+- **Persistent Storage**: Data is saved locally using [Hive CE](https://pub.dev/packages/hive_ce) and [SharedPreferences](https://pub.dev/packages/shared_preferences), ensuring your records are kept safe even after the app is closed.
 - **Food Configuration**: Manage and customize your food items and their nutritional values.
 - **Theming**: Includes a custom app theme for a consistent and pleasant user interface.
 - **State Management**: Utilizes the `Provider` package for efficient state management across the application.
@@ -42,7 +42,7 @@ This project is a starting point for a Flutter application.
 
 ### Code Generation
 
-This project uses `build_runner` for code generation (e.g., for Hive adapters). If you make changes to models that require code generation, run:
+This project uses `build_runner` for code generation (e.g., for Hive CE adapters). If you make changes to models that require code generation, run:
 
 ```bash
 flutter pub run build_runner build

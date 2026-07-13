@@ -1,6 +1,6 @@
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 class PersistentWeightRepository with WeightRepositoryHelper implements WeightRepository {
   final Box<Weight> _box;
