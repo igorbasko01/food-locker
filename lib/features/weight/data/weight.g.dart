@@ -8,7 +8,7 @@ part of 'weight.dart';
 
 class WeightAdapter extends TypeAdapter<Weight> {
   @override
-  final int typeId = 4;
+  final typeId = 4;
 
   @override
   Weight read(BinaryReader reader) {
@@ -18,8 +18,8 @@ class WeightAdapter extends TypeAdapter<Weight> {
     };
     return Weight(
       date: fields[0] as DateTime,
-      value: fields[1] as double,
-      unit: fields[2] as WeightUnit,
+      value: (fields[1] as num).toDouble(),
+      unit: fields[2] == null ? WeightUnit.kilograms : fields[2] as WeightUnit,
     );
   }
 
@@ -48,7 +48,7 @@ class WeightAdapter extends TypeAdapter<Weight> {
 
 class WeightUnitAdapter extends TypeAdapter<WeightUnit> {
   @override
-  final int typeId = 3;
+  final typeId = 3;
 
   @override
   WeightUnit read(BinaryReader reader) {
@@ -67,10 +67,8 @@ class WeightUnitAdapter extends TypeAdapter<WeightUnit> {
     switch (obj) {
       case WeightUnit.kilograms:
         writer.writeByte(0);
-        break;
       case WeightUnit.pounds:
         writer.writeByte(1);
-        break;
     }
   }
 

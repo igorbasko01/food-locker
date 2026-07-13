@@ -53,7 +53,20 @@ class SerializationService {
     final file = File(filePath);
     final bytes = await file.readAsBytes();
 
-    final weights = const WeightBackupCodec().decode(bytes);
+    await restoreFromBackup(weightRepo, bytes);
+  }
+
+  /// Replaces every stored weight with the contents of a backup zip.
+  ///
+  /// This is the destructive core of [importData], kept separate from the
+  /// file-picker and file-I/O plumbing so the clear-then-restore path is
+  /// unit-testable. It is also the natural coordination point for the upcoming
+  /// two-store import (bite data alongside weights).
+  Future<void> restoreFromBackup(
+    WeightRepository weightRepo,
+    List<int> zipBytes,
+  ) async {
+    final weights = const WeightBackupCodec().decode(zipBytes);
     await weightRepo.clear();
     for (final weight in weights) {
       await weightRepo.saveWeight(weight);

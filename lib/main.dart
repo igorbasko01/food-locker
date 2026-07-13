@@ -4,16 +4,16 @@ import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
+import 'package:food_locker/hive_registrar.g.dart';
 import 'package:food_locker/ui/app_shell.dart';
 import 'package:food_locker/ui/theme.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(WeightAdapter());
-  Hive.registerAdapter(WeightUnitAdapter());
+  Hive.registerAdapters();
   final weightBox = await Hive.openBox<Weight>('weights');
 
   final weightRepository = PersistentWeightRepository(weightBox);
