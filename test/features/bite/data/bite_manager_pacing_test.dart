@@ -6,7 +6,7 @@ import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/pacing_zone.dart';
 
-/// Phase 5: the pacing ticker lifecycle. Driven with [fakeAsync] so the clock
+/// The pacing ticker lifecycle. Driven with [fakeAsync] so the clock
 /// (via `package:clock`) and the periodic ticker advance together and
 /// deterministically — no real waiting, no drift database under fake time.
 void main() {
@@ -44,6 +44,31 @@ void main() {
 
       async.elapse(const Duration(seconds: 15));
       expect(manager.pacingZone, PacingZone.inTheClear);
+
+      manager.dispose();
+    });
+  });
+
+  test('the ticker notifies every tick so the readout keeps updating', () {
+    fakeAsync((async) {
+      final repo = _FakeBiteRepository(config: config);
+      final manager = BiteManager(repo, onReachedClear: () async {});
+
+      manager.logBite();
+      async.flushMicrotasks();
+      expect(manager.pacingZone, PacingZone.tooSoon);
+
+      // Within a single zone (still too-soon) the zone never changes, yet the
+      // ticker must keep publishing so the countdown readout can update —
+      // driven by this same clock ticker.
+      var ticks = 0;
+      manager.addListener(() => ticks++);
+      async.elapse(const Duration(seconds: 3));
+
+      expect(manager.pacingZone, PacingZone.tooSoon, reason: 'still same zone');
+      expect(ticks, greaterThan(1),
+          reason: 'publishes each tick within a zone, not only on change');
+      expect(manager.sinceLastBite!.inSeconds, greaterThanOrEqualTo(3));
 
       manager.dispose();
     });

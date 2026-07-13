@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
-import 'package:food_locker/ui/widgets/pacing_indicator.dart';
+import 'package:food_locker/features/bite/data/pacing_zone.dart';
+import 'package:food_locker/ui/widgets/pacing_zone_style.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-/// The main bite-logging screen (Phases 4–5).
+/// The main bite-logging screen.
 ///
-/// One big tap = one bite, recorded immediately and never blocked (§3a); the
-/// day's running count — the headline metric — sits above the button and
-/// re-queries after every tap. The pacing feedback banner (§3b) sits between
-/// the count and the button, colouring the current zone derived from the time
-/// since the last bite.
+/// One big tap = one bite, recorded immediately and never blocked; the day's
+/// running count — the headline metric — sits above the button and re-queries
+/// after every tap. The button itself is the pacing surface, colouring the
+/// current zone derived from the time since the last bite.
 ///
 /// Logging a meal is a stop-start affair — you eat a bite, tap, wait, eat
 /// again — and those gaps can be longer than the system screen timeout, which
@@ -74,8 +74,6 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
     _keepAwakeForWindow(biteManager.b2 + _clearGrace);
   }
 
-  /// Enables the wake-lock (if not already held) and (re)arms the release
-  /// timer so the screen stays on for [window] from now.
   void _keepAwakeForWindow(Duration window) {
     if (!widget.isActive) return;
     _releaseTimer?.cancel();
@@ -111,11 +109,9 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          // Force full width so the centered column spans the whole screen.
-          // Unlike the other tabs (scroll views that fill width), this page is
-          // a bare Column; inside the app shell's IndexedStack (loose sizing,
-          // topStart alignment) it would otherwise shrink to the button's width
-          // and pin left, leaving the content off-centre from the app-bar title.
+          // Force full width: inside the app shell's IndexedStack (loose sizing)
+          // this bare Column would otherwise shrink to the button's width and pin
+          // left, off-centre from the app-bar title.
           child: SizedBox(
             width: double.infinity,
             child: Column(
@@ -140,9 +136,14 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
                   ),
                 ),
                 const Spacer(),
-                PacingIndicator(zone: biteManager.pacingZone),
-                const SizedBox(height: 24),
-                _BiteButton(onTap: _handleBite),
+                _BiteButton(
+                  zone: biteManager.pacingZone,
+                  remaining: biteManager.isPacing
+                      ? biteManager.b2 -
+                          (biteManager.sinceLastBite ?? Duration.zero)
+                      : null,
+                  onTap: _handleBite,
+                ),
                 const Spacer(),
                 Text(
                   'Tap for each bite',
@@ -161,50 +162,119 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
   }
 }
 
-/// The large circular tap target — the primary action of the whole screen.
+/// The large circular tap target and the pacing surface itself: its fill
+/// animates to the current [zone]'s colour (red / amber / green) and, below its
+/// "Bite" action label, it names the current zone — so the feedback lives under
+/// the thumb. [remaining] — the seconds left until the clear point — shows
+/// inside the button while pacing, hidden at `b2`.
+///
+/// Logging stays feedback, not lockout: the button is tappable in every zone, a
+/// tap always logs immediately, and the colour never green-lights an early bite
+/// (red/amber mean "still costly"). The fixed 'Log a bite' semantics label keeps
+/// the action announced independently of the visual zone label.
 class _BiteButton extends StatelessWidget {
-  const _BiteButton({required this.onTap});
+  const _BiteButton({
+    required this.zone,
+    required this.remaining,
+    required this.onTap,
+  });
 
+  final PacingZone zone;
+  final Duration? remaining;
   final Future<void> Function() onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final style = PacingZoneStyle.of(zone);
+    final countdown = remaining;
 
     return Semantics(
       button: true,
       label: 'Log a bite',
-      child: Material(
-        color: theme.colorScheme.primary,
-        shape: const CircleBorder(),
-        elevation: 4,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            width: 220,
-            height: 220,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+      child: AnimatedContainer(
+        // Animate zone-colour changes so they glide instead of snapping.
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        width: 220,
+        height: 220,
+        decoration: BoxDecoration(
+          color: style.fillColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Icon(
-                  Icons.restaurant_rounded,
-                  size: 72,
-                  color: theme.colorScheme.onPrimary,
+                // Centred so the icon and labels don't shift as the countdown
+                // appears and disappears.
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.restaurant_rounded,
+                      size: 60,
+                      color: style.onFillColor,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Bite',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: style.onFillColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      style.label,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: style.onFillColor.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Bite',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
+                if (countdown != null)
+                  Positioned(
+                    bottom: 24,
+                    child: Text(
+                      '${_ceilSeconds(countdown)}s',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: style.onFillColor.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// Seconds left, rounded *up* and floored at zero, so the countdown reads a
+  /// whole "1s" for the last fractional second rather than flashing "0s" while
+  /// still pacing.
+  static int _ceilSeconds(Duration d) {
+    final ms = d.inMilliseconds;
+    if (ms <= 0) return 0;
+    return (ms / Duration.millisecondsPerSecond).ceil();
   }
 }
