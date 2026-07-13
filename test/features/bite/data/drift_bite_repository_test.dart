@@ -185,4 +185,29 @@ void main() {
       expect(all, hasLength(2));
     });
   });
+
+  group('clearBites', () {
+    test('removes every logged bite', () async {
+      await repo.logBite(DateTime(2026, 7, 13, 12, 0, 0));
+      await repo.logBite(DateTime(2026, 7, 13, 12, 0, 30));
+
+      await repo.clearBites();
+
+      expect(await db.select(db.bites).get(), isEmpty);
+      expect(await repo.lastBite(), isNull);
+    });
+
+    test('leaves the pacing-config history intact', () async {
+      await repo.logBite(DateTime(2026, 7, 13, 12, 0, 0));
+
+      await repo.clearBites();
+
+      // The seeded default must survive a bite wipe — it is not part of the
+      // CSV backup and is a separate slowly-changing dimension.
+      final cfg = await repo.pacingConfigAt(DateTime(2026, 7, 13));
+      expect(cfg, isNotNull);
+      expect(cfg!.b1S, 15);
+      expect(cfg.b2S, 30);
+    });
+  });
 }

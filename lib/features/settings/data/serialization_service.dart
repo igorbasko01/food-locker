@@ -70,6 +70,7 @@ class SerializationService {
 
   Future<void> importData(BuildContext context) async {
     final weightRepo = context.read<WeightRepository>();
+    final biteRepo = context.read<BiteRepository>();
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -82,23 +83,42 @@ class SerializationService {
     final file = File(filePath);
     final bytes = await file.readAsBytes();
 
-    await restoreFromBackup(weightRepo, bytes);
+    await restoreFromBackup(weightRepo, biteRepo, bytes);
   }
 
-  /// Replaces every stored weight with the contents of a backup zip.
+  /// Replaces both stores' contents with a backup zip — the destructive core of
+  /// [importData], kept separate from the file-picker and file-I/O plumbing so
+  /// the clear-then-restore path stays unit-testable.
   ///
-  /// This is the destructive core of [importData], kept separate from the
-  /// file-picker and file-I/O plumbing so the clear-then-restore path is
-  /// unit-testable. It is also the natural coordination point for the upcoming
-  /// two-store import (bite data alongside weights).
+  /// The single decode is the coordination point for the two-store tax (§1c):
+  /// weights and bites are restored from the same archive. Weights are always
+  /// replaced; bites are replaced only when the archive actually carries a bite
+  /// entry, so restoring an older weight-only backup leaves existing bites
+  /// alone rather than wiping them.
   Future<void> restoreFromBackup(
     WeightRepository weightRepo,
+    BiteRepository biteRepo,
     List<int> zipBytes,
   ) async {
-    final weights = const WeightBackupCodec().decode(zipBytes);
+    final archive = ZipDecoder().decodeBytes(zipBytes);
+
+    final weights = const WeightBackupCodec().fromArchive(archive);
     await weightRepo.clear();
     for (final weight in weights) {
       await weightRepo.saveWeight(weight);
+    }
+
+    final bites = const BiteBackupCodec().fromArchive(archive);
+    if (bites != null) {
+      await biteRepo.clearBites();
+      final seen = <int>{};
+      for (final at in bites) {
+        // Dedupe by instant so a backup with repeated rows — or a re-import of
+        // the same file — never double-logs a bite.
+        if (seen.add(at.millisecondsSinceEpoch)) {
+          await biteRepo.logBite(at);
+        }
+      }
     }
   }
 }

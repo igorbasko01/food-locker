@@ -38,7 +38,7 @@ Dates are treated as day-granular throughout: repository keys and equality norma
 
 ### Backup / restore
 
-`SerializationService` (Settings tab) exports/imports a zip. `WeightBackupCodec` handles CSV-in-zip encode/decode; `restoreFromBackup` is the destructive clear-then-restore core, kept separate from file-picker/IO so it stays unit-testable. Core CSV helpers live in `lib/core/` (`csv_serializer.dart`, `where.dart`).
+`SerializationService` (Settings tab) exports/imports one zip spanning **both** stores. Each dataset owns a per-store codec — `WeightBackupCodec` (`weight.csv`) and `BiteBackupCodec` (`bites.csv`, storing only the raw `at_ms`) — and `SerializationService` coordinates them into a single archive. `restoreFromBackup` is the destructive clear-then-restore core, kept separate from file-picker/IO so it stays unit-testable; it always replaces weights, and replaces bites only when the archive actually carries a bite entry (an older weight-only backup leaves bites untouched), deduping repeated instants on import. Core CSV helpers live in `lib/core/` (`csv_serializer.dart`, `where.dart`).
 
 ## Testing
 

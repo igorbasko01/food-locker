@@ -76,4 +76,9 @@ class DriftBiteRepository implements BiteRepository {
   Future<PacingConfig?> pacingConfigAt(DateTime instant) {
     return _db.pacingConfigAt(instant);
   }
+
+  @override
+  Future<void> clearBites() async {
+    await _db.delete(_db.bites).go();
+  }
 }
