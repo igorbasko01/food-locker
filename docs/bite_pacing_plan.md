@@ -259,6 +259,12 @@ The Bite screen content is currently left-justified; it should be horizontally c
 - [x] Center the Bite screen's content horizontally (explicit `CrossAxisAlignment.center` on the
       column plus `TextAlign.center` on the loose labels), matching the layout intent of the
       other tabs
+- [x] Constrain the column to full width (`SizedBox(width: double.infinity)`). This was the
+      missing piece: `CrossAxisAlignment.center` only centers *within the column's own width*, and
+      inside `AppShell`'s `IndexedStack` (loose sizing, `topStart` alignment) the bare column shrank
+      to the button's width and pinned left — so the content sat left of the centered app-bar title
+      until it was forced to full width. The other tabs avoid this because their scroll views
+      (`CustomScrollView`/`ListView`) already fill the width.
 - [x] Verify the tap button, count, and pacing message all read as centered
 
 **Phase 10 — Elapsed-time timer up to the clear threshold**
