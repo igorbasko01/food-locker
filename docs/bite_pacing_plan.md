@@ -269,3 +269,18 @@ timer disappears.
 - [ ] Count up from the bite instant; hide the timer once the gap reaches `b2` (the "all good"
       threshold), consistent with the ticker freezing/cancelling at `b2`
 - [ ] On screen open with no recent bite (already past `b2`, or none), show no timer
+
+**Phase 11 — Export/import the `pacing_config` table**
+
+Backup currently exports only `bites.csv` (raw `at_ms` timestamps); the `pacing_config`
+table — the versioned thresholds — is left out, so a restore loses the config history and any
+historical bite's zone can no longer be reconstructed (§2b). Extend the backup to carry it too.
+- [ ] Add a per-store CSV entry for the pacing config (e.g. `pacing_config.csv` with
+      `effective_ms`, `b1_s`, `b2_s`, one row per version), following the `BiteBackupCodec` /
+      `bites.csv` pattern
+- [ ] Have `SerializationService` pack it into the same archive and route it through the
+      repository seam on both export and import
+- [ ] On import, replace/merge the config versions consistently with how bites are restored;
+      preserve the null-vs-empty semantics for older archives that lack the entry (leave existing
+      config untouched when absent)
+- [ ] Ensure a default config still seeds correctly when restoring a pre-config backup
