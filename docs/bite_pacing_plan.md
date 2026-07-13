@@ -203,10 +203,10 @@ tooling swap, not a data migration.
 - [x] Verify a `Weight` round-trips through a real on-disk box (adapters + binary format intact)
 
 **Phase 1 — Drift setup + `bites` table**
-- [ ] Add Drift deps (`drift`, `drift_flutter` or `sqlite3_flutter_libs`, dev `drift_dev` + `build_runner`)
-- [ ] Define the database class and connection
-- [ ] Define `bites`: `id` autoincrement, `at_ms` plain `integer()` (epoch millis), indexed
-- [ ] Run codegen; confirm the DB opens and a row round-trips
+- [x] Add Drift deps (`drift`, `drift_flutter` or `sqlite3_flutter_libs`, dev `drift_dev` + `build_runner`)
+- [x] Define the database class and connection
+- [x] Define `bites`: `id` autoincrement, `at_ms` plain `integer()` (epoch millis), indexed
+- [x] Run codegen; confirm the DB opens and a row round-trips
 
 **Phase 2 — `pacing_config` table + default**
 - [ ] Define `pacing_config`: `effective_ms`, `b1_s`, `b2_s`
