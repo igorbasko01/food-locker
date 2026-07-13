@@ -112,10 +112,12 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
               Text(
                 "Today's Bites",
+                textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
@@ -137,6 +139,7 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
               const Spacer(),
               Text(
                 'Tap for each bite',
+                textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

@@ -14,7 +14,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  static const List<String> _titles = ['Bite', 'Home', 'Weight', 'Settings'];
+  static const List<String> _titles = ['Home', 'Weight', 'Bite', 'Settings'];
 
   void _onTabTapped(int index) {
     setState(() {
@@ -29,11 +29,11 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // The Bite tab keeps the screen awake while logging; tell it whether
-          // it is the visible tab so it can release the wake-lock when hidden.
-          BitePage(isActive: _currentIndex == 0),
           const HomePage(),
           const WeightPage(),
+          // The Bite tab keeps the screen awake while logging; tell it whether
+          // it is the visible tab so it can release the wake-lock when hidden.
+          BitePage(isActive: _currentIndex == 2),
           const SettingsPage(),
         ],
       ),
@@ -43,11 +43,6 @@ class _AppShellState extends State<AppShell> {
         onTap: _onTabTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_outlined),
-            activeIcon: Icon(Icons.restaurant_rounded),
-            label: 'Bite',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
@@ -56,6 +51,11 @@ class _AppShellState extends State<AppShell> {
             icon: Icon(Icons.monitor_weight_outlined),
             activeIcon: Icon(Icons.monitor_weight_rounded),
             label: 'Weight',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant_outlined),
+            activeIcon: Icon(Icons.restaurant_rounded),
+            label: 'Bite',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),

@@ -235,3 +235,54 @@ tooling swap, not a data migration.
 **Phase 7 — CSV import**
 - [x] Parse the bite CSV back into the SQLite (Drift) store
 - [x] Route through the repository seam; validate / dedupe on import
+
+---
+
+## 5. Follow-up tasks
+
+Refinements to the shipped feature, ordered independently — each is a small, self-contained
+change to the existing Bite screen and app shell.
+
+**Phase 8 — Reorder the Bite tab**
+
+The Bite tab currently sits first in the bottom navigation. Move it so the tab order reads
+**Home, Weight, Bite, Settings** — Bite becomes the third tab.
+- [x] Reorder the tabs in `AppShell` so Bite is third (Home, Weight, Bite, Settings)
+- [x] Update the matching `IndexedStack` children and any tab-index constants/defaults so the
+      selected index still maps to the right page
+- [x] Confirm the default landing tab is still the intended one after the reorder (now Home —
+      index 0 — matching the pre-bite landing tab)
+
+**Phase 9 — Center the Bite screen content**
+
+The Bite screen content is currently left-justified; it should be horizontally centered.
+- [x] Center the Bite screen's content horizontally (explicit `CrossAxisAlignment.center` on the
+      column plus `TextAlign.center` on the loose labels), matching the layout intent of the
+      other tabs
+- [x] Verify the tap button, count, and pacing message all read as centered
+
+**Phase 10 — Elapsed-time timer up to the clear threshold**
+
+Alongside the pacing zone message, show a live timer counting the time elapsed since the current
+bite started, running up until the "in the clear" (`b2`) threshold is reached — at which point the
+timer disappears.
+- [ ] Render an elapsed-time readout next to the pacing message, driven by the same clock ticker
+      (`now − lastBite`) already rebuilding the zone
+- [ ] Count up from the bite instant; hide the timer once the gap reaches `b2` (the "all good"
+      threshold), consistent with the ticker freezing/cancelling at `b2`
+- [ ] On screen open with no recent bite (already past `b2`, or none), show no timer
+
+**Phase 11 — Export/import the `pacing_config` table**
+
+Backup currently exports only `bites.csv` (raw `at_ms` timestamps); the `pacing_config`
+table — the versioned thresholds — is left out, so a restore loses the config history and any
+historical bite's zone can no longer be reconstructed (§2b). Extend the backup to carry it too.
+- [ ] Add a per-store CSV entry for the pacing config (e.g. `pacing_config.csv` with
+      `effective_ms`, `b1_s`, `b2_s`, one row per version), following the `BiteBackupCodec` /
+      `bites.csv` pattern
+- [ ] Have `SerializationService` pack it into the same archive and route it through the
+      repository seam on both export and import
+- [ ] On import, replace/merge the config versions consistently with how bites are restored;
+      preserve the null-vs-empty semantics for older archives that lack the entry (leave existing
+      config untouched when absent)
+- [ ] Ensure a default config still seeds correctly when restoring a pre-config backup
