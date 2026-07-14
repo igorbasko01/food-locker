@@ -78,7 +78,19 @@ class DriftBiteRepository implements BiteRepository {
   }
 
   @override
+  Future<List<PacingConfig>> allPacingConfigs() {
+    return (_db.select(_db.pacingConfigs)
+          ..orderBy([(c) => OrderingTerm.asc(c.effectiveMs)]))
+        .get();
+  }
+
+  @override
   Future<void> clearBites() async {
     await _db.delete(_db.bites).go();
+  }
+
+  @override
+  Future<void> clearPacingConfigs() async {
+    await _db.delete(_db.pacingConfigs).go();
   }
 }

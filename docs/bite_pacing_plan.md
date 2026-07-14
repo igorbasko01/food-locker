@@ -283,15 +283,17 @@ timer disappears.
 Backup currently exports only `bites.csv` (raw `at_ms` timestamps); the `pacing_config`
 table — the versioned thresholds — is left out, so a restore loses the config history and any
 historical bite's zone can no longer be reconstructed (§2b). Extend the backup to carry it too.
-- [ ] Add a per-store CSV entry for the pacing config (e.g. `pacing_config.csv` with
+- [x] Add a per-store CSV entry for the pacing config (`pacing_config.csv` with
       `effective_ms`, `b1_s`, `b2_s`, one row per version), following the `BiteBackupCodec` /
-      `bites.csv` pattern
-- [ ] Have `SerializationService` pack it into the same archive and route it through the
-      repository seam on both export and import
-- [ ] On import, replace/merge the config versions consistently with how bites are restored;
-      preserve the null-vs-empty semantics for older archives that lack the entry (leave existing
-      config untouched when absent)
-- [ ] Ensure a default config still seeds correctly when restoring a pre-config backup
+      `bites.csv` pattern (`PacingConfigBackupCodec`)
+- [x] Have `SerializationService` pack it into the same archive and route it through the
+      repository seam on both export (`allPacingConfigs`) and import (`clearPacingConfigs` +
+      `setPacingConfig`)
+- [x] On import, replace/merge the config versions consistently with how bites are restored
+      (clear then re-insert, deduped by `effective_ms`); preserve the null-vs-empty semantics for
+      older archives that lack the entry (leave existing config untouched when absent)
+- [x] Ensure a default config still seeds correctly when restoring a pre-config backup (the
+      absent-entry case leaves the seeded default in place)
 
 **Phase 12 — Fold the pacing feedback into the button**
 

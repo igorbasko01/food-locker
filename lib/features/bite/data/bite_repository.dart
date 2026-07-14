@@ -43,12 +43,26 @@ abstract interface class BiteRepository {
   /// effective instant is at or before it, or null if none precedes it.
   Future<PacingConfig?> pacingConfigAt(DateTime instant);
 
+  /// Every pacing-config version, in chronological (effective-instant) order.
+  ///
+  /// The backup exports the whole history, not just the current version, so a
+  /// restore can still reconstruct the zone of any historical bite.
+  Future<List<PacingConfig>> allPacingConfigs();
+
   /// Deletes every logged bite.
   ///
   /// The clear half of the clear-then-restore import path (§1c): a backup is a
   /// full snapshot of the bite log, so restoring replaces it. The pacing-config
-  /// history is deliberately left intact — it is a separate slowly-changing
-  /// dimension the CSV backup doesn't carry, and wiping it would drop the
-  /// seeded default and any retuned thresholds.
+  /// history is deliberately left intact — it is cleared separately via
+  /// [clearPacingConfigs] only when a backup actually carries replacement
+  /// versions, so a bite-only or weight-only restore keeps the thresholds.
   Future<void> clearBites();
+
+  /// Deletes every pacing-config version.
+  ///
+  /// The clear half of the config restore: a backup that carries pacing config
+  /// is a full snapshot of the threshold history, so restoring replaces it.
+  /// Kept distinct from [clearBites] so the bite log and the config history are
+  /// cleared independently — a bite restore never touches the thresholds.
+  Future<void> clearPacingConfigs();
 }

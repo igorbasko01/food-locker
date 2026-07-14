@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
+import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -36,7 +37,12 @@ class SerializationService {
 
     if (weights.isEmpty && bites.isEmpty) return;
 
-    final zipData = encodeBackup(weights, bites);
+    // Pacing config rides along with real data rather than gating the export:
+    // the default is always seeded, so it never on its own makes a backup
+    // "non-empty".
+    final configs = await biteRepo.allPacingConfigs();
+
+    final zipData = encodeBackup(weights, bites, configs);
 
     final tempDir = await getTemporaryDirectory();
     final zipFile = File('${tempDir.path}/${generateZipFileName()}');
@@ -46,14 +52,20 @@ class SerializationService {
     await Share.shareXFiles([XFile(zipFile.path)], text: 'Food Locker Backup');
   }
 
-  /// Packs both datasets into a single backup zip. Each store owns its own
-  /// codec (§1c two-store tax); the coordination — one archive, one file per
-  /// dataset — lives here so a single export call spans both stores.
+  /// Packs every dataset into a single backup zip — weights, bites, and the
+  /// pacing-config history. Each dataset owns its own codec; the coordination —
+  /// one archive, one file per dataset — lives here so a single export call
+  /// spans both stores.
   @visibleForTesting
-  List<int> encodeBackup(List<Weight> weights, List<Bite> bites) {
+  List<int> encodeBackup(
+    List<Weight> weights,
+    List<Bite> bites,
+    List<PacingConfig> configs,
+  ) {
     final archive = Archive()
       ..addFile(const WeightBackupCodec().toArchiveFile(weights))
-      ..addFile(const BiteBackupCodec().toArchiveFile(bites));
+      ..addFile(const BiteBackupCodec().toArchiveFile(bites))
+      ..addFile(const PacingConfigBackupCodec().toArchiveFile(configs));
     return ZipEncoder().encode(archive);
   }
 
@@ -117,6 +129,21 @@ class SerializationService {
         // the same file — never double-logs a bite.
         if (seen.add(at.millisecondsSinceEpoch)) {
           await biteRepo.logBite(at);
+        }
+      }
+    }
+
+    final configs = const PacingConfigBackupCodec().fromArchive(archive);
+    if (configs != null) {
+      // Same null-vs-empty contract as bites: a pre-config (older) backup has
+      // no entry and leaves the seeded thresholds alone; a present entry is a
+      // full snapshot and replaces the history. Dedupe by effective instant,
+      // which keys a version.
+      await biteRepo.clearPacingConfigs();
+      final seen = <int>{};
+      for (final cfg in configs) {
+        if (seen.add(cfg.effectiveMs)) {
+          await biteRepo.setPacingConfig(cfg);
         }
       }
     }
