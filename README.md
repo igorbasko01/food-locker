@@ -1,14 +1,15 @@
 # FoodLocker
 
-A Flutter application for tracking your daily weight and understanding your progress over time. FoodLocker stores everything locally using `Hive CE` and uses `Provider` for state management.
+A Flutter application for tracking your daily weight and pacing your eating, one bite at a time. FoodLocker stores everything locally and uses `Provider` for state management.
 
 ## Features
 
 - **Daily Weight Tracking**: Log one weight entry per day, in kilograms or pounds.
 - **Analytics & Insights**: See your lowest weight all-time and over the last 7 / 30 days, plus "clean" vs. "overeating" streaks derived from day-over-day changes.
 - **Weight History & Chart**: Browse past entries and visualize trends with a chart (`fl_chart`).
-- **Backup & Restore**: Export your data to a zip file and import it back later from the Settings tab.
-- **Persistent Storage**: Data is saved locally using [Hive CE](https://pub.dev/packages/hive_ce), so your records survive app restarts.
+- **Bite Counting & Pacing**: Tap once per bite to count your bites for the day, with a colour-coded timer that paces you between bites (too soon → hold on → clear) and a haptic buzz when it's a good time for the next one. Bites are never blocked — the pacing is feedback, not a lockout.
+- **Backup & Restore**: Export all your data — weight and bites — to a zip file and import it back later from the Settings tab.
+- **Persistent Storage**: Data is saved locally — weight in [Hive CE](https://pub.dev/packages/hive_ce) and bites in [Drift](https://pub.dev/packages/drift)/SQLite — so your records survive app restarts.
 - **State Management**: Uses the [Provider](https://pub.dev/packages/provider) package for state management across the app.
 
 ## Getting Started
@@ -47,7 +48,7 @@ A Flutter application for tracking your daily weight and understanding your prog
 
 ### Code Generation
 
-This project uses `build_runner` for code generation (e.g. for Hive CE adapters). If you change a model that requires code generation, regenerate the `*.g.dart` files:
+This project uses `build_runner` for code generation (Hive CE adapters and the Drift database). If you change a model or Drift table that requires code generation, regenerate the `*.g.dart` files:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -55,7 +56,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Project Structure
 
-- `lib/features`: Feature-specific domain and persistence code (e.g. `weight`, `settings`).
+- `lib/features`: Feature-specific domain and persistence code (e.g. `weight`, `bite`, `settings`).
 - `lib/ui`: UI pages, widgets, the app shell, and theme.
 - `lib/core`: Shared helpers (CSV serialization, query utilities).
 - `lib/main.dart`: Application entry point and dependency wiring.

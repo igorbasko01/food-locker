@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-FoodLocker is a Flutter (mobile, primarily Android) app with two shipped features: daily **weight** tracking + analytics, and in-meal **bite** counting + pacing. State is exposed to the UI via Provider. The two features use different local stores: weight is on Hive CE, bite is on Drift/SQLite (see Architecture). Despite the name and README, those are the whole feature set (a `food`/`days` feature described in the README no longer exists in `lib/`).
+FoodLocker is a Flutter (mobile, primarily Android) app with two shipped features: daily **weight** tracking + analytics, and in-meal **bite** counting + pacing. State is exposed to the UI via Provider. The two features use different local stores: weight is on Hive CE, bite is on Drift/SQLite (see Architecture). Despite the app's name, there is no food-logging feature; a former `food`/`days` feature no longer exists in `lib/`.
 
 ## Commands
 
