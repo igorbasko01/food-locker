@@ -20,7 +20,7 @@ class WeightBackupCodec {
   }
 
   /// The weight CSV packaged as a single [ArchiveFile], so it can be added to a
-  /// shared archive that also carries other datasets (§1c two-store backup).
+  /// shared archive that also carries the other datasets' CSVs.
   ArchiveFile toArchiveFile(List<Weight> weights) {
     final csvContent = generateWeightCsv(weights);
     return ArchiveFile(weightFileName, csvContent.length, csvContent.codeUnits);
