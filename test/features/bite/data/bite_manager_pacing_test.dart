@@ -224,5 +224,11 @@ class _FakeBiteRepository implements BiteRepository {
   Future<PacingConfig?> pacingConfigAt(DateTime instant) async => config;
 
   @override
+  Future<List<PacingConfig>> allPacingConfigs() async => [?config];
+
+  @override
   Future<void> clearBites() async => _bites.clear();
+
+  @override
+  Future<void> clearPacingConfigs() async {}
 }

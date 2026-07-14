@@ -4,9 +4,9 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 
-/// Phase 3 verification: the [BiteRepository] seam over Drift. An in-memory
-/// drift database stands in for the on-disk store, so the seam is exercised
-/// without touching the filesystem.
+/// The [BiteRepository] seam over Drift. An in-memory drift database stands in
+/// for the on-disk store, so the seam is exercised without touching the
+/// filesystem.
 void main() {
   late BiteDatabase db;
   late BiteRepository repo;

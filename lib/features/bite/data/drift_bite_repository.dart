@@ -5,9 +5,9 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 /// Drift/SQLite-backed [BiteRepository].
 ///
 /// Every range in this store is a half-open `[from, to)` window over `at_ms`
-/// (epoch millis), which is what the plan's day-granular counts expect: a
-/// local day is `[startOfDay, startOfNextDay)`, so consecutive days never
-/// double-count the boundary instant.
+/// (epoch millis), which is what the day-granular counts expect: a local day is
+/// `[startOfDay, startOfNextDay)`, so consecutive days never double-count the
+/// boundary instant.
 class DriftBiteRepository implements BiteRepository {
   DriftBiteRepository(this._db);
 
@@ -78,7 +78,19 @@ class DriftBiteRepository implements BiteRepository {
   }
 
   @override
+  Future<List<PacingConfig>> allPacingConfigs() {
+    return (_db.select(_db.pacingConfigs)
+          ..orderBy([(c) => OrderingTerm.asc(c.effectiveMs)]))
+        .get();
+  }
+
+  @override
   Future<void> clearBites() async {
     await _db.delete(_db.bites).go();
+  }
+
+  @override
+  Future<void> clearPacingConfigs() async {
+    await _db.delete(_db.pacingConfigs).go();
   }
 }

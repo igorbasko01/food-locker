@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
+import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
@@ -32,6 +33,8 @@ class _RecordingWeightRepository extends InMemoryWeightRepository {
 class _RecordingBiteRepository implements BiteRepository {
   final List<String> operations = [];
   final List<int> loggedMs = [];
+  final List<String> configOperations = [];
+  final List<PacingConfig> savedConfigs = [];
 
   @override
   Future<void> clearBites() async {
@@ -46,6 +49,18 @@ class _RecordingBiteRepository implements BiteRepository {
   }
 
   @override
+  Future<void> clearPacingConfigs() async {
+    configOperations.add('clear');
+    savedConfigs.clear();
+  }
+
+  @override
+  Future<void> setPacingConfig(PacingConfig cfg) async {
+    configOperations.add('set');
+    savedConfigs.add(cfg);
+  }
+
+  @override
   Future<Bite?> lastBite() => throw UnimplementedError();
 
   @override
@@ -57,11 +72,11 @@ class _RecordingBiteRepository implements BiteRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> setPacingConfig(PacingConfig cfg) => throw UnimplementedError();
-
-  @override
   Future<PacingConfig?> pacingConfigAt(DateTime instant) =>
       throw UnimplementedError();
+
+  @override
+  Future<List<PacingConfig>> allPacingConfigs() => throw UnimplementedError();
 }
 
 void main() {
@@ -85,10 +100,11 @@ void main() {
     List<int> contentOf(Archive archive, String name) =>
         archive.files.firstWhere((f) => f.name == name).content as List<int>;
 
-    test('packs both datasets into one zip, one file each', () {
+    test('packs all three datasets into one zip, one file each', () {
       final zip = service.encodeBackup(
         [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
         [const Bite(id: 1, atMs: 1000)],
+        [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
       );
 
       final archive = ZipDecoder().decodeBytes(zip);
@@ -96,6 +112,7 @@ void main() {
       expect(names, containsAll([
         WeightBackupCodec.weightFileName,
         BiteBackupCodec.biteFileName,
+        PacingConfigBackupCodec.pacingConfigFileName,
       ]));
     });
 
@@ -105,6 +122,7 @@ void main() {
       final zip = service.encodeBackup(
         [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
         [const Bite(id: 1, atMs: 1000)],
+        const [],
       );
 
       final weights = const WeightBackupCodec().decode(zip);
@@ -115,6 +133,7 @@ void main() {
       final zip = service.encodeBackup(
         const [],
         [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 31000)],
+        const [],
       );
 
       final archive = ZipDecoder().decodeBytes(zip);
@@ -123,6 +142,26 @@ void main() {
       );
       expect(csv, contains('1000'));
       expect(csv, contains('31000'));
+    });
+
+    test('the pacing-config entry holds the exported version values', () {
+      final zip = service.encodeBackup(
+        const [],
+        const [],
+        [
+          const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30),
+          const PacingConfig(id: 2, effectiveMs: 5000, b1S: 10, b2S: 20),
+        ],
+      );
+
+      final archive = ZipDecoder().decodeBytes(zip);
+      final csv = String.fromCharCodes(
+        contentOf(archive, PacingConfigBackupCodec.pacingConfigFileName),
+      );
+      expect(csv, contains('effective_ms'));
+      expect(csv, contains('5000'));
+      expect(csv, contains('10'));
+      expect(csv, contains('20'));
     });
   });
 
@@ -182,6 +221,7 @@ void main() {
       final backup = service.encodeBackup(
         [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
         [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 31000)],
+        const [],
       );
 
       await service.restoreFromBackup(
@@ -201,6 +241,7 @@ void main() {
       final backup = service.encodeBackup(
         const [],
         [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 1000)],
+        const [],
       );
 
       await service.restoreFromBackup(
@@ -216,6 +257,7 @@ void main() {
       final biteRepo = _RecordingBiteRepository();
       final backup = service.encodeBackup(
         [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        const [],
         const [],
       );
 
@@ -243,6 +285,78 @@ void main() {
       );
 
       expect(biteRepo.operations, isEmpty);
+      // The config history rides on the bite backup's absence too: no entry.
+      expect(biteRepo.configOperations, isEmpty);
+    });
+
+    test('restores pacing config from a backup, clearing first', () async {
+      final biteRepo = _RecordingBiteRepository();
+      final backup = service.encodeBackup(
+        const [],
+        const [],
+        [
+          const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30),
+          const PacingConfig(id: 2, effectiveMs: 5000, b1S: 10, b2S: 20),
+        ],
+      );
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      // clear must come first, then one set per restored version.
+      expect(biteRepo.configOperations, ['clear', 'set', 'set']);
+      expect(
+        biteRepo.savedConfigs.map((c) => c.effectiveMs),
+        [0, 5000],
+      );
+      expect(biteRepo.savedConfigs.map((c) => c.b2S), [30, 20]);
+    });
+
+    test('dedupes repeated config versions by effective instant', () async {
+      final biteRepo = _RecordingBiteRepository();
+      // Two rows share an effective_ms — only the first survives.
+      final backup = service.encodeBackup(
+        const [],
+        const [],
+        [
+          const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30),
+          const PacingConfig(id: 2, effectiveMs: 0, b1S: 10, b2S: 20),
+        ],
+      );
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      expect(biteRepo.savedConfigs, hasLength(1));
+      expect(biteRepo.savedConfigs.single.b2S, 30);
+    });
+
+    test('leaves pacing config untouched for a pre-config backup', () async {
+      final biteRepo = _RecordingBiteRepository();
+      // A weight+bite backup with no pacing_config.csv must not wipe the
+      // seeded thresholds.
+      final archive = Archive()
+        ..addFile(
+          const WeightBackupCodec().toArchiveFile([
+            Weight(date: DateTime(2023, 10, 27), value: 75.5),
+          ]),
+        )
+        ..addFile(const BiteBackupCodec().toArchiveFile([]));
+      final backup = ZipEncoder().encode(archive);
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        backup,
+      );
+
+      expect(biteRepo.configOperations, isEmpty);
     });
   });
 }

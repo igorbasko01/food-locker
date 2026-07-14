@@ -1,9 +1,9 @@
-/// The three pacing zones a bite can fall into (§3b of the pacing plan).
+/// The three pacing zones a bite can fall into.
 ///
 /// A zone is a *derived* view, never stored: it is always computed at read time
-/// from `now − lastBite` against the two boundaries of the effective
-/// `PacingConfig`. The zones are the ranges those two boundaries cut —
-/// `[0, b1)` too soon, `[b1, b2)` ok — hold on, `[b2, ∞)` in the clear.
+/// from the time since the last bite against the two boundaries of the
+/// effective `PacingConfig`. The zones are the ranges those two boundaries
+/// cut — `[0, b1)` too soon, `[b1, b2)` ok — hold on, `[b2, ∞)` in the clear.
 ///
 /// The zone expresses *how costly it is to bite right now*, decreasing to zero
 /// once you're clear — so the colour never falsely green-lights an early bite.

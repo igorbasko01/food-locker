@@ -36,8 +36,8 @@ class Bites extends Table {
 /// no separate boundaries table is needed.
 @DataClassName('PacingConfig')
 class PacingConfigs extends Table {
-  /// The table name follows the plan's schema (`pacing_config`); the drift
-  /// accessor stays `pacingConfigs` (derived from the Dart class name).
+  /// The SQL table is `pacing_config`; the drift accessor stays `pacingConfigs`
+  /// (derived from the Dart class name).
   @override
   String get tableName => 'pacing_config';
 
@@ -74,7 +74,7 @@ class BiteDatabase extends _$BiteDatabase {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
-      // v1 (Phase 1) shipped with only `bites`; v2 adds `pacing_config`.
+      // v1 shipped with only `bites`; v2 adds `pacing_config`.
       if (from < 2) {
         await m.createTable(pacingConfigs);
       }
