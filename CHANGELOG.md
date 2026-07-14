@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/igorbasko01/food-locker/compare/v1.11.0...v1.12.0) (2026-07-14)
+
+
+### Features
+
+* export/import pacing_config in backup archive ([#63](https://github.com/igorbasko01/food-locker/issues/63)) ([24993c6](https://github.com/igorbasko01/food-locker/commit/24993c604d6eb86af0a3f7bea2a63229a5182066))
+
 ## [1.11.0](https://github.com/igorbasko01/food-locker/compare/v1.10.0...v1.11.0) (2026-07-13)
 
 
