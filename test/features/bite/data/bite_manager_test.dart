@@ -4,9 +4,9 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 
-/// Phase 4 verification: [BiteManager] logs bites through the repository and
-/// keeps today's count consistent with the store. An in-memory drift database
-/// stands in for the on-disk store, matching the repository tests.
+/// [BiteManager] logs bites through the repository and keeps today's count
+/// consistent with the store. An in-memory drift database stands in for the
+/// on-disk store, matching the repository tests.
 void main() {
   late BiteDatabase db;
   late DriftBiteRepository repo;

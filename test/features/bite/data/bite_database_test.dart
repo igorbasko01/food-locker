@@ -2,8 +2,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 
-/// Phase 1 verification: the Drift database opens and a bite row round-trips.
-/// Phase 2 verification: `pacing_config` seeds a default and resolves by instant.
+/// The Drift database opens and a bite row round-trips, and `pacing_config`
+/// seeds a default and resolves the effective version by instant.
 void main() {
   late BiteDatabase db;
 

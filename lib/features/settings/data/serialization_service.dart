@@ -102,8 +102,8 @@ class SerializationService {
   /// [importData], kept separate from the file-picker and file-I/O plumbing so
   /// the clear-then-restore path stays unit-testable.
   ///
-  /// The single decode is the coordination point for the two-store tax (§1c):
-  /// weights and bites are restored from the same archive. Weights are always
+  /// The single decode is where the two stores are coordinated: weights and
+  /// bites are restored from the same archive. Weights are always
   /// replaced; bites are replaced only when the archive actually carries a bite
   /// entry, so restoring an older weight-only backup leaves existing bites
   /// alone rather than wiping them.

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/pacing_zone.dart';
 
-/// Phase 5: the pure zone computation. Boundaries are half-open `[b1, b2)`, so a
-/// gap exactly on a boundary reads as the later (less costly) zone — matching
-/// the storage windows and the plan's zone table (§3b).
+/// The pure zone computation. Boundaries are half-open `[b1, b2)`, so a gap
+/// exactly on a boundary reads as the later (less costly) zone — matching the
+/// storage windows.
 void main() {
   const b1 = Duration(seconds: 15);
   const b2 = Duration(seconds: 30);

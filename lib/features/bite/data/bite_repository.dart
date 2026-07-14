@@ -1,10 +1,10 @@
 import 'package:food_locker/features/bite/data/bite_database.dart';
 
-/// The seam in front of the bite dataset (§1b of the pacing plan).
+/// The seam in front of the bite dataset.
 ///
 /// The rest of the app depends on this interface, never on the engine backing
 /// it — today Drift/SQLite, but that choice stays an implementation detail. It
-/// is the single place the two-store tax (§1c) gets coordinated, and it keeps
+/// is the single place the weight and bite stores get coordinated, and it keeps
 /// the bite store independently testable.
 ///
 /// The [Bite] and [PacingConfig] data classes it trades in are plain,
@@ -12,15 +12,15 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 /// greenfield feature carry no query machinery), so exposing them here doesn't
 /// leak the engine.
 abstract interface class BiteRepository {
-  /// Records a single bite at [at]. One tap = one bite; never blocked
-  /// (§3a) — the timestamp is persisted immediately.
+  /// Records a single bite at [at]. One tap = one bite; never blocked — the
+  /// timestamp is persisted immediately.
   Future<void> logBite(DateTime at);
 
   /// The most recent bite, or null if none has been logged.
   ///
   /// The reference point for the pacing ticker: the live view seeds itself from
-  /// this once per session and derives every zone from `now − lastBite` in
-  /// memory thereafter (§3b).
+  /// this once per session and derives every zone in memory thereafter from the
+  /// time since that bite.
   Future<Bite?> lastBite();
 
   /// Every bite whose timestamp falls in the half-open window `[from, to)`,
@@ -28,12 +28,12 @@ abstract interface class BiteRepository {
   Future<List<Bite>> bitesInRange(DateTime from, DateTime to);
 
   /// The number of bites in the half-open window `[from, to)` — the headline
-  /// metric (§3c). Callers pass a local day's bounds for "today's count".
+  /// metric. Callers pass a local day's bounds for "today's count".
   Future<int> biteCount(DateTime from, DateTime to);
 
   /// Appends [cfg] as a new pacing-config version (a config-change marker).
   ///
-  /// Thresholds are a slowly-changing dimension (§2b): retuning appends rather
+  /// Thresholds are a slowly-changing dimension: retuning appends rather
   /// than mutates, so every past bite stays gradable against the version
   /// effective at its own timestamp. The version takes effect from
   /// [PacingConfig.effectiveMs]; its [PacingConfig.id] is assigned by the store.
@@ -51,7 +51,7 @@ abstract interface class BiteRepository {
 
   /// Deletes every logged bite.
   ///
-  /// The clear half of the clear-then-restore import path (§1c): a backup is a
+  /// The clear half of the clear-then-restore import path: a backup is a
   /// full snapshot of the bite log, so restoring replaces it. The pacing-config
   /// history is deliberately left intact — it is cleared separately via
   /// [clearPacingConfigs] only when a backup actually carries replacement
