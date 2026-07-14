@@ -2,6 +2,10 @@
 
 A phased plan to add bite counting and timer-based pacing to Food Locker.
 
+> **Status: done.** Every phase below is shipped. This document is kept for
+> reference only — it records the design rationale (the `§`-sections that source
+> comments cite), not outstanding work.
+
 ---
 
 ## 0. Guiding principles
