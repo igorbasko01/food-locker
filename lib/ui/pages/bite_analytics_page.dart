@@ -3,6 +3,7 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
+import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
 
 /// The read-only Bite Analytics dashboard, reached from the chart button in the
@@ -49,7 +50,14 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
             return const _EmptyAnalytics();
           }
           return ListView(
-            children: [_DailyBitesCard(counts: _controller.dailyCounts)],
+            children: [
+              _DailyBitesCard(counts: _controller.dailyCounts),
+              _StatTilesRow(
+                averageLast30: _controller.averageLast30,
+                averageLastYear: _controller.averageLastYear,
+                maxLast30: _controller.maxLast30,
+              ),
+            ],
           );
         },
       ),
@@ -87,6 +95,69 @@ class _DailyBitesCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A band of three equal-width stat tiles: the 30-day and 1-year daily-bite
+/// averages, and the 30-day max with the day it fell on.
+///
+/// A `—` stands in wherever there is no qualifying data: an average is 0 only
+/// when no day in the window cleared [BiteAnalytics.minBitesForAverage], and the
+/// max is null only when the window holds no bites.
+class _StatTilesRow extends StatelessWidget {
+  const _StatTilesRow({
+    required this.averageLast30,
+    required this.averageLastYear,
+    required this.maxLast30,
+  });
+
+  final double averageLast30;
+  final double averageLastYear;
+  final DailyBiteCount? maxLast30;
+
+  @override
+  Widget build(BuildContext context) {
+    final max = maxLast30;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+      // IntrinsicHeight gives the row a bounded height (the tallest tile) so the
+      // stretch keeps all three tiles the same height inside the scroll view.
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: StatTile(
+                label: '30-day average',
+                value: _formatAverage(averageLast30),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatTile(
+                label: '1-year average',
+                value: _formatAverage(averageLastYear),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatTile(
+                label: '30-day max',
+                value: max == null ? '—' : max.count.toString(),
+                subLabel: max == null ? null : _formatDay(max.day),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A whole-bite figure, with `—` for the no-qualifying-day case (average 0).
+  static String _formatAverage(double average) =>
+      average == 0 ? '—' : average.toStringAsFixed(0);
+
+  /// A day as `month/day`, matching the daily-bites chart's axis labels.
+  static String _formatDay(DateTime day) => '${day.month}/${day.day}';
 }
 
 /// Shown when the bite log is empty: there is nothing to analyse until bites

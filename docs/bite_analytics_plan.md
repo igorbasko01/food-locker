@@ -266,9 +266,9 @@ Get an (empty) screen reachable before filling it in.
       shows muted below the 40 line and a ≥40 bar shows full-colour above it
 
 **Phase 6 — Averages + max stat tiles**
-- [ ] A stat-tile widget and a row of three: 30-day average, 1-year average,
+- [x] A stat-tile widget and a row of three: 30-day average, 1-year average,
       30-day max (with its date)
-- [ ] **Verify:** tiles read correctly against a seeded fixture
+- [x] **Verify:** tiles read correctly against a seeded fixture
 
 **Phase 7 — Meals-per-day summary**
 - [ ] Surface today's meal count and the window average (`averageMealsPerDay`)
@@ -282,3 +282,20 @@ Get an (empty) screen reachable before filling it in.
 **Phase 9 — Polish**
 - [ ] Accessibility labels on the chart and tiles, consistent theming/spacing,
       and a final `flutter analyze` / `flutter test` pass before pushing
+
+**Phase 10 — Reuse `StatTile` on the Weight tab**
+
+The Weight tab renders its lowest-weight stats (All Time / 30 Days / 7 Days)
+through a private `_buildStatCard` helper in `weight_page.dart` — the same card
+pattern Phase 6 extracted into the reusable `StatTile`
+(`lib/ui/widgets/stat_tile.dart`), which already matches its fill, corner
+radius, and caption/value/sub-line layout. Fold the two onto one widget so the
+stat tile lives in a single place across both tabs.
+- [ ] Replace `_buildStatCard` in `weight_page.dart` with the shared `StatTile`,
+      passing the weight through `value` and the `kg` unit through `subLabel`,
+      and keeping the `--`/`—` empty state for a missing value (any small styling
+      gap — e.g. the value's accent colour — is reconciled on `StatTile` so both
+      tabs share it, rather than reintroducing a private card)
+- [ ] **Verify:** the Weight tab's three stat cards still render with the right
+      titles, values, and unit against a seeded fixture; `flutter analyze` /
+      `flutter test` pass
