@@ -199,7 +199,8 @@ All confirmed — these fix the numbers on screen:
 2. **Averages count only days with ≥ `minBitesForAverage` (40) bites.** Zero and
    lightly-logged days are excluded from both the numerator and the denominator,
    so a day you forgot to log — or only logged a few bites — never dilutes the
-   mean. A fixed code constant, like the meal thresholds.
+   mean. A fixed code constant, like the meal thresholds. The chart flags these
+   excluded days visually (Phase 5) so the average stays legible against it.
 3. **`mealGapThreshold = 5 min` is a fixed code constant** in v1 — not
    user-configurable.
 4. **Midnight-straddling meals split at the day boundary**, consistent with every
@@ -267,7 +268,11 @@ Get an (empty) screen reachable before filling it in.
 **Phase 5 — Daily bites chart card**
 - [ ] `daily_bites_chart.dart` — an `fl_chart` `BarChart` over `dailyCounts`
       (last 30 days), one bar per day, themed like `weight_chart.dart`
-- [ ] **Verify:** renders with sparse data and with a zero-bite gap day
+- [ ] Flag days that don't count toward the average (§6.2): a faint horizontal
+      reference line at `minBitesForAverage` (40), and muted/desaturated fill on
+      bars below it — so the chart visibly explains why those days are excluded
+- [ ] **Verify:** renders with sparse data and a zero-bite gap day; a sub-40 bar
+      shows muted below the 40 line and a ≥40 bar shows full-colour above it
 
 **Phase 6 — Averages + max stat tiles**
 - [ ] A stat-tile widget and a row of three: 30-day average, 1-year average,
