@@ -6,9 +6,9 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 ///
 /// One bar per day between the first and last logged day, with zero-height
 /// gaps for days that had no bites. Days below [BiteAnalytics.minBitesForAverage]
-/// — the ones excluded from the average (§5.2) — are drawn muted and sit under a
-/// faint reference line at that threshold, so the chart visibly explains why
-/// they don't count. Themed like `weight_chart.dart`.
+/// — the ones excluded from the average — are drawn muted and sit under a faint
+/// reference line at that threshold, so the chart visibly explains why they
+/// don't count. Themed like `weight_chart.dart`.
 class DailyBitesChart extends StatelessWidget {
   const DailyBitesChart({super.key, required this.counts});
 
