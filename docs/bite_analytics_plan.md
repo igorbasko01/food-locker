@@ -154,7 +154,7 @@ The chart button lives at the **top-right of the Bite tab's app bar**, and the
 app bar is owned by `AppShell` (one shared `AppBar` across all four tabs), so the
 button is added there, shown only for the Bite tab.
 
-- **Recommended:** in `AppShell`, add `actions:` to the shared `AppBar` that
+- **The button.** In `AppShell`, add `actions:` to the shared `AppBar` that
   render an `IconButton(Icons.bar_chart_rounded /* or insights */)` **only on the
   Bite tab**, pushing a full-screen route to a new `BiteAnalyticsPage`. That page
   owns its **own** `Scaffold` + `AppBar` (title "Bite Analytics", automatic back
@@ -169,9 +169,6 @@ button is added there, shown only for the Bite tab.
   the same name so this plan *removes* a magic number rather than adding a third.
   (The `_titles` list, `IndexedStack` children, and nav items stay index-ordered;
   the enum just gives that order a single named source of truth.)
-- **Why a pushed route, not a fifth tab:** analytics is a drill-down off the Bite
-  tab, not a peer of Home/Weight/Bite/Settings. A route keeps the bottom nav at
-  four items and gives a natural back affordance.
 
 New files: `lib/ui/pages/bite_analytics_page.dart`, plus widgets under
 `lib/ui/widgets/` (e.g. `daily_bites_chart.dart`, a stat-tile widget for the
