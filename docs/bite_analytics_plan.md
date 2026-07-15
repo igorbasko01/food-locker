@@ -139,14 +139,12 @@ window) of raw bites, which is small. No new table, no `schemaVersion` bump.
 The screen loads async, so give it a lightweight controller rather than reusing
 the pacing-oriented `BiteManager`:
 
-- **Recommended:** a `BiteAnalyticsController extends ChangeNotifier` that holds
-  the loaded results + a loading flag, created per-screen from the injected
-  `BiteRepository` (`context.read<BiteRepository>()`), loading in `initState`.
-  Keeps `BiteManager` focused on live logging/pacing and keeps analytics work off
-  the main screen's hot path.
-- **Alternative:** a bare `FutureBuilder` in the page if the state stays trivial.
-  Fine for a first cut; promote to a controller once there's a window selector or
-  a day picker driving re-loads.
+A `BiteAnalyticsController extends ChangeNotifier` holds the loaded results + a
+loading flag, created per-screen from the injected `BiteRepository`
+(`context.read<BiteRepository>()`), loading in `initState`. This keeps
+`BiteManager` focused on live logging/pacing and analytics work off the main
+screen's hot path, and leaves a clean seam for a later window selector or day
+picker to drive re-loads.
 
 ---
 
@@ -262,8 +260,8 @@ Get an (empty) screen reachable before filling it in.
 - [ ] Chart `IconButton` in `AppShell`'s app bar, rendered only when
       `_currentIndex == 2`, pushing `BiteAnalyticsPage`
 - [ ] `bite_analytics_page.dart` with its own `Scaffold`/`AppBar` ("Bite
-      Analytics", back arrow) and a `BiteAnalyticsController extends ChangeNotifier`
-      loading from the injected `BiteRepository` in `initState`
+      Analytics", back arrow) and the `BiteAnalyticsController` (§3c) loading from
+      the injected `BiteRepository` in `initState`
 - [ ] Loading spinner and a global empty state (no bites logged ever)
 - [ ] **Verify:** the button shows only on the Bite tab and the route opens/pops
 
