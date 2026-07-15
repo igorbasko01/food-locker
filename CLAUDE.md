@@ -19,6 +19,8 @@ FoodLocker is a Flutter (mobile, primarily Android) app with two shipped feature
 
 `flutter analyze` and `flutter test` both gate pushes locally (`.githooks/pre-push`) and PRs to `main` (`.github/workflows/flutter_ci.yml`). Run them before pushing.
 
+If Flutter is not installed in the environment (e.g. a Claude Code web session), **do not install it** — the toolchain is heavy and the sandboxed sqlite3 native-asset download is unreliable. Instead, push the branch and let the `flutter_ci.yml` workflow run `flutter analyze` and `flutter test` on the PR, then read the CI result to verify. Keep changes small and self-reviewed so a red CI run is cheap to diagnose.
+
 ## Code Generation
 
 `*.g.dart` files (e.g. `lib/features/weight/data/weight.g.dart`, `lib/features/bite/data/bite_database.g.dart`) and `lib/hive_registrar.g.dart` are generated and checked in — do not edit them by hand. After adding or changing a Hive model, or adding a new `@HiveType`, rerun `build_runner`. Hive `typeId`s must be unique and stable across the app's history (weight uses 3 and 4); reusing an old id breaks existing users' stored boxes, so pick a fresh id rather than renumbering. The bite store is Drift: rerun `build_runner` after changing a `@DriftDatabase` table, and bump `BiteDatabase.schemaVersion` with a matching migration so existing users' SQLite files upgrade.

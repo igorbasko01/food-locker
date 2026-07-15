@@ -1,5 +1,6 @@
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
@@ -69,6 +70,10 @@ class _RecordingBiteRepository implements BiteRepository {
 
   @override
   Future<int> biteCount(DateTime from, DateTime to) =>
+      throw UnimplementedError();
+
+  @override
+  Future<List<DailyBiteCount>> dailyBiteCounts(DateTime from, DateTime to) =>
       throw UnimplementedError();
 
   @override

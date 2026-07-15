@@ -211,12 +211,12 @@ fully-tested logic behind no UI.
 **Phase 1 — `dailyBiteCounts` on the repository seam**
 
 The one new persistence query; a SQL `GROUP BY`, no schema change.
-- [ ] Create `lib/features/bite/data/bite_analytics.dart` with the
+- [x] Create `lib/features/bite/data/bite_analytics.dart` with the
       `DailyBiteCount` value type (`day` + `count`) — the file the `BiteAnalytics`
       class lands in next phase
-- [ ] Add `dailyBiteCounts(from, to)` to `BiteRepository`; implement in
+- [x] Add `dailyBiteCounts(from, to)` to `BiteRepository`; implement in
       `DriftBiteRepository` grouping on `date(at_ms/1000,'unixepoch','localtime')`
-- [ ] **Verify:** unit-test grouping, the half-open `[from, to)` window, an empty
+- [x] **Verify:** unit-test grouping, the half-open `[from, to)` window, an empty
       range, and two bites on the same day collapsing to one entry
 
 **Phase 2 — `BiteAnalytics`: counts, averages, max**
