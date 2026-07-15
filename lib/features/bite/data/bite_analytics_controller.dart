@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 
 /// Per-screen state for the Bite Analytics page.
@@ -12,9 +13,15 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 /// It establishes whether the log holds any bite at all, which decides the
 /// screen's global empty state.
 class BiteAnalyticsController extends ChangeNotifier {
-  BiteAnalyticsController(this._repository);
+  BiteAnalyticsController(BiteRepository repository)
+    : _repository = repository,
+      _analytics = BiteAnalytics(repository);
 
   final BiteRepository _repository;
+  final BiteAnalytics _analytics;
+
+  /// The chart's window: the [dailyBitesWindow]-day span ending today.
+  static const int dailyBitesWindow = 30;
 
   bool _isLoading = true;
 
@@ -27,12 +34,22 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// global empty state instead of empty cards.
   bool get hasAnyBites => _hasAnyBites;
 
+  List<DailyBiteCount> _dailyCounts = const [];
+
+  /// Bites per day over the last [dailyBitesWindow] days, one entry per day
+  /// that had bites — the daily-bites chart's data.
+  List<DailyBiteCount> get dailyCounts => _dailyCounts;
+
   /// Loads the analytics for the screen, notifying at the start and end so the
   /// spinner shows while the store is read.
   Future<void> load() async {
     _isLoading = true;
     notifyListeners();
     _hasAnyBites = await _repository.lastBite() != null;
+    final now = DateTime.now();
+    final to = DateTime(now.year, now.month, now.day + 1);
+    final from = DateTime(now.year, now.month, now.day - (dailyBitesWindow - 1));
+    _dailyCounts = await _analytics.dailyCounts(from, to);
     _isLoading = false;
     notifyListeners();
   }

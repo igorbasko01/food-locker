@@ -257,12 +257,12 @@ Get an (empty) screen reachable before filling it in.
 - [x] **Verify:** the button shows only on the Bite tab and the route opens/pops
 
 **Phase 5 — Daily bites chart card**
-- [ ] `daily_bites_chart.dart` — an `fl_chart` `BarChart` over `dailyCounts`
+- [x] `daily_bites_chart.dart` — an `fl_chart` `BarChart` over `dailyCounts`
       (last 30 days), one bar per day, themed like `weight_chart.dart`
-- [ ] Flag days that don't count toward the average (§5.2): a faint horizontal
+- [x] Flag days that don't count toward the average (§5.2): a faint horizontal
       reference line at `minBitesForAverage` (40), and muted/desaturated fill on
       bars below it — so the chart visibly explains why those days are excluded
-- [ ] **Verify:** renders with sparse data and a zero-bite gap day; a sub-40 bar
+- [x] **Verify:** renders with sparse data and a zero-bite gap day; a sub-40 bar
       shows muted below the 40 line and a ≥40 bar shows full-colour above it
 
 **Phase 6 — Averages + max stat tiles**
