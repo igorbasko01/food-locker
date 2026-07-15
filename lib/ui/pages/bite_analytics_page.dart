@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
 import 'package:provider/provider.dart';
 
 /// The read-only Bite Analytics dashboard, reached from the chart button in the
@@ -46,9 +48,42 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
           if (!_controller.hasAnyBites) {
             return const _EmptyAnalytics();
           }
-          // Analytics cards render here once there is data to show.
-          return const SizedBox.shrink();
+          return ListView(
+            children: [_DailyBitesCard(counts: _controller.dailyCounts)],
+          );
         },
+      ),
+    );
+  }
+}
+
+/// The daily-bites chart, framed in a titled card with a fixed height so the
+/// bars have room without the surrounding [ListView] collapsing them.
+class _DailyBitesCard extends StatelessWidget {
+  const _DailyBitesCard({required this.counts});
+
+  final List<DailyBiteCount> counts;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.all(16.0),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Daily bites — last 30 days',
+              style: theme.textTheme.titleMedium,
+            ),
+            SizedBox(height: 240, child: DailyBitesChart(counts: counts)),
+          ],
+        ),
       ),
     );
   }
