@@ -41,17 +41,15 @@ class BiteAnalytics {
 
   /// Bites per local calendar day in the half-open window `[from, to)`, one
   /// entry per day that has at least one bite, in chronological day order.
-  ///
-  /// Days with no bites are absent, not zero-filled — the chart fills the gaps
-  /// against its own window.
+  /// Days with no bites are absent, not zero-filled.
   Future<List<DailyBiteCount>> dailyCounts(DateTime from, DateTime to) {
     return _repository.dailyBiteCounts(from, to);
   }
 
   /// Mean daily bites over `[from, to)`, counting only days with at least
-  /// [minBitesForAverage] bites (§5.2). Zero and lightly-logged days are
-  /// excluded from both numerator and denominator, so partial-logging noise
-  /// never drags the mean down. Returns 0 when no day qualifies.
+  /// [minBitesForAverage] bites. Zero and lightly-logged days are excluded
+  /// from both numerator and denominator, so partial-logging noise never
+  /// drags the mean down. Returns 0 when no day qualifies.
   Future<double> averagePerDay(DateTime from, DateTime to) async {
     final counts = await _repository.dailyBiteCounts(from, to);
     final qualifying = counts.where((c) => c.count >= minBitesForAverage);
@@ -61,8 +59,7 @@ class BiteAnalytics {
   }
 
   /// The single highest-bite day in `[from, to)`, or null when the window holds
-  /// no bites. On a tie the earliest day wins (chronological order, first max
-  /// kept).
+  /// no bites. On a tie the earliest day wins.
   Future<DailyBiteCount?> maxDay(DateTime from, DateTime to) async {
     final counts = await _repository.dailyBiteCounts(from, to);
     if (counts.isEmpty) return null;
