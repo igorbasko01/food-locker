@@ -31,6 +31,14 @@ void main() {
     }
   }
 
+  /// Logs [count] bites one per minute from [hour]:00 on [day] — a single
+  /// cluster (consecutive-minute gaps stay under the meal-gap threshold).
+  Future<void> logCluster(DateTime day, int hour, int count) async {
+    for (var i = 0; i < count; i++) {
+      await repo.logBite(DateTime(day.year, day.month, day.day, hour, i));
+    }
+  }
+
   Future<void> pumpPage(WidgetTester tester) async {
     await tester.pumpWidget(
       Provider<BiteRepository>.value(
@@ -112,6 +120,42 @@ void main() {
       find.descendant(
         of: find.widgetWithText(StatTile, '30-day max'),
         matching: find.text('5'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('meal tiles read today\'s meals and the window average from a '
+      'hand-counted fixture', (tester) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final earlier = DateTime(now.year, now.month, now.day - 3);
+
+    // Today: two meals (12 bites @ 08, 15 @ 09) plus a 5-bite snack @ 10 that
+    // stays below minMealBites → 2 meals.
+    await logCluster(today, 8, 12);
+    await logCluster(today, 9, 15);
+    await logCluster(today, 10, 5);
+    // Yesterday: a single 20-bite meal.
+    await logCluster(yesterday, 8, 20);
+    // Three days ago: 8 bites — a snack, so a logged day with 0 meals.
+    await logCluster(earlier, 8, 8);
+    // Days with bites in the window: 3; meals 2 + 1 + 0 = 3 → average 1.0.
+
+    await pumpPage(tester);
+
+    expect(
+      find.descendant(
+        of: find.widgetWithText(StatTile, 'Meals today'),
+        matching: find.text('2'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.widgetWithText(StatTile, '30-day avg meals'),
+        matching: find.text('1.0'),
       ),
       findsOneWidget,
     );
