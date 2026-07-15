@@ -155,11 +155,20 @@ app bar is owned by `AppShell` (one shared `AppBar` across all four tabs), so th
 button is added there, shown only for the Bite tab.
 
 - **Recommended:** in `AppShell`, add `actions:` to the shared `AppBar` that
-  render an `IconButton(Icons.bar_chart_rounded /* or insights */)` **only when
-  `_currentIndex == 2`** (the Bite tab), pushing a full-screen route to a new
-  `BiteAnalyticsPage`. That page owns its **own** `Scaffold` + `AppBar` (title
-  "Bite Analytics", automatic back arrow), so it is self-contained and does not
-  fight the shell's chrome.
+  render an `IconButton(Icons.bar_chart_rounded /* or insights */)` **only on the
+  Bite tab**, pushing a full-screen route to a new `BiteAnalyticsPage`. That page
+  owns its **own** `Scaffold` + `AppBar` (title "Bite Analytics", automatic back
+  arrow), so it is self-contained and does not fight the shell's chrome.
+- **Identify the tab by name, not by a bare index.** `AppShell` currently keys
+  everything off `_currentIndex` and already carries a magic `_currentIndex == 2`
+  in the `BitePage(isActive:)` line — and the tab order has been reshuffled once
+  before (pacing plan Phase 8), which is exactly what makes a hardcoded `2`
+  fragile. Introduce an `AppTab { home, weight, bite, settings }` enum so the tab
+  is named in one place; the action then shows when
+  `_currentIndex == AppTab.bite.index`, and the existing `isActive` check adopts
+  the same name so this plan *removes* a magic number rather than adding a third.
+  (The `_titles` list, `IndexedStack` children, and nav items stay index-ordered;
+  the enum just gives that order a single named source of truth.)
 - **Why a pushed route, not a fifth tab:** analytics is a drill-down off the Bite
   tab, not a peer of Home/Weight/Bite/Settings. A route keeps the bottom nav at
   four items and gives a natural back affordance.
@@ -257,8 +266,10 @@ The meal/snack model (§2), the one genuinely new logic.
 **Phase 4 — Screen scaffold + navigation**
 
 Get an (empty) screen reachable before filling it in.
+- [ ] Add an `AppTab { home, weight, bite, settings }` enum and repoint the
+      existing `_currentIndex == 2` (`BitePage isActive:`) at `AppTab.bite.index`
 - [ ] Chart `IconButton` in `AppShell`'s app bar, rendered only when
-      `_currentIndex == 2`, pushing `BiteAnalyticsPage`
+      `_currentIndex == AppTab.bite.index`, pushing `BiteAnalyticsPage`
 - [ ] `bite_analytics_page.dart` with its own `Scaffold`/`AppBar` ("Bite
       Analytics", back arrow) and the `BiteAnalyticsController` (§3c) loading from
       the injected `BiteRepository` in `initState`
