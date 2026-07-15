@@ -74,8 +74,9 @@ Not every cluster is a "meal" — item 5 explicitly separates *meals* from *bite
 outside meals (snacks)*. So a cluster is promoted to a **meal** only if it has at
 least `minMealBites` bites; smaller clusters count as **snacks**.
 
-- **`minMealBites = 5`** (§6.1, settled). A cluster of fewer than 5 bites is
-  treated as snacking, and its bites roll into the day's snack total.
+- **`minMealBites = 10`** (§6.1, settled). A cluster of fewer than 10 bites is
+  treated as snacking, and its bites roll into the day's snack total — so a small
+  snack never gets promoted to a full meal.
 - "Bites outside meals (snacks)" = every bite in the day that is not part of a
   qualifying meal cluster: `todayCount − Σ(bites in meal clusters)`.
 
@@ -194,8 +195,9 @@ Parked, not in v1 — listed so v1 doesn't accidentally foreclose them:
 
 All confirmed — these fix the numbers on screen:
 
-1. **Snack threshold `minMealBites = 5`.** A cluster qualifies as a *meal* only
-   with 5+ bites; smaller clusters are snacks and roll into the day's snack total.
+1. **Snack threshold `minMealBites = 10`.** A cluster qualifies as a *meal* only
+   with 10+ bites; smaller clusters are snacks and roll into the day's snack
+   total, so a snack-sized cluster is never promoted to a meal.
 2. **Averages count only days with ≥ `minBitesForAverage` (40) bites.** Zero and
    lightly-logged days are excluded from both the numerator and the denominator,
    so a day you forgot to log — or only logged a few bites — never dilutes the
@@ -245,13 +247,13 @@ Pure computation over the repository — no meals yet.
 **Phase 3 — `BiteAnalytics`: meal clustering**
 
 The meal/snack model (§2), the one genuinely new logic.
-- [ ] `mealGapThreshold = 5 min` and `minMealBites = 5` constants
+- [ ] `mealGapThreshold = 5 min` and `minMealBites = 10` constants
 - [ ] `mealsForDay(day)` — cluster a day's `bitesInRange` by ≤-5-min gaps, keep
-      clusters with ≥ 5 bites as meals; split at the local-day boundary (§2c)
+      clusters with ≥ 10 bites as meals; split at the local-day boundary (§2c)
 - [ ] `breakdownForDay(day)` → `DayMealBreakdown` (per-meal counts + snack total)
       and `averageMealsPerDay(from, to)`
 - [ ] **Verify:** unit-test empty day, single bite, a gap of *exactly* 5 min,
-      back-to-back clusters, a sub-5-bite cluster → snacks, all-snack day, and a
+      back-to-back clusters, a sub-10-bite cluster → snacks, all-snack day, and a
       meal straddling midnight splitting into two days
 
 **Phase 4 — Screen scaffold + navigation**
