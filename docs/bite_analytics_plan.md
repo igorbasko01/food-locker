@@ -35,8 +35,9 @@ every decision below.
 1. **Daily bites chart** — a bar chart of total bites per calendar day over a
    window (default: last 30 days). One bar per day, gaps for zero days.
 2. **Averages** — mean daily bites over the **last 30 days** and the **last
-   year**, dividing by *every* calendar day in the window (zero-bite days
-   included, so skipped days pull the mean down — §6.2).
+   year**, counting only days with at least `minBitesForAverage` (**40**) bites;
+   zero and lightly-logged days are excluded so partial-logging noise doesn't drag
+   the mean down (§6.2).
 3. **Max daily bites — last 30 days** — the single highest day's count in the
    window, and the day it fell on.
 4. **Meals per day** — count of *meals* per day, where a **meal** is a cluster of
@@ -195,9 +196,10 @@ All confirmed — these fix the numbers on screen:
 
 1. **Snack threshold `minMealBites = 5`.** A cluster qualifies as a *meal* only
    with 5+ bites; smaller clusters are snacks and roll into the day's snack total.
-2. **Averages include zero-bite days.** The daily mean divides by *every*
-   calendar day in the window, so skipped days pull it down — it reflects real
-   adherence (§0).
+2. **Averages count only days with ≥ `minBitesForAverage` (40) bites.** Zero and
+   lightly-logged days are excluded from both the numerator and the denominator,
+   so a day you forgot to log — or only logged a few bites — never dilutes the
+   mean. A fixed code constant, like the meal thresholds.
 3. **`mealGapThreshold = 5 min` is a fixed code constant** in v1 — not
    user-configurable.
 4. **Midnight-straddling meals split at the day boundary**, consistent with every
@@ -232,11 +234,12 @@ The one new persistence query; a SQL `GROUP BY`, no schema change.
 Pure computation over the repository — no meals yet.
 - [ ] New `lib/features/bite/data/bite_analytics.dart` constructed from a
       `BiteRepository`
-- [ ] `dailyCounts(from, to)`, `averagePerDay(from, to)` (divide by all calendar
-      days in the window — §6.2), `maxDay(from, to)` returning the peak
-      `DailyBiteCount`
-- [ ] **Verify:** unit-test the average incl. zero days, max with ties, and empty
-      data (average 0, max null)
+- [ ] `minBitesForAverage = 40` constant
+- [ ] `dailyCounts(from, to)`, `averagePerDay(from, to)` (mean over only the days
+      with ≥ 40 bites — §6.2), `maxDay(from, to)` returning the peak `DailyBiteCount`
+- [ ] **Verify:** unit-test that sub-40 and zero days are excluded from the
+      average, a window with no qualifying day (average null/0), max with ties, and
+      empty data (max null)
 
 **Phase 3 — `BiteAnalytics`: meal clustering**
 
