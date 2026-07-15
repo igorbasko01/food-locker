@@ -198,11 +198,11 @@ class BiteAnalytics {
     final clusters = <List<Bite>>[];
     for (final bite in bites) {
       final current = clusters.isEmpty ? null : clusters.last;
-      final gap = current == null ? null : bite.atMs - current.last.atMs;
-      if (gap == null || gap > mealGapThreshold.inMilliseconds) {
-        clusters.add([bite]);
-      } else {
+      if (current != null &&
+          bite.atMs - current.last.atMs <= mealGapThreshold.inMilliseconds) {
         current.add(bite);
+      } else {
+        clusters.add([bite]);
       }
     }
     return clusters;
