@@ -222,12 +222,12 @@ The one new persistence query; a SQL `GROUP BY`, no schema change.
 **Phase 2 — `BiteAnalytics`: counts, averages, max**
 
 Pure computation over the repository — no meals yet.
-- [ ] Add the `BiteAnalytics` class (constructed from a `BiteRepository`) to the
+- [x] Add the `BiteAnalytics` class (constructed from a `BiteRepository`) to the
       `bite_analytics.dart` created in Phase 1
-- [ ] `minBitesForAverage = 40` constant
-- [ ] `dailyCounts(from, to)`, `averagePerDay(from, to)` (mean over only the days
+- [x] `minBitesForAverage = 40` constant
+- [x] `dailyCounts(from, to)`, `averagePerDay(from, to)` (mean over only the days
       with ≥ 40 bites — §5.2), `maxDay(from, to)` returning the peak `DailyBiteCount`
-- [ ] **Verify:** unit-test that sub-40 and zero days are excluded from the
+- [x] **Verify:** unit-test that sub-40 and zero days are excluded from the
       average, a window with no qualifying day (average null/0), max with ties, and
       empty data (max null)
 
