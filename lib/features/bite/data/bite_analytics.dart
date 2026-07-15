@@ -1,3 +1,4 @@
+import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 
 /// Total bites on a single local calendar day.
@@ -25,6 +26,61 @@ class DailyBiteCount {
   String toString() => 'DailyBiteCount(day: $day, count: $count)';
 }
 
+/// A single meal: a cluster of bites no more than [BiteAnalytics.mealGapThreshold]
+/// apart that reached [BiteAnalytics.minMealBites] bites.
+///
+/// A read-time projection of the bite log, never persisted. [start] and [end]
+/// are the first and last bite's local instants, so a meal list can show when
+/// it happened; [count] is the bites it holds.
+class Meal {
+  const Meal({required this.start, required this.end, required this.count});
+
+  /// The first bite's local instant.
+  final DateTime start;
+
+  /// The last bite's local instant.
+  final DateTime end;
+
+  /// Bites in the meal (always at least [BiteAnalytics.minMealBites]).
+  final int count;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Meal && other.start == start && other.end == end && other.count == count;
+
+  @override
+  int get hashCode => Object.hash(start, end, count);
+
+  @override
+  String toString() => 'Meal(start: $start, end: $end, count: $count)';
+}
+
+/// A day split into its meals and the bites that fell outside any meal.
+///
+/// [snackBites] is every bite on [day] not part of a qualifying meal — the
+/// bites of sub-[BiteAnalytics.minMealBites] clusters roll into it — so
+/// `Σ meals.count + snackBites` is the day's total bite count.
+class DayMealBreakdown {
+  const DayMealBreakdown({
+    required this.day,
+    required this.meals,
+    required this.snackBites,
+  });
+
+  /// The calendar day, at local midnight.
+  final DateTime day;
+
+  /// The day's meals, in chronological order.
+  final List<Meal> meals;
+
+  /// Bites outside any meal (snacks), including sub-threshold clusters' bites.
+  final int snackBites;
+
+  @override
+  String toString() =>
+      'DayMealBreakdown(day: $day, meals: $meals, snackBites: $snackBites)';
+}
+
 /// Read-time analytics over the append-only bite log.
 ///
 /// Mirrors `WeightAnalytics`' shape — a pure projection over the repository,
@@ -38,6 +94,15 @@ class BiteAnalytics {
   /// Days below this bite count don't count toward [averagePerDay]: a day you
   /// forgot to log — or only logged a few bites on — never dilutes the mean.
   static const int minBitesForAverage = 40;
+
+  /// A gap longer than this between two consecutive bites closes the current
+  /// meal cluster and starts a new one. Measured bite-to-bite, not from the
+  /// cluster's start, so a long slow meal stays one cluster.
+  static const Duration mealGapThreshold = Duration(minutes: 5);
+
+  /// A cluster is only promoted to a meal at this many bites; smaller clusters
+  /// are snacking and their bites roll into the day's snack total.
+  static const int minMealBites = 10;
 
   /// Bites per local calendar day in the half-open window `[from, to)`, one
   /// entry per day that has at least one bite, in chronological day order.
@@ -69,4 +134,95 @@ class BiteAnalytics {
     }
     return peak;
   }
+
+  /// The meals on [day]: bite clusters (≤ [mealGapThreshold] between consecutive
+  /// bites) that reached [minMealBites], in chronological order. Clustering runs
+  /// within the single local day, so a meal straddling midnight is split at the
+  /// boundary and each side stands on its own.
+  Future<List<Meal>> mealsForDay(DateTime day) async {
+    final clusters = await _clustersForDay(day);
+    return [
+      for (final cluster in clusters)
+        if (cluster.length >= minMealBites) _toMeal(cluster),
+    ];
+  }
+
+  /// [day] split into its meals and the bites that fell outside any meal.
+  /// Sub-[minMealBites] clusters are not meals; their bites count as snacks.
+  Future<DayMealBreakdown> breakdownForDay(DateTime day) async {
+    final clusters = await _clustersForDay(day);
+    final meals = <Meal>[];
+    var snackBites = 0;
+    for (final cluster in clusters) {
+      if (cluster.length >= minMealBites) {
+        meals.add(_toMeal(cluster));
+      } else {
+        snackBites += cluster.length;
+      }
+    }
+    return DayMealBreakdown(
+      day: DateTime(day.year, day.month, day.day),
+      meals: meals,
+      snackBites: snackBites,
+    );
+  }
+
+  /// Mean meals per day over `[from, to)`, averaged across only the days that
+  /// have at least one bite — days you never logged don't dilute it. A logged
+  /// day with no qualifying meal still counts as a 0-meal day. Returns 0 when
+  /// the window holds no bites.
+  Future<double> averageMealsPerDay(DateTime from, DateTime to) async {
+    final bites = await _repository.bitesInRange(from, to);
+    if (bites.isEmpty) return 0;
+    final byDay = _groupByLocalDay(bites);
+    var totalMeals = 0;
+    for (final dayBites in byDay.values) {
+      totalMeals += _clusterBites(
+        dayBites,
+      ).where((cluster) => cluster.length >= minMealBites).length;
+    }
+    return totalMeals / byDay.length;
+  }
+
+  /// The clusters of a single local day, meal-qualifying or not.
+  Future<List<List<Bite>>> _clustersForDay(DateTime day) async {
+    final startOfDay = DateTime(day.year, day.month, day.day);
+    final startOfNextDay = DateTime(day.year, day.month, day.day + 1);
+    final bites = await _repository.bitesInRange(startOfDay, startOfNextDay);
+    return _clusterBites(bites);
+  }
+
+  /// Splits chronologically-ordered [bites] into clusters, breaking wherever a
+  /// gap from the previous bite exceeds [mealGapThreshold].
+  List<List<Bite>> _clusterBites(List<Bite> bites) {
+    final clusters = <List<Bite>>[];
+    for (final bite in bites) {
+      final current = clusters.isEmpty ? null : clusters.last;
+      final gap = current == null ? null : bite.atMs - current.last.atMs;
+      if (gap == null || gap > mealGapThreshold.inMilliseconds) {
+        clusters.add([bite]);
+      } else {
+        current.add(bite);
+      }
+    }
+    return clusters;
+  }
+
+  /// Groups [bites] by their local calendar day, preserving chronological order
+  /// within each day (the input is already ordered).
+  Map<DateTime, List<Bite>> _groupByLocalDay(List<Bite> bites) {
+    final byDay = <DateTime, List<Bite>>{};
+    for (final bite in bites) {
+      final at = DateTime.fromMillisecondsSinceEpoch(bite.atMs);
+      final day = DateTime(at.year, at.month, at.day);
+      byDay.putIfAbsent(day, () => []).add(bite);
+    }
+    return byDay;
+  }
+
+  Meal _toMeal(List<Bite> cluster) => Meal(
+    start: DateTime.fromMillisecondsSinceEpoch(cluster.first.atMs),
+    end: DateTime.fromMillisecondsSinceEpoch(cluster.last.atMs),
+    count: cluster.length,
+  );
 }

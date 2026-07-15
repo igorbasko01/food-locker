@@ -234,12 +234,12 @@ Pure computation over the repository — no meals yet.
 **Phase 3 — `BiteAnalytics`: meal clustering**
 
 The meal/snack model (§2), the one genuinely new logic.
-- [ ] `mealGapThreshold = 5 min` and `minMealBites = 10` constants
-- [ ] `mealsForDay(day)` — cluster a day's `bitesInRange` by ≤-5-min gaps, keep
+- [x] `mealGapThreshold = 5 min` and `minMealBites = 10` constants
+- [x] `mealsForDay(day)` — cluster a day's `bitesInRange` by ≤-5-min gaps, keep
       clusters with ≥ 10 bites as meals; split at the local-day boundary (§2c)
-- [ ] `breakdownForDay(day)` → `DayMealBreakdown` (per-meal counts + snack total)
+- [x] `breakdownForDay(day)` → `DayMealBreakdown` (per-meal counts + snack total)
       and `averageMealsPerDay(from, to)`
-- [ ] **Verify:** unit-test empty day, single bite, a gap of *exactly* 5 min,
+- [x] **Verify:** unit-test empty day, single bite, a gap of *exactly* 5 min,
       back-to-back clusters, a sub-10-bite cluster → snacks, all-snack day, and a
       meal straddling midnight splitting into two days
 
