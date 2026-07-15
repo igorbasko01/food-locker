@@ -172,9 +172,6 @@ button is added there, shown only for the Bite tab.
 - **Why a pushed route, not a fifth tab:** analytics is a drill-down off the Bite
   tab, not a peer of Home/Weight/Bite/Settings. A route keeps the bottom nav at
   four items and gives a natural back affordance.
-- **Alternative considered:** give `BitePage` its own `AppBar` with the action.
-  Rejected — it would double the app bar inside the shell's existing one. The
-  conditional-action approach reuses the shell's single app bar cleanly.
 
 New files: `lib/ui/pages/bite_analytics_page.dart`, plus widgets under
 `lib/ui/widgets/` (e.g. `daily_bites_chart.dart`, a stat-tile widget for the
