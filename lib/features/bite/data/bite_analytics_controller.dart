@@ -9,8 +9,8 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 /// keeping analytics work off the main Bite screen's hot path and leaving a
 /// clean seam for a later window selector or day picker to drive re-loads.
 ///
-/// Cards fill in over later phases; for now it establishes only whether the log
-/// holds any bite at all, which decides the screen's global empty state.
+/// It establishes whether the log holds any bite at all, which decides the
+/// screen's global empty state.
 class BiteAnalyticsController extends ChangeNotifier {
   BiteAnalyticsController(this._repository);
 

@@ -8,9 +8,8 @@ import 'package:provider/provider.dart';
 ///
 /// Self-contained: it owns its own [Scaffold]/[AppBar] (with the automatic back
 /// arrow) so it does not fight the app shell's shared chrome, and loads its data
-/// once through a per-screen [BiteAnalyticsController]. The cards land over
-/// later phases; here it shows a spinner while loading and a global empty state
-/// when no bites have ever been logged.
+/// once through a per-screen [BiteAnalyticsController]. It shows a spinner while
+/// loading and a global empty state when no bites have ever been logged.
 class BiteAnalyticsPage extends StatefulWidget {
   const BiteAnalyticsPage({super.key});
 
@@ -47,7 +46,7 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
           if (!_controller.hasAnyBites) {
             return const _EmptyAnalytics();
           }
-          // The analytics cards land here over Phases 5–8.
+          // Analytics cards render here once there is data to show.
           return const SizedBox.shrink();
         },
       ),
