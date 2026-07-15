@@ -246,15 +246,15 @@ The meal/snack model (§2), the one genuinely new logic.
 **Phase 4 — Screen scaffold + navigation**
 
 Get an (empty) screen reachable before filling it in.
-- [ ] Add an `AppTab { home, weight, bite, settings }` enum and repoint the
+- [x] Add an `AppTab { home, weight, bite, settings }` enum and repoint the
       existing `_currentIndex == 2` (`BitePage isActive:`) at `AppTab.bite.index`
-- [ ] Chart `IconButton` in `AppShell`'s app bar, rendered only when
+- [x] Chart `IconButton` in `AppShell`'s app bar, rendered only when
       `_currentIndex == AppTab.bite.index`, pushing `BiteAnalyticsPage`
-- [ ] `bite_analytics_page.dart` with its own `Scaffold`/`AppBar` ("Bite
+- [x] `bite_analytics_page.dart` with its own `Scaffold`/`AppBar` ("Bite
       Analytics", back arrow) and the `BiteAnalyticsController` (§3c) loading from
       the injected `BiteRepository` in `initState`
-- [ ] Loading spinner and a global empty state (no bites logged ever)
-- [ ] **Verify:** the button shows only on the Bite tab and the route opens/pops
+- [x] Loading spinner and a global empty state (no bites logged ever)
+- [x] **Verify:** the button shows only on the Bite tab and the route opens/pops
 
 **Phase 5 — Daily bites chart card**
 - [ ] `daily_bites_chart.dart` — an `fl_chart` `BarChart` over `dailyCounts`
