@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.13.0](https://github.com/igorbasko01/food-locker/compare/v1.12.0...v1.13.0) (2026-07-15)
+
+
+### Features
+
+* add dailyBiteCounts repository query for bite analytics ([#66](https://github.com/igorbasko01/food-locker/issues/66)) ([fc3d274](https://github.com/igorbasko01/food-locker/commit/fc3d274db790de432ed7bcd04bf9ba8a5f7d3f3e))
+* bite analytics screen scaffold + navigation (Phase 4) ([#71](https://github.com/igorbasko01/food-locker/issues/71)) ([5be2fe0](https://github.com/igorbasko01/food-locker/commit/5be2fe08058240c3abe4a6e939d3d1e8eeb8eaf3))
+* bite meal clustering — BiteAnalytics Phase 3 ([#70](https://github.com/igorbasko01/food-locker/issues/70)) ([91bce31](https://github.com/igorbasko01/food-locker/commit/91bce317a5bb2b70039070f4f35f064584957919))
+* daily bites chart card (Phase 5) ([#72](https://github.com/igorbasko01/food-locker/issues/72)) ([942673e](https://github.com/igorbasko01/food-locker/commit/942673e2cae124311f5167cb3e9b2ca12bda457a))
+
 ## [1.12.0](https://github.com/igorbasko01/food-locker/compare/v1.11.0...v1.12.0) (2026-07-14)
 
 
