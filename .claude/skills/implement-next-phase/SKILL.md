@@ -48,9 +48,12 @@ In the same branch, edit the plan document: flip every checklist item of the imp
 
 ## 7. Open the PR and iterate until green
 
-- Commit with a concise message like `Phase <N>: <phase title>`. The commit includes both the implementation and the plan-document update.
+- Match the repo's commit-message convention. Check first (a `CLAUDE.md`/`CONTRIBUTING` note, a `commitlint`/`release-please` config, or the existing `git log`). If the repo uses **Conventional Commits**, both the commit message and the PR title must carry a type prefix (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, …) chosen from what the phase actually did — user-facing behaviour is usually `feat:`, pure-logic/test-only phases often `test:` or `refactor:`. This is not cosmetic: a squash-merge takes its subject from the PR title, and tools like release-please parse that subject to compute the next version, so a non-conforming title lands a commit that breaks versioning.
+- Commit with a concise message; the commit includes both the implementation and the plan-document update.
+  - Conventional-Commits repo: `<type>: <phase title> (Phase <N>)`, e.g. `feat: daily bites chart card (Phase 5)`.
+  - Otherwise: `Phase <N>: <phase title>`.
 - Push and open a PR against `main` using whatever GitHub access is available (the `gh` CLI or a GitHub MCP tool — use whichever exists; do not install anything).
-  - Title: `Phase <N>: <phase title> (<plan name>)`
+  - Title: same convention as the commit — `<type>: <phase title> (Phase <N>)` where Conventional Commits are used, otherwise `Phase <N>: <phase title> (<plan name>)`.
   - Body: what was implemented, keyed to the phase's checklist; how it was verified (locally, or deferred to PR checks); any deviations from the plan.
 - Watch the PR checks (`gh pr checks --watch` or the MCP equivalent). While any check fails: read the failure logs, fix, commit, push, and watch again.
 - After 5 failed fix rounds, stop pushing and report: link the PR, summarize what still fails and why, and suggest next steps.
