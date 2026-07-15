@@ -211,7 +211,9 @@ fully-tested logic behind no UI.
 **Phase 1 — `dailyBiteCounts` on the repository seam**
 
 The one new persistence query; a SQL `GROUP BY`, no schema change.
-- [ ] Add the `DailyBiteCount` value type (`day` + `count`) in `bite_analytics.dart`
+- [ ] Create `lib/features/bite/data/bite_analytics.dart` with the
+      `DailyBiteCount` value type (`day` + `count`) — the file the `BiteAnalytics`
+      class lands in next phase
 - [ ] Add `dailyBiteCounts(from, to)` to `BiteRepository`; implement in
       `DriftBiteRepository` grouping on `date(at_ms/1000,'unixepoch','localtime')`
 - [ ] **Verify:** unit-test grouping, the half-open `[from, to)` window, an empty
@@ -220,8 +222,8 @@ The one new persistence query; a SQL `GROUP BY`, no schema change.
 **Phase 2 — `BiteAnalytics`: counts, averages, max**
 
 Pure computation over the repository — no meals yet.
-- [ ] New `lib/features/bite/data/bite_analytics.dart` constructed from a
-      `BiteRepository`
+- [ ] Add the `BiteAnalytics` class (constructed from a `BiteRepository`) to the
+      `bite_analytics.dart` created in Phase 1
 - [ ] `minBitesForAverage = 40` constant
 - [ ] `dailyCounts(from, to)`, `averagePerDay(from, to)` (mean over only the days
       with ≥ 40 bites — §5.2), `maxDay(from, to)` returning the peak `DailyBiteCount`
@@ -280,5 +282,3 @@ Get an (empty) screen reachable before filling it in.
 **Phase 9 — Polish**
 - [ ] Accessibility labels on the chart and tiles, consistent theming/spacing,
       and a final `flutter analyze` / `flutter test` pass before pushing
-</content>
-</invoke>
