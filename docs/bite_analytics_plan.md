@@ -266,9 +266,9 @@ Get an (empty) screen reachable before filling it in.
       shows muted below the 40 line and a ≥40 bar shows full-colour above it
 
 **Phase 6 — Averages + max stat tiles**
-- [ ] A stat-tile widget and a row of three: 30-day average, 1-year average,
+- [x] A stat-tile widget and a row of three: 30-day average, 1-year average,
       30-day max (with its date)
-- [ ] **Verify:** tiles read correctly against a seeded fixture
+- [x] **Verify:** tiles read correctly against a seeded fixture
 
 **Phase 7 — Meals-per-day summary**
 - [ ] Surface today's meal count and the window average (`averageMealsPerDay`)

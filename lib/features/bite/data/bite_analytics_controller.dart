@@ -20,7 +20,8 @@ class BiteAnalyticsController extends ChangeNotifier {
   final BiteRepository _repository;
   final BiteAnalytics _analytics;
 
-  /// The chart's window: the [dailyBitesWindow]-day span ending today.
+  /// The chart's window, and the span the 30-day average and max cover: the
+  /// [dailyBitesWindow]-day span ending today.
   static const int dailyBitesWindow = 30;
 
   bool _isLoading = true;
@@ -40,6 +41,24 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// that had bites — the daily-bites chart's data.
   List<DailyBiteCount> get dailyCounts => _dailyCounts;
 
+  double _averageLast30 = 0;
+
+  /// Mean daily bites over the last [dailyBitesWindow] days, counting only days
+  /// at or above [BiteAnalytics.minBitesForAverage]. 0 when no day qualifies.
+  double get averageLast30 => _averageLast30;
+
+  double _averageLastYear = 0;
+
+  /// Mean daily bites over the last year, on the same qualifying-days rule as
+  /// [averageLast30]. 0 when no day qualifies.
+  double get averageLastYear => _averageLastYear;
+
+  DailyBiteCount? _maxLast30;
+
+  /// The highest-bite day in the last [dailyBitesWindow] days, or null when the
+  /// window holds no bites — the max stat tile's value and its date.
+  DailyBiteCount? get maxLast30 => _maxLast30;
+
   /// Loads the analytics for the screen, notifying at the start and end so the
   /// spinner shows while the store is read.
   Future<void> load() async {
@@ -48,8 +67,16 @@ class BiteAnalyticsController extends ChangeNotifier {
     _hasAnyBites = await _repository.lastBite() != null;
     final now = DateTime.now();
     final to = DateTime(now.year, now.month, now.day + 1);
-    final from = DateTime(now.year, now.month, now.day - (dailyBitesWindow - 1));
-    _dailyCounts = await _analytics.dailyCounts(from, to);
+    final from30 = DateTime(
+      now.year,
+      now.month,
+      now.day - (dailyBitesWindow - 1),
+    );
+    final fromYear = DateTime(now.year - 1, now.month, now.day + 1);
+    _dailyCounts = await _analytics.dailyCounts(from30, to);
+    _averageLast30 = await _analytics.averagePerDay(from30, to);
+    _maxLast30 = await _analytics.maxDay(from30, to);
+    _averageLastYear = await _analytics.averagePerDay(fromYear, to);
     _isLoading = false;
     notifyListeners();
   }
