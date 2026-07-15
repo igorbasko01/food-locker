@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
@@ -145,6 +146,79 @@ void main() {
         ),
         0,
       );
+    });
+  });
+
+  group('dailyBiteCounts', () {
+    test('groups bites by local calendar day', () async {
+      await repo.logBite(DateTime(2026, 7, 13, 8, 0, 0));
+      await repo.logBite(DateTime(2026, 7, 13, 20, 0, 0));
+      await repo.logBite(DateTime(2026, 7, 14, 9, 0, 0));
+
+      final counts = await repo.dailyBiteCounts(
+        DateTime(2026, 7, 13),
+        DateTime(2026, 7, 15),
+      );
+
+      expect(counts, [
+        DailyBiteCount(day: DateTime(2026, 7, 13), count: 2),
+        DailyBiteCount(day: DateTime(2026, 7, 14), count: 1),
+      ]);
+    });
+
+    test('collapses two bites on the same day to one entry', () async {
+      await repo.logBite(DateTime(2026, 7, 13, 8, 0, 0));
+      await repo.logBite(DateTime(2026, 7, 13, 8, 0, 30));
+
+      final counts = await repo.dailyBiteCounts(
+        DateTime(2026, 7, 13),
+        DateTime(2026, 7, 14),
+      );
+
+      expect(counts, [DailyBiteCount(day: DateTime(2026, 7, 13), count: 2)]);
+    });
+
+    test('respects the half-open window (includes from, excludes to)', () async {
+      await repo.logBite(DateTime(2026, 7, 13)); // lower bound — included
+      await repo.logBite(DateTime(2026, 7, 14, 12, 0, 0)); // inside
+      await repo.logBite(DateTime(2026, 7, 15)); // upper bound — excluded
+      await repo.logBite(DateTime(2026, 7, 12, 23, 59, 59)); // before
+
+      final counts = await repo.dailyBiteCounts(
+        DateTime(2026, 7, 13),
+        DateTime(2026, 7, 15),
+      );
+
+      expect(counts, [
+        DailyBiteCount(day: DateTime(2026, 7, 13), count: 1),
+        DailyBiteCount(day: DateTime(2026, 7, 14), count: 1),
+      ]);
+    });
+
+    test('omits days with no bites rather than zero-filling them', () async {
+      await repo.logBite(DateTime(2026, 7, 13, 8, 0, 0));
+      await repo.logBite(DateTime(2026, 7, 15, 8, 0, 0)); // 14th has none
+
+      final counts = await repo.dailyBiteCounts(
+        DateTime(2026, 7, 13),
+        DateTime(2026, 7, 16),
+      );
+
+      expect(counts, [
+        DailyBiteCount(day: DateTime(2026, 7, 13), count: 1),
+        DailyBiteCount(day: DateTime(2026, 7, 15), count: 1),
+      ]);
+    });
+
+    test('is empty when the window holds no bites', () async {
+      await repo.logBite(DateTime(2026, 7, 13, 8, 0, 0));
+
+      final counts = await repo.dailyBiteCounts(
+        DateTime(2026, 7, 14),
+        DateTime(2026, 7, 15),
+      );
+
+      expect(counts, isEmpty);
     });
   });
 

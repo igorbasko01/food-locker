@@ -1,3 +1,4 @@
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 
 /// The seam in front of the bite dataset.
@@ -30,6 +31,15 @@ abstract interface class BiteRepository {
   /// The number of bites in the half-open window `[from, to)` — the headline
   /// metric. Callers pass a local day's bounds for "today's count".
   Future<int> biteCount(DateTime from, DateTime to);
+
+  /// Bites per local calendar day in the half-open window `[from, to)`, one
+  /// entry per day that has at least one bite, in chronological day order.
+  ///
+  /// Grouped in the store (SQL `date(at_ms/1000,'unixepoch','localtime')`) so a
+  /// year of raw rows never has to cross into Dart just to be counted. Days with
+  /// no bites are absent, not zero-filled — callers that need a dense series
+  /// fill the gaps against their own window.
+  Future<List<DailyBiteCount>> dailyBiteCounts(DateTime from, DateTime to);
 
   /// Appends [cfg] as a new pacing-config version (a config-change marker).
   ///

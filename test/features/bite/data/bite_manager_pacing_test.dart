@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
@@ -216,6 +217,23 @@ class _FakeBiteRepository implements BiteRepository {
   Future<int> biteCount(DateTime from, DateTime to) async => _bites
       .where((at) => !at.isBefore(from) && at.isBefore(to))
       .length;
+
+  @override
+  Future<List<DailyBiteCount>> dailyBiteCounts(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final byDay = <DateTime, int>{};
+    for (final at in _bites) {
+      if (at.isBefore(from) || !at.isBefore(to)) continue;
+      final day = DateTime(at.year, at.month, at.day);
+      byDay[day] = (byDay[day] ?? 0) + 1;
+    }
+    final days = byDay.keys.toList()..sort();
+    return [
+      for (final day in days) DailyBiteCount(day: day, count: byDay[day]!),
+    ];
+  }
 
   @override
   Future<void> setPacingConfig(PacingConfig cfg) async {}
