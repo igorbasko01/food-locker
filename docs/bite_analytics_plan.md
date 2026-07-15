@@ -6,7 +6,7 @@ daily-bite trends, averages, and a meal/snack breakdown derived from the stored
 timestamps.
 
 > **Status: ready to build.** Nothing here is built yet, but every design
-> decision is settled (§6) — implementation can start at Phase 1.
+> decision is settled (§5) — implementation can start at Phase 1.
 
 ---
 
@@ -37,7 +37,7 @@ every decision below.
 2. **Averages** — mean daily bites over the **last 30 days** and the **last
    year**, counting only days with at least `minBitesForAverage` (**40**) bites;
    zero and lightly-logged days are excluded so partial-logging noise doesn't drag
-   the mean down (§6.2).
+   the mean down (§5.2).
 3. **Max daily bites — last 30 days** — the single highest day's count in the
    window, and the day it fell on.
 4. **Meals per day** — count of *meals* per day, where a **meal** is a cluster of
@@ -46,8 +46,6 @@ every decision below.
 5. **Daily meal breakdown** — for a selected day (default: today), the bite count
    in each meal, plus a total of bites that fell **outside** any meal (**snacks**,
    §2).
-
-"…and maybe more" — candidates parked for later in §5.
 
 ---
 
@@ -66,7 +64,7 @@ keep adding bites while the gap from the **previous bite** is `≤ 5 min`; a gap
 - The threshold is between **consecutive** bites, not from the cluster's start —
   a long, slow meal stays one cluster as long as no single gap exceeds 5 min.
 - `5 min` is a fixed named constant (`mealGapThreshold`), defined once so it is
-  easy to retune in code — **not** user-configurable in v1 (§6.3, settled).
+  easy to retune in code — **not** user-configurable in v1 (§5.3, settled).
 
 ### 2b. Meal vs. snack
 
@@ -74,7 +72,7 @@ Not every cluster is a "meal" — item 5 explicitly separates *meals* from *bite
 outside meals (snacks)*. So a cluster is promoted to a **meal** only if it has at
 least `minMealBites` bites; smaller clusters count as **snacks**.
 
-- **`minMealBites = 10`** (§6.1, settled). A cluster of fewer than 10 bites is
+- **`minMealBites = 10`** (§5.1, settled). A cluster of fewer than 10 bites is
   treated as snacking, and its bites roll into the day's snack total — so a small
   snack never gets promoted to a full meal.
 - "Bites outside meals (snacks)" = every bite in the day that is not part of a
@@ -82,7 +80,7 @@ least `minMealBites` bites; smaller clusters count as **snacks**.
 
 ### 2c. Day boundaries
 
-Clustering runs **within a single local day** (§6.4, settled). A meal that
+Clustering runs **within a single local day** (§5.4, settled). A meal that
 straddles midnight is split at the day boundary — the bites before midnight
 belong to one day, those after to the next. This keeps "meals per day" consistent
 with every other per-day metric and avoids a single late-night meal being
@@ -178,21 +176,7 @@ the existing chart's theming.
 
 ---
 
-## 5. Follow-up candidates ("…and maybe more")
-
-Parked, not in v1 — listed so v1 doesn't accidentally foreclose them:
-
-- **Window selector** (7 / 30 / 365 days) driving the chart and averages.
-- **Day picker** for the meal breakdown (browse past days, not just today).
-- **Meals-per-day trend** as its own small chart.
-- **Time-of-day distribution** (bites/meals by hour) — a snacking-pattern view.
-- **Pacing overlay** — average inter-bite gap or share of well-paced bites,
-  joining the analytics with the pacing thresholds (`pacingConfigAt`).
-- **Best/worst day, current low-bite streak** — echoing the weight streak banners.
-
----
-
-## 6. Settled decisions
+## 5. Settled decisions
 
 All confirmed — these fix the numbers on screen:
 
@@ -213,7 +197,7 @@ All confirmed — these fix the numbers on screen:
 
 ---
 
-## 7. Phases
+## 6. Phases
 
 Each phase is one sitting on a single subject, ends **green** (`flutter analyze`
 + `flutter test` pass), and is independently committable. Phases are ordered so
@@ -240,7 +224,7 @@ Pure computation over the repository — no meals yet.
       `BiteRepository`
 - [ ] `minBitesForAverage = 40` constant
 - [ ] `dailyCounts(from, to)`, `averagePerDay(from, to)` (mean over only the days
-      with ≥ 40 bites — §6.2), `maxDay(from, to)` returning the peak `DailyBiteCount`
+      with ≥ 40 bites — §5.2), `maxDay(from, to)` returning the peak `DailyBiteCount`
 - [ ] **Verify:** unit-test that sub-40 and zero days are excluded from the
       average, a window with no qualifying day (average null/0), max with ties, and
       empty data (max null)
@@ -273,7 +257,7 @@ Get an (empty) screen reachable before filling it in.
 **Phase 5 — Daily bites chart card**
 - [ ] `daily_bites_chart.dart` — an `fl_chart` `BarChart` over `dailyCounts`
       (last 30 days), one bar per day, themed like `weight_chart.dart`
-- [ ] Flag days that don't count toward the average (§6.2): a faint horizontal
+- [ ] Flag days that don't count toward the average (§5.2): a faint horizontal
       reference line at `minBitesForAverage` (40), and muted/desaturated fill on
       bars below it — so the chart visibly explains why those days are excluded
 - [ ] **Verify:** renders with sparse data and a zero-bite gap day; a sub-40 bar
@@ -289,7 +273,7 @@ Get an (empty) screen reachable before filling it in.
 - [ ] **Verify:** matches a hand-counted fixture
 
 **Phase 8 — Daily meal breakdown card**
-- [ ] For today (§6.5): a list of each meal's bite count plus the snack total,
+- [ ] For today (§5.5): a list of each meal's bite count plus the snack total,
       with an empty state when today has no bites yet
 - [ ] **Verify:** meals, snacks, and the empty state each render
 
