@@ -78,6 +78,8 @@ class DailyBitesChart extends StatelessWidget {
 
     return Semantics(
       label: semanticsLabel,
+      container: true,
+      excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
         child: BarChart(
