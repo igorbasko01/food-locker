@@ -71,6 +71,12 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// days that had at least one bite. 0 when the window holds no bites.
   double get averageMealsLast30 => _averageMealsLast30;
 
+  double _averageMealSizeLast30 = 0;
+
+  /// Mean bites per meal over the last [dailyBitesWindow] days, across only
+  /// qualifying meals (snacks excluded). 0 when the window holds no meal.
+  double get averageMealSizeLast30 => _averageMealSizeLast30;
+
   DayMealBreakdown _breakdownToday = DayMealBreakdown(
     day: DateTime.fromMillisecondsSinceEpoch(0),
     meals: const [],
@@ -103,6 +109,7 @@ class BiteAnalyticsController extends ChangeNotifier {
     _breakdownToday = await _analytics.breakdownForDay(today);
     _mealsToday = _breakdownToday.meals.length;
     _averageMealsLast30 = await _analytics.averageMealsPerDay(from30, to);
+    _averageMealSizeLast30 = await _analytics.averageMealSize(from30, to);
     _isLoading = false;
     notifyListeners();
   }
