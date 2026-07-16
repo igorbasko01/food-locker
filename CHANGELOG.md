@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.14.0](https://github.com/igorbasko01/food-locker/compare/v1.13.0...v1.14.0) (2026-07-16)
+
+
+### Features
+
+* analytics accessibility polish (Phase 9) ([#77](https://github.com/igorbasko01/food-locker/issues/77)) ([b4c0840](https://github.com/igorbasko01/food-locker/commit/b4c08405a00a59d639dc446cd04b974821820ffd))
+* averages + max stat tiles (Phase 6) ([#73](https://github.com/igorbasko01/food-locker/issues/73)) ([f4aa698](https://github.com/igorbasko01/food-locker/commit/f4aa698b718c6907d5e502e2ebf841210d5e433c))
+* daily meal breakdown card (Phase 8) ([#76](https://github.com/igorbasko01/food-locker/issues/76)) ([2dc7550](https://github.com/igorbasko01/food-locker/commit/2dc75502022ed3effff9f3812914aa178b8aefa2))
+* meals-per-day summary (Phase 7) ([#75](https://github.com/igorbasko01/food-locker/issues/75)) ([244eb40](https://github.com/igorbasko01/food-locker/commit/244eb40fb42c9ff635bec62e8ddecc12f92815eb))
+* reuse StatTile on the Weight tab (Phase 10) ([#78](https://github.com/igorbasko01/food-locker/issues/78)) ([9cb96dc](https://github.com/igorbasko01/food-locker/commit/9cb96dc32ea57693c04d29214fa2dbf5278ccc36))
+
 ## [1.13.0](https://github.com/igorbasko01/food-locker/compare/v1.12.0...v1.13.0) (2026-07-15)
 
 
