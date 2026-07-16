@@ -9,8 +9,8 @@ across the Bite tab and its analytics screen:
 3. **Current-meal bites on the main Bite page** — the in-progress meal's running
    count, alongside the day's headline total.
 
-> **Status: ready to build.** Nothing here is built yet; the design decisions
-> below (§4) are proposed defaults — confirm or adjust before Phase 1.
+> **Status: ready to build.** Nothing here is built yet, but every design
+> decision (§4) is settled — implementation can start at Phase 1.
 
 ---
 
@@ -140,6 +140,10 @@ trailing cluster of today's bites whose consecutive gaps are `≤ mealGapThresho
 (5 min), using the same rule as the analytics meal model. It answers "how much
 have I eaten *this* sitting?" next to the all-day total.
 
+Shown only while a meal is **actually in progress**: if the most recent bite is
+more than `mealGapThreshold` ago, the sitting has ended and the line is hidden —
+so opening the app hours after a meal shows nothing rather than a stale count.
+
 No `minMealBites` gate applies to the live count — it counts from the first bite
 of the sitting, before the cluster is big enough to have "qualified" as a meal in
 the analytics sense.
@@ -151,23 +155,29 @@ every mutation. The current-meal size follows the exact same pattern: it's
 **recomputed from today's stored bites**, not tracked with a running counter.
 
 ```dart
-/// Bites in the current meal: the size of the trailing run of today's bites no
-/// more than [BiteAnalytics.mealGapThreshold] apart. Recomputed from the store
-/// alongside [todayCount]; 0 when today has no bites.
+/// Bites in the current meal, or 0 when no meal is in progress. Recomputed from
+/// the store alongside [todayCount]: the size of the trailing run of today's
+/// bites no more than [BiteAnalytics.mealGapThreshold] apart — but only when the
+/// most recent bite is within that threshold of now. A last bite older than the
+/// threshold means the sitting has ended, so this reads 0.
 int get currentMealBites;
 ```
 
-- **On `logBite` and `initialize`:** cluster today's bites by the
-  `mealGapThreshold` rule and take the trailing cluster's size — folded into the
-  same refresh that already recomputes the day count, off one read of today's
-  bites. There is no increment/reset arithmetic and no `_currentMealCount` state
-  to keep in sync; the number is always a projection of the log.
+- **On `logBite` and `initialize`** (every refresh that recomputes the day
+  count): first gate on recency — if the most recent bite is more than
+  `mealGapThreshold` ago, `currentMealBites` is 0. Otherwise cluster today's bites
+  by the `mealGapThreshold` rule and take the trailing cluster's size. It's folded
+  into the same refresh, off one read of today's bites — there is no increment/
+  reset arithmetic and no `_currentMealCount` state to keep in sync; the number is
+  always a projection of the log.
 - Reuse the meal-clustering already in `BiteAnalytics` (extract its private
   `_clusterBites` / `mealGapThreshold` into a shared spot) so the live count and
   the analytics screen apply one identical rule.
 
-Because it's recomputed from the log, resetting is automatic: a tap after a
-`> mealGapThreshold` gap forms a fresh trailing cluster of size 1.
+Because it's recomputed from the log, resetting is automatic: a just-logged bite
+(`lastBite == now`) always shows and starts a fresh trailing cluster of size 1
+after a `> mealGapThreshold` gap, while opening the app long after the last bite
+shows nothing.
 
 ### 3c. UI
 
@@ -175,18 +185,18 @@ Because it's recomputed from the log, resetting is automatic: a tap after a
 (e.g. "This meal: N"), rendered only when `currentMealBites > 0` so an empty day
 stays clean. It reads `biteManager.currentMealBites`; no new provider.
 
-**Bite-driven caveat (settled, §4.4):** the number refreshes only when the manager
-recomputes — on a bite or on open — not on a timer. Between bites it does not
-auto-clear at the 5-min mark (the pacing ticker stops at `b2` (~30 s), so there's
-no periodic rebuild), and on open it reflects today's trailing cluster. It settles
-to the right value on the next bite. A timer to blank it exactly at the 5-min
-boundary is deliberately out of scope for v1.
+**Bite-driven caveat (settled, §4.4):** the recency gate is evaluated when the
+manager recomputes — on a bite or on open — not on a timer. So opening the app
+after a meal ended correctly shows nothing, but if you sit on the Bite page and
+the 5-min mark passes with no new bite, the line only clears on the next refresh
+(a bite, a tab switch, or reopening the tab), since no ticker runs past `b2`
+(~30 s). A timer to blank it at the exact 5-min boundary is out of scope for v1.
 
 ---
 
-## 4. Proposed decisions
+## 4. Settled decisions
 
-Defaults chosen to match the shipped screen; confirm or adjust before building.
+All confirmed — these fix the behaviour on screen:
 
 1. **Avg meal size counts only qualifying meals** (`≥ minMealBites`), excluding
    snacks, and is shown as a whole number of bites. `—` when the window has no
@@ -199,9 +209,11 @@ Defaults chosen to match the shipped screen; confirm or adjust before building.
    bites (trailing `mealGapThreshold` cluster) alongside the day count, with no
    running counter. It reuses `mealGapThreshold` (5 min) and ignores
    `minMealBites` for the live count (it counts from bite 1 of the sitting).
-4. **Current meal is bite-driven, not timer-driven** — it refreshes on a bite or
-   on open, not at the instant 5 min elapses (§3c).
-5. **Current-meal line is hidden when the day has no bites.**
+4. **Current meal is bite-driven, not timer-driven** — the recency check and
+   recompute run on a bite or on open, not at the instant 5 min elapses; the line
+   can linger past 5 min only until the next refresh (§3c).
+5. **Current-meal line is hidden when no meal is in progress** — the day has no
+   bites, or the most recent bite is more than `mealGapThreshold` (5 min) ago.
 
 ---
 
@@ -248,14 +260,16 @@ Chart tap drives the breakdown card; no new analytics.
       apply one identical rule
 - [ ] Add `currentMealBites` to `BiteManager`, **recomputed** from today's bites
       (trailing `mealGapThreshold` cluster) in the same refresh that recomputes the
-      day count — no running counter, no `initialize` special-casing beyond that
-      refresh
+      day count, gated on recency — 0 when the most recent bite is more than
+      `mealGapThreshold` ago; no running counter, no `initialize` special-casing
+      beyond that refresh
 - [ ] Show a quiet "This meal: N" line under the day total in `bite_page.dart`,
       hidden when `currentMealBites == 0`
-- [ ] **Verify:** unit-test the trailing cluster's size within the threshold, a
-      fresh trailing cluster of 1 after a `> mealGapThreshold` gap, a fresh manager
-      at 0, and that it recomputes after a logged bite; widget-test the line shows
-      with a current meal and hides on an empty day
+- [ ] **Verify:** unit-test the trailing cluster's size when the last bite is
+      recent, 0 when the last bite is older than `mealGapThreshold`, a fresh
+      cluster of 1 after a `> mealGapThreshold` gap, a fresh manager at 0, and that
+      it recomputes after a logged bite; widget-test the line shows with a current
+      meal and hides when no meal is in progress
 
 **Phase 4 — Polish**
 - [ ] Accessibility labels on the new tile, the selected-bar highlight, and the
