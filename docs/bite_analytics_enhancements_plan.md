@@ -262,8 +262,9 @@ Weight is day-granular, so it aligns one-to-one with the bite days. A day with a
 weigh-in but no bites still shows its weight bar; a day with no weigh-in shows only
 the bite bar — no gap-filling, raw values as decided. Weight stays in kg.
 
-Density note: 30 days × 2 rods is tight, so bar width / group spacing get a pass
-(narrower rods, or a shorter default window) to stay legible.
+Density note: two rods per day over 30 days is tight, so each rod is drawn at
+roughly **half** the current single-rod width to fit both. The 30-day window
+stays as is.
 
 ---
 
@@ -375,7 +376,8 @@ Chart tap drives the breakdown card; no new analytics.
 - [ ] Add a second `BarChartRodData` per group in `daily_bites_chart.dart` for
       weight, on a secondary right-hand kg axis fitted to the weight min/max
       (normalise the rod's `toY`, label `rightTitles` in kg); distinct colour, a
-      two-item legend, and bar width/spacing tuned for the denser groups
+      two-item legend, and each rod at ~half the current `_barWidth` (two per day)
+      over the kept 30-day window
 - [ ] Weight bar omitted on days with no weigh-in; bite-only days unchanged
 - [ ] **Verify:** the chart renders bite-only, weight-only, and both-present days;
       the weight axis fits the weight range (small changes stay visible, not
