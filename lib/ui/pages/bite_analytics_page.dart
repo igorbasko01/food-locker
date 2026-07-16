@@ -57,6 +57,10 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
                 averageLastYear: _controller.averageLastYear,
                 maxLast30: _controller.maxLast30,
               ),
+              _MealsSummaryRow(
+                mealsToday: _controller.mealsToday,
+                averageMealsLast30: _controller.averageMealsLast30,
+              ),
             ],
           );
         },
@@ -158,6 +162,51 @@ class _StatTilesRow extends StatelessWidget {
 
   /// A day as `month/day`, matching the daily-bites chart's axis labels.
   static String _formatDay(DateTime day) => '${day.month}/${day.day}';
+}
+
+/// A meals summary: today's meal count and the 30-day average meals per day. A
+/// meal is a cluster of at least [BiteAnalytics.minMealBites] bites no more than
+/// [BiteAnalytics.mealGapThreshold] apart; the average spans only days that had
+/// bites, so `—` marks a window with no meals rather than zero.
+class _MealsSummaryRow extends StatelessWidget {
+  const _MealsSummaryRow({
+    required this.mealsToday,
+    required this.averageMealsLast30,
+  });
+
+  final int mealsToday;
+  final double averageMealsLast30;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: StatTile(
+                label: 'Meals today',
+                value: mealsToday.toString(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatTile(
+                label: '30-day avg meals',
+                value: _formatMealAverage(averageMealsLast30),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Meals per day to one decimal, with `—` for a window that held no meals.
+  static String _formatMealAverage(double average) =>
+      average == 0 ? '—' : average.toStringAsFixed(1);
 }
 
 /// Shown when the bite log is empty: there is nothing to analyse until bites

@@ -271,8 +271,8 @@ Get an (empty) screen reachable before filling it in.
 - [x] **Verify:** tiles read correctly against a seeded fixture
 
 **Phase 7 — Meals-per-day summary**
-- [ ] Surface today's meal count and the window average (`averageMealsPerDay`)
-- [ ] **Verify:** matches a hand-counted fixture
+- [x] Surface today's meal count and the window average (`averageMealsPerDay`)
+- [x] **Verify:** matches a hand-counted fixture
 
 **Phase 8 — Daily meal breakdown card**
 - [ ] For today (§5.5): a list of each meal's bite count plus the snack total,

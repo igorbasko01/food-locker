@@ -59,6 +59,18 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// window holds no bites — the max stat tile's value and its date.
   DailyBiteCount? get maxLast30 => _maxLast30;
 
+  int _mealsToday = 0;
+
+  /// The number of meals logged today — clusters that reached
+  /// [BiteAnalytics.minMealBites]. 0 when today has no qualifying meal.
+  int get mealsToday => _mealsToday;
+
+  double _averageMealsLast30 = 0;
+
+  /// Mean meals per day over the last [dailyBitesWindow] days, across only the
+  /// days that had at least one bite. 0 when the window holds no bites.
+  double get averageMealsLast30 => _averageMealsLast30;
+
   /// Loads the analytics for the screen, notifying at the start and end so the
   /// spinner shows while the store is read.
   Future<void> load() async {
@@ -66,6 +78,7 @@ class BiteAnalyticsController extends ChangeNotifier {
     notifyListeners();
     _hasAnyBites = await _repository.lastBite() != null;
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final to = DateTime(now.year, now.month, now.day + 1);
     final from30 = DateTime(
       now.year,
@@ -77,6 +90,8 @@ class BiteAnalyticsController extends ChangeNotifier {
     _averageLast30 = await _analytics.averagePerDay(from30, to);
     _maxLast30 = await _analytics.maxDay(from30, to);
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);
+    _mealsToday = (await _analytics.mealsForDay(today)).length;
+    _averageMealsLast30 = await _analytics.averageMealsPerDay(from30, to);
     _isLoading = false;
     notifyListeners();
   }
