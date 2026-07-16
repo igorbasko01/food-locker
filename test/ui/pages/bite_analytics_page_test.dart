@@ -173,6 +173,8 @@ void main() {
     await logCluster(today, 10, 5);
 
     await pumpPage(tester);
+    // The breakdown card is the bottom card in the scroll view; build it.
+    await tester.scrollUntilVisible(find.text('Today\'s meals'), 200);
 
     expect(find.text('Today\'s meals'), findsOneWidget);
     expect(find.text('Meal 1'), findsOneWidget);
@@ -192,6 +194,7 @@ void main() {
     await logCluster(yesterday, 8, 20);
 
     await pumpPage(tester);
+    await tester.scrollUntilVisible(find.text('Today\'s meals'), 200);
 
     expect(find.text('Today\'s meals'), findsOneWidget);
     expect(find.text('No bites logged today yet.'), findsOneWidget);
