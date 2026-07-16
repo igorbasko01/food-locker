@@ -71,6 +71,16 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// days that had at least one bite. 0 when the window holds no bites.
   double get averageMealsLast30 => _averageMealsLast30;
 
+  DayMealBreakdown _breakdownToday = DayMealBreakdown(
+    day: DateTime.fromMillisecondsSinceEpoch(0),
+    meals: const [],
+    snackBites: 0,
+  );
+
+  /// Today split into its meals and its snack total — the meal-breakdown card's
+  /// data. Empty (no meals, no snack bites) until today has a bite.
+  DayMealBreakdown get breakdownToday => _breakdownToday;
+
   /// Loads the analytics for the screen, notifying at the start and end so the
   /// spinner shows while the store is read.
   Future<void> load() async {
@@ -90,7 +100,8 @@ class BiteAnalyticsController extends ChangeNotifier {
     _averageLast30 = await _analytics.averagePerDay(from30, to);
     _maxLast30 = await _analytics.maxDay(from30, to);
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);
-    _mealsToday = (await _analytics.mealsForDay(today)).length;
+    _breakdownToday = await _analytics.breakdownForDay(today);
+    _mealsToday = _breakdownToday.meals.length;
     _averageMealsLast30 = await _analytics.averageMealsPerDay(from30, to);
     _isLoading = false;
     notifyListeners();
