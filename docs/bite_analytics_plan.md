@@ -275,9 +275,9 @@ Get an (empty) screen reachable before filling it in.
 - [x] **Verify:** matches a hand-counted fixture
 
 **Phase 8 — Daily meal breakdown card**
-- [ ] For today (§5.5): a list of each meal's bite count plus the snack total,
+- [x] For today (§5.5): a list of each meal's bite count plus the snack total,
       with an empty state when today has no bites yet
-- [ ] **Verify:** meals, snacks, and the empty state each render
+- [x] **Verify:** meals, snacks, and the empty state each render
 
 **Phase 9 — Polish**
 - [ ] Accessibility labels on the chart and tiles, consistent theming/spacing,

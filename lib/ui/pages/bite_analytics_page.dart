@@ -3,6 +3,7 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
+import 'package:food_locker/ui/widgets/meal_breakdown_list.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
 
@@ -61,6 +62,7 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
                 mealsToday: _controller.mealsToday,
                 averageMealsLast30: _controller.averageMealsLast30,
               ),
+              _MealBreakdownCard(breakdown: _controller.breakdownToday),
             ],
           );
         },
@@ -207,6 +209,37 @@ class _MealsSummaryRow extends StatelessWidget {
   /// Meals per day to one decimal, with `—` for a window that held no meals.
   static String _formatMealAverage(double average) =>
       average == 0 ? '—' : average.toStringAsFixed(1);
+}
+
+/// Today's meal breakdown, framed in a titled card matching the daily-bites
+/// card. The [MealBreakdownList] carries its own empty state for a day with no
+/// bites yet, so the card is always shown once the log holds any bite at all.
+class _MealBreakdownCard extends StatelessWidget {
+  const _MealBreakdownCard({required this.breakdown});
+
+  final DayMealBreakdown breakdown;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Today\'s meals', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            MealBreakdownList(breakdown: breakdown),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Shown when the bite log is empty: there is nothing to analyse until bites

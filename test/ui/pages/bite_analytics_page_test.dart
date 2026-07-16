@@ -160,4 +160,41 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('meal breakdown card lists today\'s meals and snack total', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Today: two meals (12 @ 08, 15 @ 09) plus a 5-bite snack @ 10.
+    await logCluster(today, 8, 12);
+    await logCluster(today, 9, 15);
+    await logCluster(today, 10, 5);
+
+    await pumpPage(tester);
+
+    expect(find.text('Today\'s meals'), findsOneWidget);
+    expect(find.text('Meal 1'), findsOneWidget);
+    expect(find.text('Meal 2'), findsOneWidget);
+    expect(find.text('12 bites'), findsOneWidget);
+    expect(find.text('15 bites'), findsOneWidget);
+    expect(find.text('Snacks'), findsOneWidget);
+    expect(find.text('5 bites'), findsOneWidget);
+  });
+
+  testWidgets('meal breakdown card shows its empty state when today is empty '
+      'but earlier days have bites', (tester) async {
+    final now = DateTime.now();
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+
+    // Bites only on yesterday: the page has data, but today is empty.
+    await logCluster(yesterday, 8, 20);
+
+    await pumpPage(tester);
+
+    expect(find.text('Today\'s meals'), findsOneWidget);
+    expect(find.text('No bites logged today yet.'), findsOneWidget);
+    expect(find.text('Snacks'), findsNothing);
+  });
 }
