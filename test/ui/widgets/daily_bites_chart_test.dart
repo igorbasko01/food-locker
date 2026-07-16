@@ -73,4 +73,33 @@ void main() {
     expect(lines, hasLength(1));
     expect(lines.single.y, BiteAnalytics.minBitesForAverage.toDouble());
   });
+
+  testWidgets('exposes a semantics summary for the painted bars', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: Scaffold(
+          body: SizedBox(
+            height: 300,
+            child: DailyBitesChart(
+              counts: [
+                DailyBiteCount(day: DateTime(2026, 1, 1), count: 60),
+                DailyBiteCount(day: DateTime(2026, 1, 3), count: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Three-day span (a gap day between the two logged days), highest 60.
+    expect(
+      find.bySemanticsLabel('Daily bites bar chart, 3 days. Highest day 60 bites.'),
+      findsOneWidget,
+    );
+    handle.dispose();
+  });
 }

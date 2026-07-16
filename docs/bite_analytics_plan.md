@@ -280,7 +280,7 @@ Get an (empty) screen reachable before filling it in.
 - [x] **Verify:** meals, snacks, and the empty state each render
 
 **Phase 9 — Polish**
-- [ ] Accessibility labels on the chart and tiles, consistent theming/spacing,
+- [x] Accessibility labels on the chart and tiles, consistent theming/spacing,
       and a final `flutter analyze` / `flutter test` pass before pushing
 
 **Phase 10 — Reuse `StatTile` on the Weight tab**
