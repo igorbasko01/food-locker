@@ -43,8 +43,8 @@ A **floating circular bite button**, drawn over whatever app is in front:
   from `PacingZoneStyle`. Because the zone advances with time since the last bite,
   the overlay runs a small local ticker that recomputes the colour between taps —
   the same derivation `BiteManager` does, minus the wake-lock and countdown.
-- **Draggable**, so it can be parked out of the way, with a **close gesture** (a
-  small ✕ or long-press) to dismiss it.
+- **Draggable**, so it can be parked out of the way, with a **small ✕** to dismiss
+  it.
 
 Explicitly **out of scope for v1** (kept on the main page only): the running
 count, the countdown seconds, the "in the clear" haptic, and the wake-lock — a
@@ -188,7 +188,7 @@ The puck itself, in its own engine.
       `MaterialApp` with a circular bite button: fill from `PacingZoneStyle`, a
       local ticker recomputing the zone between taps, tap → `logBite(now)` through
       the overlay's own repository
-- [ ] Draggable puck with a close gesture (✕ / long-press → `closeOverlay()`)
+- [ ] Draggable puck with a small ✕ to dismiss (→ `closeOverlay()`)
 - [ ] **Verify (device):** the puck floats over other apps, taps log bites, and
       the colour advances through the zones over time; `flutter analyze` /
       `flutter test` pass
