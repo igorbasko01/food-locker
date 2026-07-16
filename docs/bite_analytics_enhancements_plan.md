@@ -10,7 +10,7 @@ across the Bite tab and its analytics screen:
    count, alongside the day's headline total.
 
 > **Status: ready to build.** Nothing here is built yet, but every design
-> decision (§5) is settled — implementation can start at Phase 1.
+> decision (§6) is settled — implementation can start at Phase 1.
 
 ---
 
@@ -186,7 +186,7 @@ shows nothing.
 (e.g. "This meal: N"), rendered only when `currentMealBites > 0` so an empty day
 stays clean. It reads `biteManager.currentMealBites`; no new provider.
 
-**Bite-driven caveat (settled, §5.4):** the recency gate is evaluated when the
+**Bite-driven caveat (settled, §6.4):** the recency gate is evaluated when the
 manager recomputes — on a bite or on open — not on a timer. So opening the app
 after a meal ended correctly shows nothing, but if you sit on the Bite page and
 the 5-min mark passes with no new bite, the line only clears on the next refresh
@@ -233,7 +233,41 @@ instead, and format through `intl`:
 
 ---
 
-## 5. Settled decisions
+## 5. Body weight on the bite chart
+
+### 5a. Shape — grouped bars
+
+`fl_chart` renders side-by-side bars out of the box: a `BarChartGroupData` holds a
+*list* of `BarChartRodData` in `barRods`, drawn grouped per x. The daily-bites
+chart uses one rod today; a second rod per day is the weight bar, in a distinct
+colour with a two-entry legend.
+
+### 5b. The scale still needs a second axis
+
+Two bars don't close the unit gap: bites are a count (0–~150) and weight is kg in
+a narrow band far from zero (e.g. 72–96). Drawn from zero on the shared bite axis,
+every weight bar is a near-identical tall block and the day-to-day change — the
+whole point of overlaying it — is invisible. So the weight rod is mapped onto a
+**secondary right-hand axis** fitted to the weight's own min/max (±~1 kg padding,
+as `weight_chart.dart` does): its `toY` is normalised into the bar chart's Y
+range, and the right axis (`rightTitles`, hidden today) is labelled in kg by
+inverting that mapping. Left axis = bites, right axis = kg, one grouped bar each.
+
+### 5c. Data + wiring
+
+`BiteAnalyticsController` gains a `WeightRepository` (already provided in
+`main.dart`; inject it alongside the bite repo) and loads **raw daily weights**
+over the same 30-day window via `getAllWeights()` filtered to `[from30, to)`.
+Weight is day-granular, so it aligns one-to-one with the bite days. A day with a
+weigh-in but no bites still shows its weight bar; a day with no weigh-in shows only
+the bite bar — no gap-filling, raw values as decided. Weight stays in kg.
+
+Density note: 30 days × 2 rods is tight, so bar width / group spacing get a pass
+(narrower rods, or a shorter default window) to stay legible.
+
+---
+
+## 6. Settled decisions
 
 All confirmed — these fix the behaviour on screen:
 
@@ -257,10 +291,14 @@ All confirmed — these fix the behaviour on screen:
    `14/7` or `7/14` per the phone — through one shared `intl` helper. Full ISO
    dates elsewhere (history list, dialogs, home header, backup filename) are left
    as-is (§4a).
+7. **Weight rides the bite chart as a second grouped bar per day** (`fl_chart`
+   `barRods`), on a **secondary right-hand kg axis fitted to the weight range** —
+   not from zero, which would flatten the day-to-day change (§5b). Raw daily
+   weights, in kg, no gap-filling.
 
 ---
 
-## 6. Phases
+## 7. Phases
 
 Each phase is one sitting on a single subject, ends **green** (`flutter analyze`
 + `flutter test` pass), and is independently committable. Ordered so each assumes
@@ -330,7 +368,20 @@ Chart tap drives the breakdown card; no new analytics.
       it recomputes after a logged bite; widget-test the line shows with a current
       meal and hides when no meal is in progress
 
-**Phase 5 — Polish**
-- [ ] Accessibility labels on the new tile, the selected-bar highlight, and the
-      current-meal line; consistent theming/spacing; a final `flutter analyze` /
-      `flutter test` pass before pushing
+**Phase 5 — Body weight as a second bar on the bite chart**
+
+- [ ] Inject `WeightRepository` into `BiteAnalyticsController` and load raw daily
+      weights over the 30-day window (`getAllWeights()` filtered to `[from30, to)`)
+- [ ] Add a second `BarChartRodData` per group in `daily_bites_chart.dart` for
+      weight, on a secondary right-hand kg axis fitted to the weight min/max
+      (normalise the rod's `toY`, label `rightTitles` in kg); distinct colour, a
+      two-item legend, and bar width/spacing tuned for the denser groups
+- [ ] Weight bar omitted on days with no weigh-in; bite-only days unchanged
+- [ ] **Verify:** the chart renders bite-only, weight-only, and both-present days;
+      the weight axis fits the weight range (small changes stay visible, not
+      flattened from zero); a day without a weigh-in shows only the bite bar
+
+**Phase 6 — Polish**
+- [ ] Accessibility labels on the new tile, the selected-bar highlight, the
+      current-meal line, and the weight bars/legend; consistent theming/spacing; a
+      final `flutter analyze` / `flutter test` pass before pushing
