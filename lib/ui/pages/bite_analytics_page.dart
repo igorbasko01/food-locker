@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
@@ -162,8 +163,9 @@ class _StatTilesRow extends StatelessWidget {
   static String _formatAverage(double average) =>
       average == 0 ? '—' : average.toStringAsFixed(0);
 
-  /// A day as `month/day`, matching the daily-bites chart's axis labels.
-  static String _formatDay(DateTime day) => '${day.month}/${day.day}';
+  /// A day in the device locale's numeric order, matching the daily-bites
+  /// chart's axis labels.
+  static String _formatDay(DateTime day) => shortDate(day);
 }
 
 /// A meals summary: today's meal count and the 30-day average meals per day. A

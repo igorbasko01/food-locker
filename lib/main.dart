@@ -12,10 +12,12 @@ import 'package:food_locker/hive_registrar.g.dart';
 import 'package:food_locker/ui/app_shell.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initializeDateFormatting();
   await Hive.initFlutter();
   Hive.registerAdapters();
   final weightBox = await Hive.openBox<Weight>('weights');

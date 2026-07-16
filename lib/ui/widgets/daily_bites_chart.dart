@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 
 /// A bar chart of total bites per calendar day over the analytics window.
@@ -133,7 +134,7 @@ class DailyBitesChart extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        '${day.month}/${day.day}',
+                        shortDate(day),
                         style: const TextStyle(fontSize: 10),
                       ),
                     );
@@ -160,8 +161,7 @@ class DailyBitesChart extends StatelessWidget {
                     firstDay.day + group.x,
                   );
                   return BarTooltipItem(
-                    '${day.year}-${day.month.toString().padLeft(2, '0')}-'
-                    '${day.day.toString().padLeft(2, '0')}\n${rod.toY.toInt()} bites',
+                    '${fullDate(day)}\n${rod.toY.toInt()} bites',
                     const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

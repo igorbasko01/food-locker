@@ -310,15 +310,15 @@ chart and stat phases render dates through it from the start.
 **Phase 1 — Locale-aware dates in charts and stats (shared foundation)**
 
 The cross-cutting date fix, retrofitting both features' existing charts/stats.
-- [ ] Add `intl` to `pubspec.yaml`; call `initializeDateFormatting()` once at
+- [x] Add `intl` to `pubspec.yaml`; call `initializeDateFormatting()` once at
       startup in `main.dart`
-- [ ] Add a shared date helper in `lib/core/` — `shortDate` (`DateFormat.Md`,
+- [x] Add a shared date helper in `lib/core/` — `shortDate` (`DateFormat.Md`,
       numeric month/day) for axes and tiles, `fullDate` (`DateFormat.yMd`) for
       tooltips — formatting against `PlatformDispatcher.instance.locale`
-- [ ] Retrofit the hardcoded month/day axis labels and ISO tooltips in
+- [x] Retrofit the hardcoded month/day axis labels and ISO tooltips in
       `daily_bites_chart.dart` and `weight_chart.dart`, and `_formatDay` (the
       30-day-max tile) in `bite_analytics_page.dart`, to the helper
-- [ ] **Verify:** unit-test the helper renders `7/14` under `en_US` and `14/7`
+- [x] **Verify:** unit-test the helper renders `7/14` under `en_US` and `14/7`
       under `en_GB`; pin the locale in the existing `stat_tile_test` /
       `bite_analytics_page_test` date expectations so they stay deterministic
 

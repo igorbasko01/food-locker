@@ -40,6 +40,10 @@ void main() {
   }
 
   Future<void> pumpPage(WidgetTester tester) async {
+    // Pin the locale so the 30-day-max tile's date renders deterministically
+    // (`shortDate` formats against the platform locale).
+    tester.platformDispatcher.localeTestValue = const Locale('en', 'US');
+    addTearDown(tester.platformDispatcher.clearLocaleTestValue);
     await tester.pumpWidget(
       Provider<BiteRepository>.value(
         value: repo,

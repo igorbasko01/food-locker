@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 class WeightChart extends StatelessWidget {
@@ -72,7 +73,7 @@ class WeightChart extends StatelessWidget {
                   final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text('${date.month}/${date.day}', style: const TextStyle(fontSize: 10)),
+                    child: Text(shortDate(date), style: const TextStyle(fontSize: 10)),
                   );
                 },
               ),
@@ -89,7 +90,7 @@ class WeightChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final date = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
                   return LineTooltipItem(
-                    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}\n${spot.y} kg',
+                    '${fullDate(date)}\n${spot.y} kg',
                     const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   );
                 }).toList();
