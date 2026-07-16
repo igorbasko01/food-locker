@@ -70,97 +70,108 @@ class DailyBitesChart extends StatelessWidget {
         .clamp(BiteAnalytics.minBitesForAverage * 1.2, double.infinity)
         .toDouble();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceBetween,
-          maxY: maxY,
-          minY: 0,
-          gridData: const FlGridData(show: true, drawVerticalLine: false),
-          borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
-            show: true,
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  if (value != value.roundToDouble()) {
-                    return const SizedBox.shrink();
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(
-                      value.toInt().toString(),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  );
-                },
+    // The bars are painted to a canvas fl_chart exposes no semantics for, so
+    // summarise the chart for screen readers.
+    final semanticsLabel =
+        'Daily bites bar chart, $dayCount days. '
+        'Highest day $maxCount bites.';
+
+    return Semantics(
+      label: semanticsLabel,
+      container: true,
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.spaceBetween,
+            maxY: maxY,
+            minY: 0,
+            gridData: const FlGridData(show: true, drawVerticalLine: false),
+            borderData: FlBorderData(show: false),
+            titlesData: FlTitlesData(
+              show: true,
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    if (value != value.roundToDouble()) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Text(
+                        value.toInt().toString(),
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  interval: _labelInterval(dayCount),
+                  getTitlesWidget: (value, meta) {
+                    final index = value.toInt();
+                    if (index < 0 || index >= dayCount) {
+                      return const SizedBox.shrink();
+                    }
+                    final day = DateTime(
+                      firstDay.year,
+                      firstDay.month,
+                      firstDay.day + index,
+                    );
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        '${day.month}/${day.day}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 30,
-                interval: _labelInterval(dayCount),
-                getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
-                  if (index < 0 || index >= dayCount) {
-                    return const SizedBox.shrink();
-                  }
+            extraLinesData: ExtraLinesData(
+              horizontalLines: [
+                HorizontalLine(
+                  y: BiteAnalytics.minBitesForAverage.toDouble(),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                  strokeWidth: 1,
+                  dashArray: const [4, 4],
+                ),
+              ],
+            ),
+            barTouchData: BarTouchData(
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   final day = DateTime(
                     firstDay.year,
                     firstDay.month,
-                    firstDay.day + index,
+                    firstDay.day + group.x,
                   );
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      '${day.month}/${day.day}',
-                      style: const TextStyle(fontSize: 10),
+                  return BarTooltipItem(
+                    '${day.year}-${day.month.toString().padLeft(2, '0')}-'
+                    '${day.day.toString().padLeft(2, '0')}\n${rod.toY.toInt()} bites',
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   );
                 },
               ),
             ),
+            barGroups: bars,
           ),
-          extraLinesData: ExtraLinesData(
-            horizontalLines: [
-              HorizontalLine(
-                y: BiteAnalytics.minBitesForAverage.toDouble(),
-                color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                strokeWidth: 1,
-                dashArray: const [4, 4],
-              ),
-            ],
-          ),
-          barTouchData: BarTouchData(
-            touchTooltipData: BarTouchTooltipData(
-              getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                final day = DateTime(
-                  firstDay.year,
-                  firstDay.month,
-                  firstDay.day + group.x,
-                );
-                return BarTooltipItem(
-                  '${day.year}-${day.month.toString().padLeft(2, '0')}-'
-                  '${day.day.toString().padLeft(2, '0')}\n${rod.toY.toInt()} bites',
-                  const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
-            ),
-          ),
-          barGroups: bars,
         ),
       ),
     );

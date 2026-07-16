@@ -35,4 +35,28 @@ void main() {
     // The sub-line is present but empty, keeping tile heights aligned.
     expect(find.text(''), findsOneWidget);
   });
+
+  testWidgets('reads as one semantics node including the sub-label', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpTile(
+      tester,
+      const StatTile(label: '30-day max', value: '60', subLabel: '7/14'),
+    );
+
+    expect(find.bySemanticsLabel('30-day max: 60, 7/14'), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('omits the sub-label from semantics when absent', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pumpTile(
+      tester,
+      const StatTile(label: '30-day average', value: '55'),
+    );
+
+    expect(find.bySemanticsLabel('30-day average: 55'), findsOneWidget);
+    handle.dispose();
+  });
 }
