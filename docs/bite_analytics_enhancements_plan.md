@@ -10,7 +10,7 @@ across the Bite tab and its analytics screen:
    count, alongside the day's headline total.
 
 > **Status: ready to build.** Nothing here is built yet, but every design
-> decision (§4) is settled — implementation can start at Phase 1.
+> decision (§5) is settled — implementation can start at Phase 1.
 
 ---
 
@@ -124,8 +124,9 @@ final ValueChanged<DateTime>? onDaySelected;
 
 ### 2d. Card
 
-`_MealBreakdownCard`'s title becomes the selected date ("Meals — Jul 14", "Today's
-meals" when it's today), with a small "Back to today" action shown only when
+`_MealBreakdownCard`'s title becomes the selected date (through the shared
+locale-aware date helper from §4 — `14/7` or `7/14` per the phone; "Today's meals"
+when it's today), with a small "Back to today" action shown only when
 `!isSelectedDayToday`. The card keeps its own empty state for a selected day with
 no bites.
 
@@ -185,7 +186,7 @@ shows nothing.
 (e.g. "This meal: N"), rendered only when `currentMealBites > 0` so an empty day
 stays clean. It reads `biteManager.currentMealBites`; no new provider.
 
-**Bite-driven caveat (settled, §4.4):** the recency gate is evaluated when the
+**Bite-driven caveat (settled, §5.4):** the recency gate is evaluated when the
 manager recomputes — on a bite or on open — not on a timer. So opening the app
 after a meal ended correctly shows nothing, but if you sit on the Bite page and
 the 5-min mark passes with no new bite, the line only clears on the next refresh
@@ -194,7 +195,45 @@ the 5-min mark passes with no new bite, the line only clears on the next refresh
 
 ---
 
-## 4. Settled decisions
+## 4. Locale-aware dates in charts and stats
+
+### 4a. What changes
+
+Every date drawn on a chart or a stat is currently hardcoded to US month/day
+order — `'${day.month}/${day.day}'` on the axes and the max-day tile, ISO
+`year-month-day` in the tooltips. This makes the numeric dates follow the
+**device locale's** ordering instead (`14/7` vs `7/14`) — still numbers, no month
+names, just the order the phone uses.
+
+Sites in scope (charts + stats only):
+
+- `daily_bites_chart.dart` — the x-axis day labels and the touch tooltip.
+- `weight_chart.dart` — the x-axis day labels and the touch tooltip.
+- `bite_analytics_page.dart` — `_formatDay` (the 30-day-max stat tile's date).
+- The pickable-day card title from §2d.
+
+**Out of scope, left as-is:** the full ISO dates in the weight history list, the
+add-weight dialog, and the home-tab day header (ISO `yyyy-mm-dd` is
+order-unambiguous), and the backup filename timestamp in `serialization_service.dart`
+(it must stay a stable, sortable format — never localised).
+
+### 4b. How
+
+The app wires no `Localizations` delegates, so `Localizations.localeOf(context)`
+would always resolve to the fallback locale. Read the real device locale directly
+instead, and format through `intl`:
+
+- Add `intl` to `pubspec.yaml` (not currently even a transitive dependency) and
+  call `initializeDateFormatting()` once at startup in `main.dart`.
+- One shared helper in `lib/core/` (beside `csv_serializer.dart`): `shortDate`
+  (`DateFormat.Md` — numeric month/day in locale order) for axis labels and tiles,
+  and `fullDate` (`DateFormat.yMd`) for tooltips, both formatting against
+  `PlatformDispatcher.instance.locale`. Every in-scope site calls this one place,
+  so ordering can never drift between the two charts and the tile again.
+
+---
+
+## 5. Settled decisions
 
 All confirmed — these fix the behaviour on screen:
 
@@ -214,17 +253,37 @@ All confirmed — these fix the behaviour on screen:
    can linger past 5 min only until the next refresh (§3c).
 5. **Current-meal line is hidden when no meal is in progress** — the day has no
    bites, or the most recent bite is more than `mealGapThreshold` (5 min) ago.
+6. **Chart/stat dates follow the device locale**, numeric (no month names) —
+   `14/7` or `7/14` per the phone — through one shared `intl` helper. Full ISO
+   dates elsewhere (history list, dialogs, home header, backup filename) are left
+   as-is (§4a).
 
 ---
 
-## 5. Phases
+## 6. Phases
 
 Each phase is one sitting on a single subject, ends **green** (`flutter analyze`
 + `flutter test` pass), and is independently committable. Ordered so each assumes
 the earlier ones; every phase ships with its tests — the "verify" bullet is the
-definition of done.
+definition of done. The shared date helper (Phase 1) lands first so the later
+chart and stat phases render dates through it from the start.
 
-**Phase 1 — `averageMealSize` on `BiteAnalytics` + the stat tile**
+**Phase 1 — Locale-aware dates in charts and stats (shared foundation)**
+
+The cross-cutting date fix, retrofitting both features' existing charts/stats.
+- [ ] Add `intl` to `pubspec.yaml`; call `initializeDateFormatting()` once at
+      startup in `main.dart`
+- [ ] Add a shared date helper in `lib/core/` — `shortDate` (`DateFormat.Md`,
+      numeric month/day) for axes and tiles, `fullDate` (`DateFormat.yMd`) for
+      tooltips — formatting against `PlatformDispatcher.instance.locale`
+- [ ] Retrofit the hardcoded month/day axis labels and ISO tooltips in
+      `daily_bites_chart.dart` and `weight_chart.dart`, and `_formatDay` (the
+      30-day-max tile) in `bite_analytics_page.dart`, to the helper
+- [ ] **Verify:** unit-test the helper renders `7/14` under `en_US` and `14/7`
+      under `en_GB`; pin the locale in the existing `stat_tile_test` /
+      `bite_analytics_page_test` date expectations so they stay deterministic
+
+**Phase 2 — `averageMealSize` on `BiteAnalytics` + the stat tile**
 
 Pure computation first, then wire it into the existing meals summary row.
 - [ ] Add `averageMealSize(from, to)` to `BiteAnalytics`, factoring the shared
@@ -237,7 +296,7 @@ Pure computation first, then wire it into the existing meals summary row.
       meal (0/`—`), a single meal, and multiple meals across several days; the
       tile reads correctly against a seeded fixture
 
-**Phase 2 — Pickable breakdown day**
+**Phase 3 — Pickable breakdown day**
 
 Chart tap drives the breakdown card; no new analytics.
 - [ ] Replace `breakdownToday` with `selectedDay` / `selectedBreakdown` /
@@ -253,7 +312,7 @@ Chart tap drives the breakdown card; no new analytics.
       `isSelectedDayToday` flips; widget-test that tapping a bar calls
       `onDaySelected` with that day and that "Back to today" resets to today
 
-**Phase 3 — Current-meal bites on the Bite page**
+**Phase 4 — Current-meal bites on the Bite page**
 
 - [ ] Extract the meal-clustering rule (`_clusterBites` / `mealGapThreshold`) from
       `BiteAnalytics` into a shared spot so the manager and the analytics screen
@@ -271,7 +330,7 @@ Chart tap drives the breakdown card; no new analytics.
       it recomputes after a logged bite; widget-test the line shows with a current
       meal and hides when no meal is in progress
 
-**Phase 4 — Polish**
+**Phase 5 — Polish**
 - [ ] Accessibility labels on the new tile, the selected-bar highlight, and the
       current-meal line; consistent theming/spacing; a final `flutter analyze` /
       `flutter test` pass before pushing
