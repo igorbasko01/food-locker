@@ -55,19 +55,27 @@ apps. The launch control (§4) is Android-only and hidden elsewhere.
 
 ---
 
-## 2. The overlay is a separate Flutter engine (the core fact)
+## 2. Same app, second engine — what's reused vs re-created
 
-Everything below follows from one thing: `flutter_overlay_window` renders the
-overlay from a **second Flutter entrypoint running in its own isolate**. It does
-**not** share the app's `Provider`s, the `BiteManager`, or the open Drift
-connection. So the overlay cannot call into existing UI state — it needs its own
-path to the bite store and its own pacing derivation.
+**This is not a new app.** The overlay lives in the same APK and reuses the code
+we already have — `PacingZone`, `PacingConfig`, `PacingZoneStyle`, the
+`BiteDatabase`, `DriftBiteRepository`, and `logBite`. The *only* thing it can't
+reuse is a **live in-memory object**: `flutter_overlay_window` renders the puck
+from a second Flutter entrypoint running in its own isolate, and isolates don't
+share memory, so the overlay can't grab the already-running `BiteManager` /
+`Provider` instance the main screen uses.
+
+The practical consequence is small — instead of reading a repository out of a
+`Provider`, the overlay **re-creates the thin data layer** (a `DriftBiteRepository`
+over the *same* on-disk database) and derives pacing with the same calls:
 
 - A dedicated `@pragma('vm:entry-point')` `overlayMain()` boots a minimal
-  `MaterialApp` whose only content is the puck.
-- The puck talks to the **store directly**, not through `BiteManager`.
-- The main app and the overlay stay in sync through the **shared store on disk**
-  (both read/write the same SQLite file), not through shared memory.
+  `MaterialApp` whose only content is the puck — built from the existing widgets
+  and models, not new ones.
+- The puck reads/writes the **store directly** through its own repository, not
+  through `BiteManager`.
+- The main app and the overlay stay in sync through the **shared database on disk**
+  (the same SQLite file), not through shared memory.
 
 ---
 
