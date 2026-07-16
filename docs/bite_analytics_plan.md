@@ -291,11 +291,11 @@ pattern Phase 6 extracted into the reusable `StatTile`
 (`lib/ui/widgets/stat_tile.dart`), which already matches its fill, corner
 radius, and caption/value/sub-line layout. Fold the two onto one widget so the
 stat tile lives in a single place across both tabs.
-- [ ] Replace `_buildStatCard` in `weight_page.dart` with the shared `StatTile`,
+- [x] Replace `_buildStatCard` in `weight_page.dart` with the shared `StatTile`,
       passing the weight through `value` and the `kg` unit through `subLabel`,
       and keeping the `--`/`—` empty state for a missing value (any small styling
       gap — e.g. the value's accent colour — is reconciled on `StatTile` so both
       tabs share it, rather than reintroducing a private card)
-- [ ] **Verify:** the Weight tab's three stat cards still render with the right
+- [x] **Verify:** the Weight tab's three stat cards still render with the right
       titles, values, and unit against a seeded fixture; `flutter analyze` /
       `flutter test` pass
