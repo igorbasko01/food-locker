@@ -9,8 +9,8 @@ across the Bite tab and its analytics screen:
 3. **Current-meal bites on the main Bite page** — the in-progress meal's running
    count, alongside the day's headline total.
 
-> **Status: ready to build.** Nothing here is built yet, but every design
-> decision (§6) is settled — implementation can start at Phase 1.
+> **Status: shipped.** All phases (1–6) are implemented; every design
+> decision (§6) is settled.
 
 ---
 
