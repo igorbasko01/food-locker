@@ -55,6 +55,7 @@ In the same branch, edit the plan document: flip every checklist item of the imp
 - Push and open a PR against `main` using whatever GitHub access is available (the `gh` CLI or a GitHub MCP tool — use whichever exists; do not install anything).
   - Title: same convention as the commit — `<type>: <phase title> (Phase <N>)` where Conventional Commits are used, otherwise `Phase <N>: <phase title> (<plan name>)`.
   - Body: what was implemented, keyed to the phase's checklist; how it was verified (locally, or deferred to PR checks); any deviations from the plan.
+- Immediately after the PR is created, subscribe this session to its activity (`subscribe_pr_activity`, or the equivalent for the GitHub access in use) so CI results and review comments flow back into the conversation. If no subscription mechanism is available, skip this silently.
 - Watch the PR checks (`gh pr checks --watch` or the MCP equivalent). While any check fails: read the failure logs, fix, commit, push, and watch again.
 - After 5 failed fix rounds, stop pushing and report: link the PR, summarize what still fails and why, and suggest next steps.
 
