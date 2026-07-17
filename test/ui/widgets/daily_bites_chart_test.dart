@@ -35,6 +35,10 @@ void main() {
     return tester.widget<BarChart>(find.byType(BarChart)).data;
   }
 
+  /// The overlaid weight line's data, present only when weigh-ins are passed.
+  LineChartData lineData(WidgetTester tester) =>
+      tester.widget<LineChart>(find.byType(LineChart)).data;
+
   /// A tap-up touch on the bar at [groupIndex], as fl_chart would deliver it to
   /// `barTouchData.touchCallback`.
   void tapBar(BarChartData data, int groupIndex) {
@@ -210,8 +214,8 @@ void main() {
     expect(selected, DateTime(2026, 1, 1));
   });
 
-  testWidgets('without weights each day has a single bite rod and no right '
-      'axis', (tester) async {
+  testWidgets('without weights each day has a single bite rod, no right axis '
+      'and no weight line', (tester) async {
     final data = await pumpChart(tester, [
       DailyBiteCount(day: DateTime(2026, 1, 1), count: 50),
       DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
@@ -220,10 +224,12 @@ void main() {
     expect(data.barGroups[0].barRods, hasLength(1));
     expect(data.barGroups[1].barRods, hasLength(1));
     expect(data.titlesData.rightTitles.sideTitles.showTitles, isFalse);
+    expect(find.byType(LineChart), findsNothing);
   });
 
-  testWidgets('a day with a weigh-in gets a second weight rod and a right '
-      'axis', (tester) async {
+  testWidgets('a day with a weigh-in adds a weight line and a right axis', (
+    tester,
+  ) async {
     final data = await pumpChart(
       tester,
       [
@@ -236,10 +242,14 @@ void main() {
       ],
     );
 
-    // Both days: a bite rod plus a weight rod in the theme's tertiary colour.
-    expect(data.barGroups[0].barRods, hasLength(2));
-    expect(data.barGroups[1].barRods, hasLength(2));
-    expect(data.barGroups[0].barRods[1].color, appTheme.colorScheme.tertiary);
+    // Bites stay a single rod per day; weight is no longer a bar.
+    expect(data.barGroups[0].barRods, hasLength(1));
+    expect(data.barGroups[1].barRods, hasLength(1));
+    // Weight rides on an overlaid line in the theme's tertiary colour, one
+    // spot per weighed day.
+    final line = lineData(tester);
+    expect(line.lineBarsData.single.color, appTheme.colorScheme.tertiary);
+    expect(line.lineBarsData.single.spots, hasLength(2));
     // The right axis is now labelled (in kg).
     expect(data.titlesData.rightTitles.sideTitles.showTitles, isTrue);
     // A two-item legend accompanies the chart.
@@ -247,11 +257,11 @@ void main() {
     expect(find.text('Weight (kg)'), findsOneWidget);
   });
 
-  testWidgets('a day weighed but not eaten shows only the weight bar', (
+  testWidgets('a day weighed but not eaten shows a zero bar and a line spot', (
     tester,
   ) async {
     // Bite on 1/1, weigh-in on 1/3 → the range extends to 1/3, whose bite rod
-    // is zero-height and whose weight rod carries the weigh-in.
+    // is zero-height and whose weigh-in is a spot on the line at that day index.
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 50)],
@@ -259,18 +269,22 @@ void main() {
     );
 
     expect(data.barGroups, hasLength(3));
-    // 1/1: eaten, not weighed → single bite rod.
+    // Every day carries just the bite rod now.
     expect(data.barGroups[0].barRods, hasLength(1));
-    // 1/3: weighed, not eaten → zero bite rod plus the weight rod.
-    expect(data.barGroups[2].barRods, hasLength(2));
+    expect(data.barGroups[2].barRods, hasLength(1));
+    // 1/3: weighed, not eaten → zero bite rod.
     expect(data.barGroups[2].barRods[0].toY, 0);
-    expect(data.barGroups[2].barRods[1].toY, greaterThan(0));
+    // The single weigh-in is a line spot at the 1/3 day index (x == 2).
+    final spots = lineData(tester).lineBarsData.single.spots;
+    expect(spots, hasLength(1));
+    expect(spots.single.x, 2);
+    expect(spots.single.y, greaterThan(0));
   });
 
   testWidgets('the weight axis fits the weight range so small changes stay '
       'visible', (tester) async {
     // A 1 kg day-to-day change: fitted to [71, 74] it maps to a clearly
-    // different bar height, and the lighter day still draws above the floor.
+    // different line height, and the lighter day still sits above the floor.
     final data = await pumpChart(
       tester,
       [
@@ -283,8 +297,9 @@ void main() {
       ],
     );
 
-    final lighter = data.barGroups[0].barRods[1].toY;
-    final heavier = data.barGroups[1].barRods[1].toY;
+    final spots = lineData(tester).lineBarsData.single.spots;
+    final lighter = spots[0].y;
+    final heavier = spots[1].y;
     // Not flattened from zero: the lighter day is well above the axis floor.
     expect(lighter, greaterThan(0));
     // The 1 kg gain is a visible height difference, not a hairline.
