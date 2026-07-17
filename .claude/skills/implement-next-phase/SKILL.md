@@ -44,7 +44,9 @@ The phase's Verify bullet is the definition of done. Run the verification it des
 
 ## 6. Mark the phase complete
 
-In the same branch, edit the plan document: flip every checklist item of the implemented phase from `- [ ]` to `- [x]`, including its Verify bullet. Touch nothing else in the document. (The PR is not finished until its checks are green, so the checked state is truthful by the time the PR is mergeable.)
+In the same branch, edit the plan document: flip every checklist item of the implemented phase from `- [ ]` to `- [x]`, including its Verify bullet. (The PR is not finished until its checks are green, so the checked state is truthful by the time the PR is mergeable.)
+
+If this phase was the **last** one — after flipping it, no unchecked `- [ ]` item remains anywhere in the document — also mark the plan itself complete: if the document carries a top-level status line or banner (e.g. `> **Status: ready to build.**`, "Nothing here is built yet", or similar), update it to say the plan is shipped/complete. Leave that banner alone on any earlier phase, and touch nothing else in the document either way.
 
 ## 7. Open the PR and iterate until green
 

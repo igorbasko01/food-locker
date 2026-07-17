@@ -149,11 +149,24 @@ class DailyBitesChart extends StatelessWidget {
       x++;
     }
 
-    // The bars are painted to a canvas fl_chart exposes no semantics for, so
-    // summarise the chart for screen readers.
-    final semanticsLabel =
-        'Daily bites bar chart, $dayCount days. '
-        'Highest day $maxCount bites.';
+    // The bars are painted to a canvas fl_chart exposes no semantics for, and
+    // the label/highlight/legend all live in that canvas, so fold them into one
+    // spoken summary for screen readers.
+    final summary = StringBuffer(
+      'Daily bites bar chart, $dayCount days. Highest day $maxCount bites.',
+    );
+    if (hasWeight) {
+      final weighedMin = weightByDay.values.reduce((a, b) => a < b ? a : b);
+      final weighedMax = weightByDay.values.reduce((a, b) => a > b ? a : b);
+      summary.write(
+        ' Weight overlaid, ${weighedMin.toStringAsFixed(1)} to '
+        '${weighedMax.toStringAsFixed(1)} kg.',
+      );
+    }
+    if (selected != null) {
+      summary.write(' Selected day ${fullDate(selected)}.');
+    }
+    final semanticsLabel = summary.toString();
 
     final chart = BarChart(
       BarChartData(

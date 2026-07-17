@@ -9,8 +9,8 @@ across the Bite tab and its analytics screen:
 3. **Current-meal bites on the main Bite page** — the in-progress meal's running
    count, alongside the day's headline total.
 
-> **Status: ready to build.** Nothing here is built yet, but every design
-> decision (§6) is settled — implementation can start at Phase 1.
+> **Status: shipped.** All phases (1–6) are implemented; every design
+> decision (§6) is settled.
 
 ---
 
@@ -384,6 +384,6 @@ Chart tap drives the breakdown card; no new analytics.
       flattened from zero); a day without a weigh-in shows only the bite bar
 
 **Phase 6 — Polish**
-- [ ] Accessibility labels on the new tile, the selected-bar highlight, the
+- [x] Accessibility labels on the new tile, the selected-bar highlight, the
       current-meal line, and the weight bars/legend; consistent theming/spacing; a
       final `flutter analyze` / `flutter test` pass before pushing
