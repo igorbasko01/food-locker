@@ -139,11 +139,16 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
                 // meal is actually underway (0 once the sitting has ended).
                 if (biteManager.currentMealBites > 0) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    'This meal: ${biteManager.currentMealBites}',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Semantics(
+                    label:
+                        'Current meal: ${biteManager.currentMealBites} bites',
+                    excludeSemantics: true,
+                    child: Text(
+                      'This meal: ${biteManager.currentMealBites}',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],

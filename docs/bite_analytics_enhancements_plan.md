@@ -384,6 +384,6 @@ Chart tap drives the breakdown card; no new analytics.
       flattened from zero); a day without a weigh-in shows only the bite bar
 
 **Phase 6 — Polish**
-- [ ] Accessibility labels on the new tile, the selected-bar highlight, the
+- [x] Accessibility labels on the new tile, the selected-bar highlight, the
       current-meal line, and the weight bars/legend; consistent theming/spacing; a
       final `flutter analyze` / `flutter test` pass before pushing

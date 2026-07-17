@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -135,6 +136,54 @@ void main() {
     // Three-day span (a gap day between the two logged days), highest 60.
     expect(
       find.bySemanticsLabel('Daily bites bar chart, 3 days. Highest day 60 bites.'),
+      findsOneWidget,
+    );
+    handle.dispose();
+  });
+
+  testWidgets('the semantics summary announces the selected day', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpChart(
+      tester,
+      [
+        DailyBiteCount(day: DateTime(2026, 1, 1), count: 60),
+        DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
+      ],
+      selectedDay: DateTime(2026, 1, 2),
+    );
+
+    expect(
+      find.bySemanticsLabel(
+        'Daily bites bar chart, 2 days. Highest day 60 bites. '
+        'Selected day ${fullDate(DateTime(2026, 1, 2))}.',
+      ),
+      findsOneWidget,
+    );
+    handle.dispose();
+  });
+
+  testWidgets('the semantics summary announces the overlaid weight range', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpChart(
+      tester,
+      [
+        DailyBiteCount(day: DateTime(2026, 1, 1), count: 50),
+        DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
+      ],
+      weights: [
+        Weight(date: DateTime(2026, 1, 1), value: 80),
+        Weight(date: DateTime(2026, 1, 2), value: 81),
+      ],
+    );
+
+    expect(
+      find.bySemanticsLabel(
+        RegExp(r'Weight overlaid, 80\.0 to 81\.0 kg\.'),
+      ),
       findsOneWidget,
     );
     handle.dispose();

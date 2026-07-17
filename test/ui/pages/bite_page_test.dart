@@ -47,6 +47,23 @@ void main() {
     manager.dispose();
   });
 
+  testWidgets('the current-meal line carries a spoken accessibility label',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    final now = clock.now();
+    final repo = _FakeBiteRepository(config: config, bites: [
+      now.subtract(const Duration(minutes: 2)),
+      now.subtract(const Duration(seconds: 10)),
+    ]);
+
+    final manager = await pumpPage(tester, repo);
+
+    expect(find.bySemanticsLabel('Current meal: 2 bites'), findsOneWidget);
+
+    manager.dispose();
+    handle.dispose();
+  });
+
   testWidgets('hides the current-meal line when no meal is in progress',
       (tester) async {
     final now = clock.now();
