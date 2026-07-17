@@ -353,17 +353,17 @@ Chart tap drives the breakdown card; no new analytics.
 
 **Phase 4 — Current-meal bites on the Bite page**
 
-- [ ] Extract the meal-clustering rule (`_clusterBites` / `mealGapThreshold`) from
+- [x] Extract the meal-clustering rule (`_clusterBites` / `mealGapThreshold`) from
       `BiteAnalytics` into a shared spot so the manager and the analytics screen
       apply one identical rule
-- [ ] Add `currentMealBites` to `BiteManager`, **recomputed** from today's bites
+- [x] Add `currentMealBites` to `BiteManager`, **recomputed** from today's bites
       (trailing `mealGapThreshold` cluster) in the same refresh that recomputes the
       day count, gated on recency — 0 when the most recent bite is more than
       `mealGapThreshold` ago; no running counter, no `initialize` special-casing
       beyond that refresh
-- [ ] Show a quiet "This meal: N" line under the day total in `bite_page.dart`,
+- [x] Show a quiet "This meal: N" line under the day total in `bite_page.dart`,
       hidden when `currentMealBites == 0`
-- [ ] **Verify:** unit-test the trailing cluster's size when the last bite is
+- [x] **Verify:** unit-test the trailing cluster's size when the last bite is
       recent, 0 when the last bite is older than `mealGapThreshold`, a fresh
       cluster of 1 after a `> mealGapThreshold` gap, a fresh manager at 0, and that
       it recomputes after a logged bite; widget-test the line shows with a current

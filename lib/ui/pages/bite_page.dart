@@ -135,6 +135,18 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
                     color: theme.colorScheme.primary,
                   ),
                 ),
+                // The in-progress sitting's running count, shown only while a
+                // meal is actually underway (0 once the sitting has ended).
+                if (biteManager.currentMealBites > 0) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'This meal: ${biteManager.currentMealBites}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 const Spacer(),
                 _BiteButton(
                   zone: biteManager.pacingZone,

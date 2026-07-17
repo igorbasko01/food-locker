@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/bite/data/meal_clustering.dart';
 import 'package:food_locker/features/bite/data/pacing_zone.dart';
 
 /// UI-facing state holder for the bite-logging screen.
@@ -46,6 +47,21 @@ class BiteManager extends ChangeNotifier {
   /// Bites logged so far during the current local day — the headline metric.
   /// Zero until [initialize] (or a [logBite]) has run.
   int get todayCount => _todayCount;
+
+  int _currentMealBites = 0;
+
+  /// Bites in the current meal, or 0 when no meal is in progress. Recomputed
+  /// from the store alongside [todayCount]: the size of the trailing run of
+  /// today's bites no more than [mealGapThreshold] apart — but only when the
+  /// most recent bite is within that threshold of now. A last bite older than
+  /// the threshold means the sitting has ended, so this reads 0.
+  ///
+  /// A projection of the log, not a running counter, so there is no
+  /// increment/reset arithmetic to keep in sync: a just-logged bite always
+  /// starts a fresh cluster after a `> mealGapThreshold` gap, while opening the
+  /// app long after the last bite shows nothing. No [minMealBites] gate applies
+  /// — it counts from the first bite of the sitting.
+  int get currentMealBites => _currentMealBites;
 
   DateTime? _lastBiteAt;
 
@@ -116,8 +132,20 @@ class BiteManager extends ChangeNotifier {
     // month/year rollover and DST correct where a fixed 24-hour offset would not.
     final startOfDay = DateTime(now.year, now.month, now.day);
     final startOfNextDay = DateTime(now.year, now.month, now.day + 1);
-    _todayCount = await _repository.biteCount(startOfDay, startOfNextDay);
+    final bites = await _repository.bitesInRange(startOfDay, startOfNextDay);
+    _todayCount = bites.length;
+    _currentMealBites = _currentMealSize(bites, now);
     notifyListeners();
+  }
+
+  /// The trailing meal cluster's size given today's chronologically-ordered
+  /// [bites] and the current instant [now]. 0 when the day is empty or the most
+  /// recent bite is more than [mealGapThreshold] ago — the sitting has ended.
+  int _currentMealSize(List<Bite> bites, DateTime now) {
+    if (bites.isEmpty) return 0;
+    final lastAt = DateTime.fromMillisecondsSinceEpoch(bites.last.atMs);
+    if (now.difference(lastAt) > mealGapThreshold) return 0;
+    return clusterBites(bites).last.length;
   }
 
   /// (Re)starts the pacing countdown from the current [_lastBiteAt]. Sets the
