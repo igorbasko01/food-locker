@@ -148,10 +148,7 @@ class BiteAnalyticsController extends ChangeNotifier {
     );
     final fromYear = DateTime(now.year - 1, now.month, now.day + 1);
     _dailyCounts = await _analytics.dailyCounts(from30, to);
-    _dailyWeights = _weightRepository.getAllWeights().where((w) {
-      final day = DateTime(w.date.year, w.date.month, w.date.day);
-      return !day.isBefore(from30) && day.isBefore(to);
-    }).toList();
+    _dailyWeights = _weightRepository.getWeightsInRange(from30, to);
     _averageLast30 = await _analytics.averagePerDay(from30, to);
     _maxLast30 = await _analytics.maxDay(from30, to);
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);
