@@ -1,4 +1,6 @@
 import 'package:drift/native.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
@@ -37,6 +39,31 @@ void main() {
     for (var i = 0; i < count; i++) {
       await repo.logBite(DateTime(day.year, day.month, day.day, hour, i));
     }
+  }
+
+  /// Drives the daily-bites chart's tap callback for the bar at [groupIndex],
+  /// as fl_chart would on a tap-up — the canvas bars can't be tapped by
+  /// coordinate reliably, so we invoke the wired callback directly.
+  void tapBar(WidgetTester tester, int groupIndex) {
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    final group = data.barGroups[groupIndex];
+    data.barTouchData.touchCallback!(
+      const FlTapUpEvent(TapUpDetails(kind: PointerDeviceKind.touch)),
+      BarTouchResponse(
+        touchLocation: Offset.zero,
+        touchChartCoordinate: Offset.zero,
+        spot: BarTouchedSpot(
+          group,
+          groupIndex,
+          group.barRods.first,
+          0,
+          null,
+          -1,
+          const FlSpot(0, 0),
+          Offset.zero,
+        ),
+      ),
+    );
   }
 
   Future<void> pumpPage(WidgetTester tester) async {
@@ -211,5 +238,48 @@ void main() {
     expect(find.text('Today\'s meals'), findsOneWidget);
     expect(find.text('No bites logged today yet.'), findsOneWidget);
     expect(find.text('Snacks'), findsNothing);
+  });
+
+  testWidgets('tapping a bar switches the breakdown card to that day, and '
+      '"Back to today" returns to today', (tester) async {
+    // A tall surface so the whole scroll view builds — the breakdown card and
+    // the chart are both on-screen, so no scrolling is needed between tapping a
+    // bar and reading the card.
+    await tester.binding.setSurfaceSize(const Size(600, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+
+    // Today: a 12-bite meal. Yesterday: a 20-bite meal. Two bars: index 0 is
+    // the earlier day (yesterday), index 1 is today.
+    await logCluster(today, 8, 12);
+    await logCluster(yesterday, 9, 20);
+
+    await pumpPage(tester);
+
+    // Defaults to today: card titled "Today's meals", showing today's meal, no
+    // back control.
+    expect(find.text('Today\'s meals'), findsOneWidget);
+    expect(find.text('Back to today'), findsNothing);
+    expect(find.text('12 bites'), findsOneWidget);
+
+    // Tap yesterday's bar → card follows it: back control appears, the today
+    // title is gone, and yesterday's 20-bite meal shows.
+    tapBar(tester, 0);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Today\'s meals'), findsNothing);
+    expect(find.text('Back to today'), findsOneWidget);
+    expect(find.text('20 bites'), findsOneWidget);
+
+    // Back to today resets the card.
+    await tester.tap(find.text('Back to today'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Today\'s meals'), findsOneWidget);
+    expect(find.text('Back to today'), findsNothing);
+    expect(find.text('12 bites'), findsOneWidget);
   });
 }

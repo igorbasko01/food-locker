@@ -11,11 +11,24 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 /// reference line at that threshold, so the chart visibly explains why they
 /// don't count. Themed like `weight_chart.dart`.
 class DailyBitesChart extends StatelessWidget {
-  const DailyBitesChart({super.key, required this.counts});
+  const DailyBitesChart({
+    super.key,
+    required this.counts,
+    this.selectedDay,
+    this.onDaySelected,
+  });
 
   /// Daily totals, one entry per day that had at least one bite. Zero days are
   /// absent and rendered as gaps; the widget zero-fills between the extremes.
   final List<DailyBiteCount> counts;
+
+  /// The calendar day whose bar is highlighted, linking the chart to the
+  /// breakdown card below it. Null leaves every bar in its default treatment.
+  final DateTime? selectedDay;
+
+  /// Called with the calendar day of a tapped bar. Null makes the chart
+  /// read-only (no selection).
+  final ValueChanged<DateTime>? onDaySelected;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +51,9 @@ class DailyBitesChart extends StatelessWidget {
     final days = byDay.keys.toList()..sort();
     final firstDay = days.first;
     final lastDay = days.last;
+    final selected = selectedDay == null
+        ? null
+        : DateTime(selectedDay!.year, selectedDay!.month, selectedDay!.day);
 
     // One bar per calendar day in [firstDay, lastDay], zero-filling gap days.
     final bars = <BarChartGroupData>[];
@@ -49,15 +65,21 @@ class DailyBitesChart extends StatelessWidget {
     ) {
       final count = byDay[day] ?? 0;
       final belowThreshold = count < BiteAnalytics.minBitesForAverage;
+      final isSelected = day == selected;
       bars.add(
         BarChartGroupData(
           x: x,
           barRods: [
             BarChartRodData(
               toY: count.toDouble(),
-              color: belowThreshold ? mutedColor : fullColor,
+              // The selected bar reads at full colour even when it's muted
+              // below the threshold, so the link to the card below is visible.
+              color: (belowThreshold && !isSelected) ? mutedColor : fullColor,
               width: _barWidth(days.length),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+              borderSide: isSelected
+                  ? BorderSide(color: theme.colorScheme.onSurface, width: 1.5)
+                  : BorderSide.none,
             ),
           ],
         ),
@@ -153,6 +175,17 @@ class DailyBitesChart extends StatelessWidget {
               ],
             ),
             barTouchData: BarTouchData(
+              touchCallback: (event, response) {
+                if (onDaySelected == null) return;
+                // Select on tap-up so a scroll/drag over the chart doesn't
+                // reselect; the tooltip still shows on the same touch.
+                if (event is! FlTapUpEvent) return;
+                final group = response?.spot?.touchedBarGroup;
+                if (group == null) return;
+                onDaySelected!(
+                  DateTime(firstDay.year, firstDay.month, firstDay.day + group.x),
+                );
+              },
               touchTooltipData: BarTouchTooltipData(
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   final day = DateTime(

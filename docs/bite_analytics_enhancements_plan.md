@@ -338,16 +338,16 @@ Pure computation first, then wire it into the existing meals summary row.
 **Phase 3 — Pickable breakdown day**
 
 Chart tap drives the breakdown card; no new analytics.
-- [ ] Replace `breakdownToday` with `selectedDay` / `selectedBreakdown` /
+- [x] Replace `breakdownToday` with `selectedDay` / `selectedBreakdown` /
       `isSelectedDayToday` on the controller, plus `selectDay(day)` re-querying
       `breakdownForDay` behind a per-card loading flag; seed `selectedDay = today`
       in `load()`
-- [ ] Add `selectedDay` + `onDaySelected` to `DailyBitesChart`: select via
+- [x] Add `selectedDay` + `onDaySelected` to `DailyBitesChart`: select via
       `barTouchData.touchCallback` (tap-up → `firstDay + index`), and highlight the
       selected bar
-- [ ] `_MealBreakdownCard` titles the selected date and shows a "Back to today"
+- [x] `_MealBreakdownCard` titles the selected date and shows a "Back to today"
       control only when `!isSelectedDayToday`; keep the per-day empty state
-- [ ] **Verify:** unit-test `selectDay` loads the right day's breakdown and
+- [x] **Verify:** unit-test `selectDay` loads the right day's breakdown and
       `isSelectedDayToday` flips; widget-test that tapping a bar calls
       `onDaySelected` with that day and that "Back to today" resets to today
 

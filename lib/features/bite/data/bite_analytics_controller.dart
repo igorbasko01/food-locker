@@ -59,12 +59,6 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// window holds no bites — the max stat tile's value and its date.
   DailyBiteCount? get maxLast30 => _maxLast30;
 
-  int _mealsToday = 0;
-
-  /// The number of meals logged today — clusters that reached
-  /// [BiteAnalytics.minMealBites]. 0 when today has no qualifying meal.
-  int get mealsToday => _mealsToday;
-
   double _averageMealsLast30 = 0;
 
   /// Mean meals per day over the last [dailyBitesWindow] days, across only the
@@ -77,15 +71,53 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// qualifying meals (snacks excluded). 0 when the window holds no meal.
   double get averageMealSizeLast30 => _averageMealSizeLast30;
 
-  DayMealBreakdown _breakdownToday = DayMealBreakdown(
+  int _mealsToday = 0;
+
+  DateTime _selectedDay = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// The calendar day the breakdown card is showing, at local midnight. Seeded
+  /// to today by [load] and moved by [selectDay] when a chart bar is tapped.
+  DateTime get selectedDay => _selectedDay;
+
+  /// Whether [selectedDay] is today — drives the card's "Back to today"
+  /// affordance, shown only while browsing another day.
+  bool get isSelectedDayToday {
+    final now = DateTime.now();
+    return _selectedDay == DateTime(now.year, now.month, now.day);
+  }
+
+  DayMealBreakdown _selectedBreakdown = DayMealBreakdown(
     day: DateTime.fromMillisecondsSinceEpoch(0),
     meals: const [],
     snackBites: 0,
   );
 
-  /// Today split into its meals and its snack total — the meal-breakdown card's
-  /// data. Empty (no meals, no snack bites) until today has a bite.
-  DayMealBreakdown get breakdownToday => _breakdownToday;
+  /// [selectedDay] split into its meals and its snack total — the meal-breakdown
+  /// card's data. Empty (no meals, no snack bites) when the day has no bite.
+  DayMealBreakdown get selectedBreakdown => _selectedBreakdown;
+
+  bool _isBreakdownLoading = false;
+
+  /// Whether a [selectDay] re-query is in flight — lets the card show its own
+  /// spinner without blocking the rest of the screen.
+  bool get isBreakdownLoading => _isBreakdownLoading;
+
+  /// Selects [day] for the breakdown card: normalises to local midnight, marks
+  /// the card loading, re-queries [BiteAnalytics.breakdownForDay], and notifies.
+  /// The rest of the screen's metrics stay put — only the breakdown follows.
+  Future<void> selectDay(DateTime day) async {
+    _selectedDay = DateTime(day.year, day.month, day.day);
+    _isBreakdownLoading = true;
+    notifyListeners();
+    _selectedBreakdown = await _analytics.breakdownForDay(_selectedDay);
+    _isBreakdownLoading = false;
+    notifyListeners();
+  }
+
+  /// The number of meals logged today — clusters that reached
+  /// [BiteAnalytics.minMealBites]. 0 when today has no qualifying meal. Stays a
+  /// today metric independent of [selectedDay].
+  int get mealsToday => _mealsToday;
 
   /// Loads the analytics for the screen, notifying at the start and end so the
   /// spinner shows while the store is read.
@@ -106,8 +138,9 @@ class BiteAnalyticsController extends ChangeNotifier {
     _averageLast30 = await _analytics.averagePerDay(from30, to);
     _maxLast30 = await _analytics.maxDay(from30, to);
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);
-    _breakdownToday = await _analytics.breakdownForDay(today);
-    _mealsToday = _breakdownToday.meals.length;
+    _selectedDay = today;
+    _selectedBreakdown = await _analytics.breakdownForDay(today);
+    _mealsToday = _selectedBreakdown.meals.length;
     _averageMealsLast30 = await _analytics.averageMealsPerDay(from30, to);
     _averageMealSizeLast30 = await _analytics.averageMealSize(from30, to);
     _isLoading = false;
