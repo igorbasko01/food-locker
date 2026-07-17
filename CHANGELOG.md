@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.15.0](https://github.com/igorbasko01/food-locker/compare/v1.14.0...v1.15.0) (2026-07-17)
+
+
+### Features
+
+* 30-day average meal size stat tile (Phase 2) ([#82](https://github.com/igorbasko01/food-locker/issues/82)) ([935a86d](https://github.com/igorbasko01/food-locker/commit/935a86d0b13c6a457b07e3b7e67773cb6337dc40))
+* current-meal bites on the Bite page (Phase 4) ([#84](https://github.com/igorbasko01/food-locker/issues/84)) ([4a553f9](https://github.com/igorbasko01/food-locker/commit/4a553f939778f41d8d1d1b3ef94b827539754007))
+* locale-aware dates in charts and stats (Phase 1) ([#80](https://github.com/igorbasko01/food-locker/issues/80)) ([6dba39a](https://github.com/igorbasko01/food-locker/commit/6dba39a1c702b8354df9e89f0ee0083b8f6708a0))
+* pickable breakdown day (Phase 3) ([#83](https://github.com/igorbasko01/food-locker/issues/83)) ([9ab5270](https://github.com/igorbasko01/food-locker/commit/9ab5270406bbe6ace295b0f1be07b306cc0de9c7))
+
 ## [1.14.0](https://github.com/igorbasko01/food-locker/compare/v1.13.0...v1.14.0) (2026-07-16)
 
 
