@@ -193,7 +193,7 @@ class _StatTilesRow extends StatelessWidget {
 
 /// A meals summary: today's meal count, the 30-day average meals per day, and
 /// the 30-day average meal size. A meal is a cluster of at least
-/// [BiteAnalytics.minMealBites] bites no more than [BiteAnalytics.mealGapThreshold]
+/// [BiteAnalytics.minMealBites] bites no more than the meal-gap threshold
 /// apart; the averages span only qualifying meals (avg size) or only days that
 /// had bites (avg meals), so `—` marks a window with no meals rather than zero.
 class _MealsSummaryRow extends StatelessWidget {

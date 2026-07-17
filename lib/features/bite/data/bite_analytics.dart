@@ -1,5 +1,6 @@
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/bite/data/meal_clustering.dart';
 
 /// Total bites on a single local calendar day.
 ///
@@ -26,7 +27,7 @@ class DailyBiteCount {
   String toString() => 'DailyBiteCount(day: $day, count: $count)';
 }
 
-/// A single meal: a cluster of bites no more than [BiteAnalytics.mealGapThreshold]
+/// A single meal: a cluster of bites no more than [mealGapThreshold]
 /// apart that reached [BiteAnalytics.minMealBites] bites.
 ///
 /// A read-time projection of the bite log, never persisted. [start] and [end]
@@ -94,11 +95,6 @@ class BiteAnalytics {
   /// Days below this bite count don't count toward [averagePerDay]: a day you
   /// forgot to log — or only logged a few bites on — never dilutes the mean.
   static const int minBitesForAverage = 40;
-
-  /// A gap longer than this between two consecutive bites closes the current
-  /// meal cluster and starts a new one. Measured bite-to-bite, not from the
-  /// cluster's start, so a long slow meal stays one cluster.
-  static const Duration mealGapThreshold = Duration(minutes: 5);
 
   /// A cluster is only promoted to a meal at this many bites; smaller clusters
   /// are snacking and their bites roll into the day's snack total.
@@ -200,7 +196,7 @@ class BiteAnalytics {
     final byDay = _groupByLocalDay(bites);
     final meals = <List<Bite>>[];
     for (final dayBites in byDay.values) {
-      for (final cluster in _clusterBites(dayBites)) {
+      for (final cluster in clusterBites(dayBites)) {
         if (cluster.length >= minMealBites) meals.add(cluster);
       }
     }
@@ -212,23 +208,7 @@ class BiteAnalytics {
     final startOfDay = DateTime(day.year, day.month, day.day);
     final startOfNextDay = DateTime(day.year, day.month, day.day + 1);
     final bites = await _repository.bitesInRange(startOfDay, startOfNextDay);
-    return _clusterBites(bites);
-  }
-
-  /// Splits chronologically-ordered [bites] into clusters, breaking wherever a
-  /// gap from the previous bite exceeds [mealGapThreshold].
-  List<List<Bite>> _clusterBites(List<Bite> bites) {
-    final clusters = <List<Bite>>[];
-    for (final bite in bites) {
-      final current = clusters.isEmpty ? null : clusters.last;
-      if (current != null &&
-          bite.atMs - current.last.atMs <= mealGapThreshold.inMilliseconds) {
-        current.add(bite);
-      } else {
-        clusters.add([bite]);
-      }
-    }
-    return clusters;
+    return clusterBites(bites);
   }
 
   /// Groups [bites] by their local calendar day, preserving chronological order
