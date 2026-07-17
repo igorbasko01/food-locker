@@ -53,7 +53,11 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
           }
           return ListView(
             children: [
-              _DailyBitesCard(counts: _controller.dailyCounts),
+              _DailyBitesCard(
+                counts: _controller.dailyCounts,
+                selectedDay: _controller.selectedDay,
+                onDaySelected: _controller.selectDay,
+              ),
               _StatTilesRow(
                 averageLast30: _controller.averageLast30,
                 averageLastYear: _controller.averageLastYear,
@@ -64,7 +68,12 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
                 averageMealsLast30: _controller.averageMealsLast30,
                 averageMealSizeLast30: _controller.averageMealSizeLast30,
               ),
-              _MealBreakdownCard(breakdown: _controller.breakdownToday),
+              _MealBreakdownCard(
+                breakdown: _controller.selectedBreakdown,
+                isToday: _controller.isSelectedDayToday,
+                isLoading: _controller.isBreakdownLoading,
+                onBackToToday: () => _controller.selectDay(DateTime.now()),
+              ),
             ],
           );
         },
@@ -76,9 +85,15 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
 /// The daily-bites chart, framed in a titled card with a fixed height so the
 /// bars have room without the surrounding [ListView] collapsing them.
 class _DailyBitesCard extends StatelessWidget {
-  const _DailyBitesCard({required this.counts});
+  const _DailyBitesCard({
+    required this.counts,
+    required this.selectedDay,
+    required this.onDaySelected,
+  });
 
   final List<DailyBiteCount> counts;
+  final DateTime selectedDay;
+  final ValueChanged<DateTime> onDaySelected;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +112,14 @@ class _DailyBitesCard extends StatelessWidget {
               'Daily bites — last 30 days',
               style: theme.textTheme.titleMedium,
             ),
-            SizedBox(height: 240, child: DailyBitesChart(counts: counts)),
+            SizedBox(
+              height: 240,
+              child: DailyBitesChart(
+                counts: counts,
+                selectedDay: selectedDay,
+                onDaySelected: onDaySelected,
+              ),
+            ),
           ],
         ),
       ),
@@ -229,17 +251,29 @@ class _MealsSummaryRow extends StatelessWidget {
       average == 0 ? '—' : average.toStringAsFixed(0);
 }
 
-/// Today's meal breakdown, framed in a titled card matching the daily-bites
-/// card. The [MealBreakdownList] carries its own empty state for a day with no
-/// bites yet, so the card is always shown once the log holds any bite at all.
+/// The selected day's meal breakdown, framed in a titled card matching the
+/// daily-bites card. Tapping a chart bar changes [breakdown]; the title follows
+/// the day — "Today's meals" for today, the locale date otherwise — with a
+/// "Back to today" action while browsing another day. The [MealBreakdownList]
+/// carries its own empty state for a day with no bites, so the card is always
+/// shown once the log holds any bite at all.
 class _MealBreakdownCard extends StatelessWidget {
-  const _MealBreakdownCard({required this.breakdown});
+  const _MealBreakdownCard({
+    required this.breakdown,
+    required this.isToday,
+    required this.isLoading,
+    required this.onBackToToday,
+  });
 
   final DayMealBreakdown breakdown;
+  final bool isToday;
+  final bool isLoading;
+  final VoidCallback onBackToToday;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final title = isToday ? 'Today\'s meals' : shortDate(breakdown.day);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
@@ -250,9 +284,26 @@ class _MealBreakdownCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Today\'s meals', style: theme.textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(title, style: theme.textTheme.titleMedium),
+                ),
+                if (!isToday)
+                  TextButton(
+                    onPressed: onBackToToday,
+                    child: const Text('Back to today'),
+                  ),
+              ],
+            ),
             const SizedBox(height: 8),
-            MealBreakdownList(breakdown: breakdown),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
+              MealBreakdownList(breakdown: breakdown),
           ],
         ),
       ),
