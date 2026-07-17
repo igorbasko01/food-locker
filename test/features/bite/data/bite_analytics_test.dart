@@ -257,4 +257,69 @@ void main() {
       expect(avg, 0);
     });
   });
+
+  group('averageMealSize', () {
+    test('averages a single meal to its own size', () async {
+      await logEvery(DateTime(2026, 7, 15, 8), 12, const Duration(minutes: 1));
+
+      final avg = await analytics.averageMealSize(
+        DateTime(2026, 7, 15),
+        DateTime(2026, 7, 16),
+      );
+
+      expect(avg, 12);
+    });
+
+    test('excludes snack clusters from the mean', () async {
+      // A 12-bite meal, then a 6-min gap and a 4-bite snack that must not
+      // drag the average down (it would be (12 + 4) / 2 = 8 if counted).
+      await logEvery(DateTime(2026, 7, 15, 8), 12, const Duration(minutes: 1));
+      await logEvery(DateTime(2026, 7, 15, 8, 17), 4, const Duration(minutes: 1));
+
+      final avg = await analytics.averageMealSize(
+        DateTime(2026, 7, 15),
+        DateTime(2026, 7, 16),
+      );
+
+      expect(avg, 12);
+    });
+
+    test('averages meal bites over the meal count across several days', () async {
+      // 7/13: two meals, 10 and 20 bites.
+      await logEvery(DateTime(2026, 7, 13, 8), 10, const Duration(minutes: 1));
+      await logEvery(DateTime(2026, 7, 13, 8, 20), 20, const Duration(minutes: 1));
+      // 7/14: one meal, 15 bites, plus a 3-bite snack that is excluded.
+      await logEvery(DateTime(2026, 7, 14, 8), 15, const Duration(minutes: 1));
+      await logEvery(DateTime(2026, 7, 14, 8, 20), 3, const Duration(minutes: 1));
+
+      final avg = await analytics.averageMealSize(
+        DateTime(2026, 7, 13),
+        DateTime(2026, 7, 16),
+      );
+
+      // (10 + 20 + 15) bites over 3 meals.
+      expect(avg, 15);
+    });
+
+    test('is 0 for a window with no meal', () async {
+      // Bites logged, but every cluster is a sub-threshold snack.
+      await logEvery(DateTime(2026, 7, 15, 8), 5, const Duration(minutes: 1));
+
+      final avg = await analytics.averageMealSize(
+        DateTime(2026, 7, 15),
+        DateTime(2026, 7, 16),
+      );
+
+      expect(avg, 0);
+    });
+
+    test('is 0 for an empty window', () async {
+      final avg = await analytics.averageMealSize(
+        DateTime(2026, 7, 13),
+        DateTime(2026, 7, 16),
+      );
+
+      expect(avg, 0);
+    });
+  });
 }

@@ -62,6 +62,7 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
               _MealsSummaryRow(
                 mealsToday: _controller.mealsToday,
                 averageMealsLast30: _controller.averageMealsLast30,
+                averageMealSizeLast30: _controller.averageMealSizeLast30,
               ),
               _MealBreakdownCard(breakdown: _controller.breakdownToday),
             ],
@@ -168,18 +169,21 @@ class _StatTilesRow extends StatelessWidget {
   static String _formatDay(DateTime day) => shortDate(day);
 }
 
-/// A meals summary: today's meal count and the 30-day average meals per day. A
-/// meal is a cluster of at least [BiteAnalytics.minMealBites] bites no more than
-/// [BiteAnalytics.mealGapThreshold] apart; the average spans only days that had
-/// bites, so `—` marks a window with no meals rather than zero.
+/// A meals summary: today's meal count, the 30-day average meals per day, and
+/// the 30-day average meal size. A meal is a cluster of at least
+/// [BiteAnalytics.minMealBites] bites no more than [BiteAnalytics.mealGapThreshold]
+/// apart; the averages span only qualifying meals (avg size) or only days that
+/// had bites (avg meals), so `—` marks a window with no meals rather than zero.
 class _MealsSummaryRow extends StatelessWidget {
   const _MealsSummaryRow({
     required this.mealsToday,
     required this.averageMealsLast30,
+    required this.averageMealSizeLast30,
   });
 
   final int mealsToday;
   final double averageMealsLast30;
+  final double averageMealSizeLast30;
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +206,13 @@ class _MealsSummaryRow extends StatelessWidget {
                 value: _formatMealAverage(averageMealsLast30),
               ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatTile(
+                label: '30-day avg meal size',
+                value: _formatMealSize(averageMealSizeLast30),
+              ),
+            ),
           ],
         ),
       ),
@@ -211,6 +222,11 @@ class _MealsSummaryRow extends StatelessWidget {
   /// Meals per day to one decimal, with `—` for a window that held no meals.
   static String _formatMealAverage(double average) =>
       average == 0 ? '—' : average.toStringAsFixed(1);
+
+  /// Mean bites per meal as a whole number, with `—` for a window that held no
+  /// meal.
+  static String _formatMealSize(double average) =>
+      average == 0 ? '—' : average.toStringAsFixed(0);
 }
 
 /// Today's meal breakdown, framed in a titled card matching the daily-bites

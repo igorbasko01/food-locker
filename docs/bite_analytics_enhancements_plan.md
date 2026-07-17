@@ -325,13 +325,13 @@ The cross-cutting date fix, retrofitting both features' existing charts/stats.
 **Phase 2 — `averageMealSize` on `BiteAnalytics` + the stat tile**
 
 Pure computation first, then wire it into the existing meals summary row.
-- [ ] Add `averageMealSize(from, to)` to `BiteAnalytics`, factoring the shared
+- [x] Add `averageMealSize(from, to)` to `BiteAnalytics`, factoring the shared
       "meal clusters across a window" walk out of `averageMealsPerDay` so the two
       can't diverge
-- [ ] Add `averageMealSizeLast30` to `BiteAnalyticsController`, loaded over the
+- [x] Add `averageMealSizeLast30` to `BiteAnalyticsController`, loaded over the
       existing `from30 … to` window
-- [ ] Add the third tile ("30-day avg meal size") to `_MealsSummaryRow`
-- [ ] **Verify:** unit-test avg meal size with snacks excluded, a window with no
+- [x] Add the third tile ("30-day avg meal size") to `_MealsSummaryRow`
+- [x] **Verify:** unit-test avg meal size with snacks excluded, a window with no
       meal (0/`—`), a single meal, and multiple meals across several days; the
       tile reads correctly against a seeded fixture
 

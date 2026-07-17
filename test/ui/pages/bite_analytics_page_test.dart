@@ -146,6 +146,7 @@ void main() {
     // Three days ago: 8 bites — a snack, so a logged day with 0 meals.
     await logCluster(earlier, 8, 8);
     // Days with bites in the window: 3; meals 2 + 1 + 0 = 3 → average 1.0.
+    // Meal sizes 12, 15, 20 → (47 / 3) = 15.67 → 16 (snacks excluded).
 
     await pumpPage(tester);
 
@@ -160,6 +161,13 @@ void main() {
       find.descendant(
         of: find.widgetWithText(StatTile, '30-day avg meals'),
         matching: find.text('1.0'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.widgetWithText(StatTile, '30-day avg meal size'),
+        matching: find.text('16'),
       ),
       findsOneWidget,
     );

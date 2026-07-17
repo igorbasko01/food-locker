@@ -172,16 +172,39 @@ class BiteAnalytics {
   /// day with no qualifying meal still counts as a 0-meal day. Returns 0 when
   /// the window holds no bites.
   Future<double> averageMealsPerDay(DateTime from, DateTime to) async {
+    final window = await _mealsInWindow(from, to);
+    if (window.loggedDays == 0) return 0;
+    return window.meals.length / window.loggedDays;
+  }
+
+  /// Mean bites per meal over `[from, to)` — total bites in qualifying meal
+  /// clusters divided by the number of those clusters. Snacks are excluded.
+  /// Returns 0 when the window holds no meal.
+  Future<double> averageMealSize(DateTime from, DateTime to) async {
+    final window = await _mealsInWindow(from, to);
+    if (window.meals.isEmpty) return 0;
+    final totalBites = window.meals.fold<int>(0, (sum, m) => sum + m.length);
+    return totalBites / window.meals.length;
+  }
+
+  /// The qualifying meal clusters across `[from, to)`, and the number of logged
+  /// days (days with any bite). Clustering runs within each local day — as in
+  /// [mealsForDay] — so a meal straddling midnight splits at the boundary. Both
+  /// [averageMealsPerDay] and [averageMealSize] walk the log through here so
+  /// their meal definition can't drift apart.
+  Future<({List<List<Bite>> meals, int loggedDays})> _mealsInWindow(
+    DateTime from,
+    DateTime to,
+  ) async {
     final bites = await _repository.bitesInRange(from, to);
-    if (bites.isEmpty) return 0;
     final byDay = _groupByLocalDay(bites);
-    var totalMeals = 0;
+    final meals = <List<Bite>>[];
     for (final dayBites in byDay.values) {
-      totalMeals += _clusterBites(
-        dayBites,
-      ).where((cluster) => cluster.length >= minMealBites).length;
+      for (final cluster in _clusterBites(dayBites)) {
+        if (cluster.length >= minMealBites) meals.add(cluster);
+      }
     }
-    return totalMeals / byDay.length;
+    return (meals: meals, loggedDays: byDay.length);
   }
 
   /// The clusters of a single local day, meal-qualifying or not.
