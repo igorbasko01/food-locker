@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/igorbasko01/food-locker/compare/v1.16.0...v1.16.1) (2026-07-17)
+
+
+### Bug Fixes
+
+* overlay weight as a trend line and de-crowd chart date labels ([#89](https://github.com/igorbasko01/food-locker/issues/89)) ([da1a4ec](https://github.com/igorbasko01/food-locker/commit/da1a4ec56b1e58a65177fb63f6bd655b30e5a295))
+
 ## [1.16.0](https://github.com/igorbasko01/food-locker/compare/v1.15.0...v1.16.0) (2026-07-17)
 
 
