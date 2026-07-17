@@ -12,10 +12,12 @@ import 'package:food_locker/features/weight/data/weight.dart';
 /// reference line at that threshold, so the chart visibly explains why they
 /// don't count. Themed like `weight_chart.dart`.
 ///
-/// When [weights] is non-empty a second bar per day carries that day's weigh-in,
-/// drawn on a secondary right-hand kg axis fitted to the weight range (not from
-/// zero, which would flatten the day-to-day change). Days without a weigh-in
-/// show only the bite bar.
+/// When [weights] is non-empty a weight trend line is overlaid on a secondary
+/// right-hand kg axis fitted to the weight range (not from zero, which would
+/// flatten the day-to-day change), with a dot on each weighed day. The line is
+/// drawn as a `LineChart` stacked over the bars, sharing the same y-range and
+/// plot margins so the two align; days without a weigh-in leave a gap the line
+/// bridges. Days without a weigh-in show only the bite bar.
 class DailyBitesChart extends StatelessWidget {
   const DailyBitesChart({
     super.key,
@@ -29,7 +31,7 @@ class DailyBitesChart extends StatelessWidget {
   /// absent and rendered as gaps; the widget zero-fills between the extremes.
   final List<DailyBiteCount> counts;
 
-  /// Raw daily weigh-ins, one per weighed day, overlaid as a second bar. Empty
+  /// Raw daily weigh-ins, one per weighed day, overlaid as a trend line. Empty
   /// leaves the chart bites-only with no right-hand axis.
   final List<Weight> weights;
 
@@ -41,9 +43,15 @@ class DailyBitesChart extends StatelessWidget {
   /// read-only (no selection).
   final ValueChanged<DateTime>? onDaySelected;
 
-  /// Padding above/below the weight range so even the lightest day draws a
-  /// short visible bar rather than collapsing onto the axis floor.
+  /// Padding above/below the weight range so even the lightest day sits a
+  /// little above the axis floor rather than on it.
   static const double _weightAxisPadding = 1.0;
+
+  // The bar and line charts are stacked, so they must reserve identical axis
+  // margins for their plot areas to line up. These are shared by both.
+  static const double _leftAxisReserved = 40;
+  static const double _rightAxisReserved = 40;
+  static const double _bottomAxisReserved = 30;
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +100,9 @@ class DailyBitesChart extends StatelessWidget {
         .clamp(BiteAnalytics.minBitesForAverage * 1.2, double.infinity)
         .toDouble();
 
-    // The weight axis is fitted to the weight range (± padding), so the weight
-    // rod's kg value is normalised into the bite chart's [0, maxY] and the
-    // right axis inverts that mapping back to kg.
+    // The weight axis is fitted to the weight range (± padding), so a weigh-in's
+    // kg value is normalised into the bite chart's [0, maxY] and the right axis
+    // inverts that mapping back to kg.
     final weightMin = hasWeight
         ? weightByDay.values.reduce((a, b) => a < b ? a : b) - _weightAxisPadding
         : 0.0;
@@ -105,13 +113,12 @@ class DailyBitesChart extends StatelessWidget {
         (kg - weightMin) / (weightMax - weightMin) * maxY;
     double yToWeight(double y) => weightMin + (y / maxY) * (weightMax - weightMin);
 
-    // Two rods per day need half the width to fit; a bites-only chart keeps the
-    // full single-rod width.
-    final rodWidth = hasWeight ? _barWidth(dayCount) / 2 : _barWidth(dayCount);
+    final rodWidth = _barWidth(dayCount);
 
-    // One group per calendar day in [firstDay, lastDay], zero-filling gap days;
-    // the weight rod is added only on days that were weighed.
+    // One group per calendar day in [firstDay, lastDay], zero-filling gap days.
+    // Weigh-ins become line spots at the matching day index rather than a rod.
     final bars = <BarChartGroupData>[];
+    final weightSpots = <FlSpot>[];
     var x = 0;
     for (
       var day = firstDay;
@@ -121,35 +128,32 @@ class DailyBitesChart extends StatelessWidget {
       final count = byDay[day] ?? 0;
       final belowThreshold = count < BiteAnalytics.minBitesForAverage;
       final isSelected = day == selected;
-      final rods = <BarChartRodData>[
-        BarChartRodData(
-          toY: count.toDouble(),
-          // The selected bar reads at full colour even when it's muted
-          // below the threshold, so the link to the card below is visible.
-          color: (belowThreshold && !isSelected) ? mutedColor : fullColor,
-          width: rodWidth,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-          borderSide: isSelected
-              ? BorderSide(color: theme.colorScheme.onSurface, width: 1.5)
-              : BorderSide.none,
+      bars.add(
+        BarChartGroupData(
+          x: x,
+          barRods: [
+            BarChartRodData(
+              toY: count.toDouble(),
+              // The selected bar reads at full colour even when it's muted
+              // below the threshold, so the link to the card below is visible.
+              color: (belowThreshold && !isSelected) ? mutedColor : fullColor,
+              width: rodWidth,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+              borderSide: isSelected
+                  ? BorderSide(color: theme.colorScheme.onSurface, width: 1.5)
+                  : BorderSide.none,
+            ),
+          ],
         ),
-      ];
+      );
       final weight = weightByDay[day];
       if (weight != null) {
-        rods.add(
-          BarChartRodData(
-            toY: weightToY(weight),
-            color: weightColor,
-            width: rodWidth,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
-          ),
-        );
+        weightSpots.add(FlSpot(x.toDouble(), weightToY(weight)));
       }
-      bars.add(BarChartGroupData(x: x, barsSpace: 2, barRods: rods));
       x++;
     }
 
-    // The bars are painted to a canvas fl_chart exposes no semantics for, and
+    // The chart is painted to a canvas fl_chart exposes no semantics for, and
     // the label/highlight/legend all live in that canvas, so fold them into one
     // spoken summary for screen readers.
     final summary = StringBuffer(
@@ -168,7 +172,7 @@ class DailyBitesChart extends StatelessWidget {
     }
     final semanticsLabel = summary.toString();
 
-    final chart = BarChart(
+    final barChart = BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceBetween,
         maxY: maxY,
@@ -181,7 +185,7 @@ class DailyBitesChart extends StatelessWidget {
               ? AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 40,
+                    reservedSize: _rightAxisReserved,
                     interval: maxY / 4,
                     getTitlesWidget: (value, meta) {
                       return Padding(
@@ -203,7 +207,7 @@ class DailyBitesChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
+              reservedSize: _leftAxisReserved,
               getTitlesWidget: (value, meta) {
                 if (value != value.roundToDouble()) {
                   return const SizedBox.shrink();
@@ -221,11 +225,15 @@ class DailyBitesChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 30,
-              interval: _labelInterval(dayCount),
+              reservedSize: _bottomAxisReserved,
+              // fl_chart's BarChart calls this once per group and does not honour
+              // `interval`, so thin the labels here or every day would overlap.
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= dayCount) {
+                  return const SizedBox.shrink();
+                }
+                if (index % _labelInterval(dayCount) != 0) {
                   return const SizedBox.shrink();
                 }
                 final day = DateTime(
@@ -273,14 +281,11 @@ class DailyBitesChart extends StatelessWidget {
                 firstDay.month,
                 firstDay.day + group.x,
               );
-              // The weight rod's toY is normalised, so read the day's kg
-              // back from the source instead of the rod height.
-              final isWeightRod = hasWeight && rodIndex == 1;
-              final text = isWeightRod
-                  ? '${fullDate(day)}\n${weightByDay[day]!.toStringAsFixed(1)} kg'
-                  : '${fullDate(day)}\n${rod.toY.toInt()} bites';
+              final weight = weightByDay[day];
+              final weightLine =
+                  weight == null ? '' : '\n${weight.toStringAsFixed(1)} kg';
               return BarTooltipItem(
-                text,
+                '${fullDate(day)}\n${rod.toY.toInt()} bites$weightLine',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -292,6 +297,29 @@ class DailyBitesChart extends StatelessWidget {
         barGroups: bars,
       ),
     );
+
+    // The weight line rides above the bars in a Stack. Its plot area matches the
+    // bar chart's (same y-range, same reserved axis margins), and its x-domain
+    // runs 0..dayCount-1 so a spot at day index i sits over that day's bar
+    // (which `spaceBetween` places at i/(dayCount-1) across the plot). The line
+    // ignores pointers so bar taps still land.
+    final chart = hasWeight
+        ? Stack(
+            children: [
+              Positioned.fill(child: barChart),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: _weightLineChart(
+                    spots: weightSpots,
+                    maxY: maxY,
+                    dayCount: dayCount,
+                    color: weightColor,
+                  ),
+                ),
+              ),
+            ],
+          )
+        : barChart;
 
     return Semantics(
       label: semanticsLabel,
@@ -312,16 +340,66 @@ class DailyBitesChart extends StatelessWidget {
     );
   }
 
+  /// The transparent weight trend line overlaid on the bars. It draws only the
+  /// line and its dots — grid, border and axis labels are off, but the axis
+  /// margins are reserved to the same sizes as the bar chart so the plot areas
+  /// coincide.
+  Widget _weightLineChart({
+    required List<FlSpot> spots,
+    required double maxY,
+    required int dayCount,
+    required Color color,
+  }) {
+    const emptyTitles = AxisTitles(sideTitles: SideTitles(showTitles: false));
+    AxisTitles reserve(double size) => AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: size,
+        getTitlesWidget: (_, _) => const SizedBox.shrink(),
+      ),
+    );
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: maxY,
+        minX: dayCount == 1 ? -0.5 : 0,
+        maxX: dayCount == 1 ? 0.5 : (dayCount - 1).toDouble(),
+        gridData: const FlGridData(show: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: const LineTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          topTitles: emptyTitles,
+          leftTitles: reserve(_leftAxisReserved),
+          rightTitles: reserve(_rightAxisReserved),
+          bottomTitles: reserve(_bottomAxisReserved),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            color: color,
+            barWidth: 1.5,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 2.5, color: color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Narrows the bars as the window fills up so a full 30-day window stays legible.
   static double _barWidth(int dayCount) => dayCount > 20 ? 5 : 8;
 
   /// Labels at most ~6 days on the x-axis so tick labels never overlap.
-  static double _labelInterval(int dayCount) =>
-      (dayCount / 6).ceilToDouble().clamp(1, double.infinity);
+  static int _labelInterval(int dayCount) => (dayCount / 6).ceil().clamp(1, dayCount);
 }
 
-/// The two-swatch key for the grouped chart: bites (left axis) and weight in kg
-/// (right axis). Shown only when weight bars are drawn.
+/// The two-swatch key for the overlaid chart: bites (left axis, a bar) and
+/// weight in kg (right axis, a line). Shown only when the weight line is drawn.
 class _Legend extends StatelessWidget {
   const _Legend({required this.biteColor, required this.weightColor});
 
@@ -333,25 +411,33 @@ class _Legend extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _swatch(biteColor, 'Bites'),
+        _swatch(_barSwatch(biteColor), 'Bites'),
         const SizedBox(width: 16),
-        _swatch(weightColor, 'Weight (kg)'),
+        _swatch(_lineSwatch(weightColor), 'Weight (kg)'),
       ],
     );
   }
 
-  Widget _swatch(Color color, String label) {
+  Widget _barSwatch(Color color) => Container(
+    width: 10,
+    height: 10,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(2),
+    ),
+  );
+
+  Widget _lineSwatch(Color color) => Container(
+    width: 14,
+    height: 2,
+    color: color,
+  );
+
+  Widget _swatch(Widget mark, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
+        mark,
         const SizedBox(width: 6),
         Text(label, style: const TextStyle(fontSize: 11)),
       ],
