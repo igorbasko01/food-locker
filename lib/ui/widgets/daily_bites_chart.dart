@@ -355,7 +355,7 @@ class DailyBitesChart extends StatelessWidget {
       sideTitles: SideTitles(
         showTitles: true,
         reservedSize: size,
-        getTitlesWidget: (_, __) => const SizedBox.shrink(),
+        getTitlesWidget: (_, _) => const SizedBox.shrink(),
       ),
     );
     return LineChart(
