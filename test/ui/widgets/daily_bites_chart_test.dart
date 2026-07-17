@@ -50,7 +50,7 @@ void main() {
       ),
     );
     data.barTouchData.touchCallback!(
-      const FlTapUpEvent(TapUpDetails(kind: PointerDeviceKind.touch)),
+      FlTapUpEvent(TapUpDetails(kind: PointerDeviceKind.touch)),
       response,
     );
   }

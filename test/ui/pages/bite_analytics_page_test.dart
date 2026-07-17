@@ -48,7 +48,7 @@ void main() {
     final data = tester.widget<BarChart>(find.byType(BarChart)).data;
     final group = data.barGroups[groupIndex];
     data.barTouchData.touchCallback!(
-      const FlTapUpEvent(TapUpDetails(kind: PointerDeviceKind.touch)),
+      FlTapUpEvent(TapUpDetails(kind: PointerDeviceKind.touch)),
       BarTouchResponse(
         touchLocation: Offset.zero,
         touchChartCoordinate: Offset.zero,
