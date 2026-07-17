@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
 
 /// Per-screen state for the Bite Analytics page.
 ///
@@ -13,11 +15,15 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 /// It establishes whether the log holds any bite at all, which decides the
 /// screen's global empty state.
 class BiteAnalyticsController extends ChangeNotifier {
-  BiteAnalyticsController(BiteRepository repository)
-    : _repository = repository,
+  BiteAnalyticsController(
+    BiteRepository repository,
+    WeightRepository weightRepository,
+  ) : _repository = repository,
+      _weightRepository = weightRepository,
       _analytics = BiteAnalytics(repository);
 
   final BiteRepository _repository;
+  final WeightRepository _weightRepository;
   final BiteAnalytics _analytics;
 
   /// The chart's window, and the span the 30-day average and max cover: the
@@ -40,6 +46,13 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// Bites per day over the last [dailyBitesWindow] days, one entry per day
   /// that had bites — the daily-bites chart's data.
   List<DailyBiteCount> get dailyCounts => _dailyCounts;
+
+  List<Weight> _dailyWeights = const [];
+
+  /// Raw daily weigh-ins over the last [dailyBitesWindow] days, one per day that
+  /// was weighed — the weight bars overlaid on the daily-bites chart. Days
+  /// without a weigh-in are simply absent (no gap-filling).
+  List<Weight> get dailyWeights => _dailyWeights;
 
   double _averageLast30 = 0;
 
@@ -135,6 +148,10 @@ class BiteAnalyticsController extends ChangeNotifier {
     );
     final fromYear = DateTime(now.year - 1, now.month, now.day + 1);
     _dailyCounts = await _analytics.dailyCounts(from30, to);
+    _dailyWeights = _weightRepository.getAllWeights().where((w) {
+      final day = DateTime(w.date.year, w.date.month, w.date.day);
+      return !day.isBefore(from30) && day.isBefore(to);
+    }).toList();
     _averageLast30 = await _analytics.averagePerDay(from30, to);
     _maxLast30 = await _analytics.maxDay(from30, to);
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);

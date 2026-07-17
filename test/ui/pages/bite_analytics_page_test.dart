@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
+import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/pages/bite_analytics_page.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
@@ -16,10 +18,12 @@ import 'package:provider/provider.dart';
 void main() {
   late BiteDatabase db;
   late BiteRepository repo;
+  late InMemoryWeightRepository weightRepo;
 
   setUp(() {
     db = BiteDatabase.forTesting(NativeDatabase.memory());
     repo = DriftBiteRepository(db);
+    weightRepo = InMemoryWeightRepository();
   });
 
   tearDown(() async {
@@ -72,8 +76,11 @@ void main() {
     tester.platformDispatcher.localeTestValue = const Locale('en', 'US');
     addTearDown(tester.platformDispatcher.clearLocaleTestValue);
     await tester.pumpWidget(
-      Provider<BiteRepository>.value(
-        value: repo,
+      MultiProvider(
+        providers: [
+          Provider<BiteRepository>.value(value: repo),
+          Provider<WeightRepository>.value(value: weightRepo),
+        ],
         child: MaterialApp(theme: appTheme, home: const BiteAnalyticsPage()),
       ),
     );

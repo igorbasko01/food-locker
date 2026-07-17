@@ -371,15 +371,15 @@ Chart tap drives the breakdown card; no new analytics.
 
 **Phase 5 — Body weight as a second bar on the bite chart**
 
-- [ ] Inject `WeightRepository` into `BiteAnalyticsController` and load raw daily
+- [x] Inject `WeightRepository` into `BiteAnalyticsController` and load raw daily
       weights over the 30-day window (`getAllWeights()` filtered to `[from30, to)`)
-- [ ] Add a second `BarChartRodData` per group in `daily_bites_chart.dart` for
+- [x] Add a second `BarChartRodData` per group in `daily_bites_chart.dart` for
       weight, on a secondary right-hand kg axis fitted to the weight min/max
       (normalise the rod's `toY`, label `rightTitles` in kg); distinct colour, a
       two-item legend, and each rod at ~half the current `_barWidth` (two per day)
       over the kept 30-day window
-- [ ] Weight bar omitted on days with no weigh-in; bite-only days unchanged
-- [ ] **Verify:** the chart renders bite-only, weight-only, and both-present days;
+- [x] Weight bar omitted on days with no weigh-in; bite-only days unchanged
+- [x] **Verify:** the chart renders bite-only, weight-only, and both-present days;
       the weight axis fits the weight range (small changes stay visible, not
       flattened from zero); a day without a weigh-in shows only the bite bar
 
