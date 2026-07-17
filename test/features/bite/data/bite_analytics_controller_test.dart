@@ -4,19 +4,24 @@ import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
+import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 
 /// [BiteAnalyticsController] over an in-memory Drift store, covering the
 /// pickable breakdown day: `load` seeds today, `selectDay` re-queries another
-/// day, and `isSelectedDayToday` tracks whether the card is on today.
+/// day, and `isSelectedDayToday` tracks whether the card is on today. Also
+/// covers the daily weights loaded for the weight overlay.
 void main() {
   late BiteDatabase db;
   late BiteRepository repo;
+  late InMemoryWeightRepository weightRepo;
   late BiteAnalyticsController controller;
 
   setUp(() {
     db = BiteDatabase.forTesting(NativeDatabase.memory());
     repo = DriftBiteRepository(db);
-    controller = BiteAnalyticsController(repo);
+    weightRepo = InMemoryWeightRepository();
+    controller = BiteAnalyticsController(repo, weightRepo);
   });
 
   tearDown(() async {
@@ -78,6 +83,34 @@ void main() {
     await controller.selectDay(DateTime(now.year, now.month, now.day - 1, 15, 30));
 
     expect(controller.selectedDay, yesterday);
+  });
+
+  test('load reads only the weigh-ins inside the 30-day window', () async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final inWindow = DateTime(now.year, now.month, now.day - 5);
+    final outOfWindow = DateTime(now.year, now.month, now.day - 40);
+    await logCluster(today, 8, 12);
+    await weightRepo.saveWeight(Weight(date: today, value: 80));
+    await weightRepo.saveWeight(Weight(date: inWindow, value: 81));
+    await weightRepo.saveWeight(Weight(date: outOfWindow, value: 90));
+
+    await controller.load();
+
+    final days = controller.dailyWeights
+        .map((w) => DateTime(w.date.year, w.date.month, w.date.day))
+        .toSet();
+    expect(days, {today, inWindow});
+    expect(days, isNot(contains(outOfWindow)));
+  });
+
+  test('load has no weights when none were recorded', () async {
+    final now = DateTime.now();
+    await logCluster(DateTime(now.year, now.month, now.day), 8, 12);
+
+    await controller.load();
+
+    expect(controller.dailyWeights, isEmpty);
   });
 
   test('selecting another day leaves the today metrics untouched', () async {

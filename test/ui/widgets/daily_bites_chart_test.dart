@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
 
@@ -10,6 +11,7 @@ void main() {
   Future<BarChartData> pumpChart(
     WidgetTester tester,
     List<DailyBiteCount> counts, {
+    List<Weight> weights = const [],
     DateTime? selectedDay,
     ValueChanged<DateTime>? onDaySelected,
   }) async {
@@ -21,6 +23,7 @@ void main() {
             height: 300,
             child: DailyBitesChart(
               counts: counts,
+              weights: weights,
               selectedDay: selectedDay,
               onDaySelected: onDaySelected,
             ),
@@ -156,6 +159,87 @@ void main() {
 
     tapBar(data, 0);
     expect(selected, DateTime(2026, 1, 1));
+  });
+
+  testWidgets('without weights each day has a single bite rod and no right '
+      'axis', (tester) async {
+    final data = await pumpChart(tester, [
+      DailyBiteCount(day: DateTime(2026, 1, 1), count: 50),
+      DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
+    ]);
+
+    expect(data.barGroups[0].barRods, hasLength(1));
+    expect(data.barGroups[1].barRods, hasLength(1));
+    expect(data.titlesData.rightTitles.sideTitles.showTitles, isFalse);
+  });
+
+  testWidgets('a day with a weigh-in gets a second weight rod and a right '
+      'axis', (tester) async {
+    final data = await pumpChart(
+      tester,
+      [
+        DailyBiteCount(day: DateTime(2026, 1, 1), count: 50),
+        DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
+      ],
+      weights: [
+        Weight(date: DateTime(2026, 1, 1), value: 80),
+        Weight(date: DateTime(2026, 1, 2), value: 81),
+      ],
+    );
+
+    // Both days: a bite rod plus a weight rod in the theme's tertiary colour.
+    expect(data.barGroups[0].barRods, hasLength(2));
+    expect(data.barGroups[1].barRods, hasLength(2));
+    expect(data.barGroups[0].barRods[1].color, appTheme.colorScheme.tertiary);
+    // The right axis is now labelled (in kg).
+    expect(data.titlesData.rightTitles.sideTitles.showTitles, isTrue);
+    // A two-item legend accompanies the chart.
+    expect(find.text('Bites'), findsOneWidget);
+    expect(find.text('Weight (kg)'), findsOneWidget);
+  });
+
+  testWidgets('a day weighed but not eaten shows only the weight bar', (
+    tester,
+  ) async {
+    // Bite on 1/1, weigh-in on 1/3 → the range extends to 1/3, whose bite rod
+    // is zero-height and whose weight rod carries the weigh-in.
+    final data = await pumpChart(
+      tester,
+      [DailyBiteCount(day: DateTime(2026, 1, 1), count: 50)],
+      weights: [Weight(date: DateTime(2026, 1, 3), value: 80)],
+    );
+
+    expect(data.barGroups, hasLength(3));
+    // 1/1: eaten, not weighed → single bite rod.
+    expect(data.barGroups[0].barRods, hasLength(1));
+    // 1/3: weighed, not eaten → zero bite rod plus the weight rod.
+    expect(data.barGroups[2].barRods, hasLength(2));
+    expect(data.barGroups[2].barRods[0].toY, 0);
+    expect(data.barGroups[2].barRods[1].toY, greaterThan(0));
+  });
+
+  testWidgets('the weight axis fits the weight range so small changes stay '
+      'visible', (tester) async {
+    // A 1 kg day-to-day change: fitted to [71, 74] it maps to a clearly
+    // different bar height, and the lighter day still draws above the floor.
+    final data = await pumpChart(
+      tester,
+      [
+        DailyBiteCount(day: DateTime(2026, 1, 1), count: 50),
+        DailyBiteCount(day: DateTime(2026, 1, 2), count: 50),
+      ],
+      weights: [
+        Weight(date: DateTime(2026, 1, 1), value: 72),
+        Weight(date: DateTime(2026, 1, 2), value: 73),
+      ],
+    );
+
+    final lighter = data.barGroups[0].barRods[1].toY;
+    final heavier = data.barGroups[1].barRods[1].toY;
+    // Not flattened from zero: the lighter day is well above the axis floor.
+    expect(lighter, greaterThan(0));
+    // The 1 kg gain is a visible height difference, not a hairline.
+    expect(heavier - lighter, greaterThan(data.maxY * 0.1));
   });
 
   testWidgets('the selected day\'s bar is highlighted with a border', (

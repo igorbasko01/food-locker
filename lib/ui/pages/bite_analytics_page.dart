@@ -3,6 +3,8 @@ import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
 import 'package:food_locker/ui/widgets/meal_breakdown_list.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
@@ -28,8 +30,10 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
   @override
   void initState() {
     super.initState();
-    _controller = BiteAnalyticsController(context.read<BiteRepository>())
-      ..load();
+    _controller = BiteAnalyticsController(
+      context.read<BiteRepository>(),
+      context.read<WeightRepository>(),
+    )..load();
   }
 
   @override
@@ -55,6 +59,7 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
             children: [
               _DailyBitesCard(
                 counts: _controller.dailyCounts,
+                weights: _controller.dailyWeights,
                 selectedDay: _controller.selectedDay,
                 onDaySelected: _controller.selectDay,
               ),
@@ -87,11 +92,13 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
 class _DailyBitesCard extends StatelessWidget {
   const _DailyBitesCard({
     required this.counts,
+    required this.weights,
     required this.selectedDay,
     required this.onDaySelected,
   });
 
   final List<DailyBiteCount> counts;
+  final List<Weight> weights;
   final DateTime selectedDay;
   final ValueChanged<DateTime> onDaySelected;
 
@@ -116,6 +123,7 @@ class _DailyBitesCard extends StatelessWidget {
               height: 240,
               child: DailyBitesChart(
                 counts: counts,
+                weights: weights,
                 selectedDay: selectedDay,
                 onDaySelected: onDaySelected,
               ),

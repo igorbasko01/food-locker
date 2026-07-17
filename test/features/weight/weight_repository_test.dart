@@ -62,6 +62,51 @@ void main() {
       expect(repository.getLowestWeight(), isNull);
     });
 
+    test('getWeightsInRange returns only weigh-ins inside [from, to)', () async {
+      final before = DateTime(2023, 5, 9);
+      final fromDay = DateTime(2023, 5, 10);
+      final inside = DateTime(2023, 5, 12);
+      final toDay = DateTime(2023, 5, 15);
+      await repository.saveWeight(Weight(date: before, value: 70.0));
+      await repository.saveWeight(Weight(date: fromDay, value: 71.0));
+      await repository.saveWeight(Weight(date: inside, value: 72.0));
+      await repository.saveWeight(Weight(date: toDay, value: 73.0)); // exclusive
+
+      final days = repository
+          .getWeightsInRange(fromDay, toDay)
+          .map((w) => w.date)
+          .toSet();
+
+      // `from` inclusive, `to` exclusive: the 10th and 12th, not the 9th or 15th.
+      expect(days, {fromDay, inside});
+    });
+
+    test('getWeightsInRange normalises the bounds to their calendar day',
+        () async {
+      // A weigh-in stored with a time component still counts by its day: with
+      // `to` at midnight of the day after, that day is inside the range.
+      await repository.saveWeight(
+        Weight(date: DateTime(2023, 5, 12, 14, 30), value: 72.0),
+      );
+
+      final result = repository.getWeightsInRange(
+        DateTime(2023, 5, 12),
+        DateTime(2023, 5, 13),
+      );
+
+      expect(result, hasLength(1));
+      expect(result.single.value, 72.0);
+    });
+
+    test('getWeightsInRange is empty when nothing falls in range', () async {
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 1), value: 70.0));
+
+      expect(
+        repository.getWeightsInRange(DateTime(2023, 6, 1), DateTime(2023, 6, 30)),
+        isEmpty,
+      );
+    });
+
     test('getOldestWeightDate returns oldest date', () async {
       expect(repository.getOldestWeightDate(), isNull);
 

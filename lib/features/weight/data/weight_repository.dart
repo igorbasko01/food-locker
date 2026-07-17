@@ -4,6 +4,12 @@ abstract class WeightRepository {
   Weight? getWeightForDay(DateTime date);
   Future<void> saveWeight(Weight weight);
   List<Weight> getAllWeights();
+
+  /// Weigh-ins whose calendar day falls in `[from, to)` — both bounds and each
+  /// weigh-in are compared day-granular (normalised to their calendar day).
+  /// Empty when the range holds none.
+  List<Weight> getWeightsInRange(DateTime from, DateTime to);
+
   Future<void> deleteWeight(DateTime date);
   Future<void> clear();
   
@@ -64,6 +70,16 @@ mixin WeightRepositoryHelper implements WeightRepository {
     final result = filtered.map((w) => w.value).reduce((a, b) => a < b ? a : b);
     _lowestWeightCache[cacheKey] = result;
     return result;
+  }
+
+  @override
+  List<Weight> getWeightsInRange(DateTime from, DateTime to) {
+    final fromDay = DateTime(from.year, from.month, from.day);
+    final toDay = DateTime(to.year, to.month, to.day);
+    return getAllWeights().where((w) {
+      final day = DateTime(w.date.year, w.date.month, w.date.day);
+      return !day.isBefore(fromDay) && day.isBefore(toDay);
+    }).toList();
   }
 
   @override
