@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
+import 'package:food_locker/ui/widgets/app_version_label.dart';
 import 'package:food_locker/ui/widgets/longest_streak_banner.dart';
 import 'package:food_locker/ui/widgets/streak_banner.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
@@ -75,7 +76,7 @@ class HomePage extends StatelessWidget {
           ),
           _buildHistorySection(latest7, history),
           const SliverToBoxAdapter(
-            child: SizedBox(height: 40),
+            child: AppVersionLabel(),
           ),
         ],
       ),
