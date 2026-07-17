@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.16.0](https://github.com/igorbasko01/food-locker/compare/v1.15.0...v1.16.0) (2026-07-17)
+
+
+### Features
+
+* accessibility polish for bite analytics (Phase 6) ([#87](https://github.com/igorbasko01/food-locker/issues/87)) ([85f7ffd](https://github.com/igorbasko01/food-locker/commit/85f7ffdc791484a466ed0d069a3879c1e36914c8))
+* body weight as a second bar on the bite chart (Phase 5) ([#85](https://github.com/igorbasko01/food-locker/issues/85)) ([8cb861e](https://github.com/igorbasko01/food-locker/commit/8cb861e74e19e44c65eb77c623b60377ab78f378))
+* show app version on the Home tab ([#88](https://github.com/igorbasko01/food-locker/issues/88)) ([8a6d6cf](https://github.com/igorbasko01/food-locker/commit/8a6d6cf5a385168dedce3e95ed249622761c3e06))
+
 ## [1.15.0](https://github.com/igorbasko01/food-locker/compare/v1.14.0...v1.15.0) (2026-07-17)
 
 
