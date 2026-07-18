@@ -125,6 +125,10 @@ class BiteManager extends ChangeNotifier {
     final last = await _repository.lastBite();
     _lastBiteAt =
         last == null ? null : DateTime.fromMillisecondsSinceEpoch(last.atMs);
+    // Recompute the zone and ticker against the current clock: the OS freezes
+    // timers while backgrounded, so a resumed countdown would otherwise show a
+    // stale zone, and a bite that went stale (day rollover, ended sitting)
+    // needs the ticker stopped and the zone reset to clear.
     _startCountdown();
   }
 
