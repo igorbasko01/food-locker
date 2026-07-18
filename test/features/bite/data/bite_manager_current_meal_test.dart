@@ -101,6 +101,70 @@ void main() {
       manager.dispose();
     });
   });
+
+  group('refresh', () {
+    test('drops currentMealBites to 0 once the sitting has ended', () {
+      fakeAsync((async) {
+        final now = clock.now();
+        final repo = _FakeBiteRepository(config: config, bites: [
+          now.subtract(const Duration(minutes: 1)),
+        ]);
+        final manager = BiteManager(repo, onReachedClear: () async {});
+
+        manager.initialize();
+        async.flushMicrotasks();
+        expect(manager.currentMealBites, 1);
+
+        // Time passes past the meal-gap threshold while another tab shows; a
+        // refresh on return to the Bite tab recomputes the ended sitting.
+        async.elapse(const Duration(minutes: 6));
+        manager.refresh();
+        async.flushMicrotasks();
+        expect(manager.currentMealBites, 0);
+
+        manager.dispose();
+      }, initialTime: DateTime(2024, 6, 15, 12));
+    });
+
+    test('rolls todayCount to the new local day', () {
+      fakeAsync((async) {
+        final now = clock.now();
+        final repo = _FakeBiteRepository(config: config, bites: [
+          now.subtract(const Duration(minutes: 1)),
+        ]);
+        final manager = BiteManager(repo, onReachedClear: () async {});
+
+        manager.initialize();
+        async.flushMicrotasks();
+        expect(manager.todayCount, 1);
+
+        // The app sits idle across midnight; the new day starts empty and a
+        // refresh reflects it without an app restart.
+        async.elapse(const Duration(days: 1));
+        manager.refresh();
+        async.flushMicrotasks();
+        expect(manager.todayCount, 0);
+
+        manager.dispose();
+      }, initialTime: DateTime(2024, 6, 15, 12));
+    });
+
+    test('notifies listeners so the tab rebuilds', () {
+      fakeAsync((async) {
+        final repo = _FakeBiteRepository(config: config);
+        final manager = BiteManager(repo, onReachedClear: () async {});
+        var notifications = 0;
+        manager.addListener(() => notifications++);
+
+        manager.refresh();
+        async.flushMicrotasks();
+
+        expect(notifications, greaterThan(0));
+
+        manager.dispose();
+      });
+    });
+  });
 }
 
 /// An in-memory [BiteRepository] returning bites chronologically, for exercising

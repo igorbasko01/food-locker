@@ -112,6 +112,22 @@ class BiteManager extends ChangeNotifier {
     }
   }
 
+  /// Re-reads the store so the surfaced numbers reflect time that passed while
+  /// the screen was not the active tab or the app was backgrounded: the day
+  /// count rolls to the new local day, [currentMealBites] drops to 0 once the
+  /// sitting has ended, and the pacing reference is re-seeded from the last
+  /// stored bite. Cheap enough to run every time the Bite tab becomes visible.
+  Future<void> refresh() async {
+    final now = clock.now();
+    _pacingConfig ??= await _repository.pacingConfigAt(now);
+    await _refreshTodayCount();
+
+    final last = await _repository.lastBite();
+    _lastBiteAt =
+        last == null ? null : DateTime.fromMillisecondsSinceEpoch(last.atMs);
+    _startCountdown();
+  }
+
   /// Records one bite at the current instant — one tap = one bite, persisted
   /// immediately and never blocked — then refreshes today's count and
   /// restarts the pacing countdown from the fresh reference.
