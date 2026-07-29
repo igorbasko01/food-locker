@@ -51,19 +51,32 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(BitePage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Left the Bite tab: drop the lock immediately rather than waiting out the
-    // remainder of the window on some other screen.
     if (!widget.isActive) {
+      // Left the Bite tab: drop the lock immediately rather than waiting out
+      // the remainder of the window on some other screen.
       _releaseWakelock();
+    } else if (!oldWidget.isActive) {
+      // Became the visible tab: re-read the store so the day count, the
+      // current-meal number, and the pacing state reflect any day rollover or
+      // meal that ended while another tab was showing.
+      _refreshBiteState();
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Nothing to keep awake once the app is no longer in the foreground.
     if (state != AppLifecycleState.resumed) {
+      // Nothing to keep awake once the app is no longer in the foreground.
       _releaseWakelock();
+    } else if (widget.isActive) {
+      // Resumed onto the Bite tab: the app may have sat backgrounded across a
+      // day boundary or the end of a meal, so re-read the store.
+      _refreshBiteState();
     }
+  }
+
+  void _refreshBiteState() {
+    unawaited(context.read<BiteManager>().refresh());
   }
 
   Future<void> _handleBite() async {
