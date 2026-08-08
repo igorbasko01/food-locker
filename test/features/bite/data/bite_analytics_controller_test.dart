@@ -113,6 +113,37 @@ void main() {
     expect(controller.dailyWeights, isEmpty);
   });
 
+  test('selectedWeight follows the selected day', () async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final dayBefore = DateTime(now.year, now.month, now.day - 2);
+    await logCluster(today, 8, 12);
+    await logCluster(yesterday, 9, 20);
+    await logCluster(dayBefore, 9, 20);
+    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
+    await weightRepo.saveWeight(Weight(date: yesterday, value: 81.2));
+
+    await controller.load();
+    expect(controller.selectedWeight?.value, 80.4);
+
+    await controller.selectDay(yesterday);
+    expect(controller.selectedWeight?.value, 81.2);
+
+    // A day that was never weighed leaves the line empty rather than stale.
+    await controller.selectDay(dayBefore);
+    expect(controller.selectedWeight, isNull);
+  });
+
+  test('selectedWeight is null when today was not weighed', () async {
+    final now = DateTime.now();
+    await logCluster(DateTime(now.year, now.month, now.day), 8, 12);
+
+    await controller.load();
+
+    expect(controller.selectedWeight, isNull);
+  });
+
   test('selecting another day leaves the today metrics untouched', () async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

@@ -7,6 +7,7 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/pages/bite_analytics_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -245,6 +246,46 @@ void main() {
     expect(find.text('Today\'s meals'), findsOneWidget);
     expect(find.text('No bites logged today yet.'), findsOneWidget);
     expect(find.text('Snacks'), findsNothing);
+  });
+
+  testWidgets('meal breakdown card shows the selected day\'s body weight, and '
+      'follows a tapped bar', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(600, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+
+    await logCluster(today, 8, 12);
+    await logCluster(yesterday, 9, 20);
+    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
+    await weightRepo.saveWeight(
+      Weight(date: yesterday, value: 81.2, unit: WeightUnit.pounds),
+    );
+
+    await pumpPage(tester);
+
+    expect(find.text('80.4 kg'), findsOneWidget);
+
+    // Bar 0 is yesterday: the line follows the selection, in that day's unit.
+    tapBar(tester, 0);
+    await tester.pumpAndSettle();
+
+    expect(find.text('81.2 lbs'), findsOneWidget);
+    expect(find.text('80.4 kg'), findsNothing);
+  });
+
+  testWidgets('meal breakdown card marks a day with no weigh-in', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    await logCluster(DateTime(now.year, now.month, now.day), 8, 12);
+
+    await pumpPage(tester);
+    await tester.scrollUntilVisible(find.text('Today\'s meals'), 200);
+
+    expect(find.text('No weigh-in'), findsOneWidget);
   });
 
   testWidgets('tapping a bar switches the breakdown card to that day, and '

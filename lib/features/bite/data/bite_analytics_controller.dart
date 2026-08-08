@@ -109,6 +109,12 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// card's data. Empty (no meals, no snack bites) when the day has no bite.
   DayMealBreakdown get selectedBreakdown => _selectedBreakdown;
 
+  Weight? _selectedWeight;
+
+  /// The weigh-in recorded on [selectedDay], or null when that day was not
+  /// weighed — the body weight shown alongside the breakdown card.
+  Weight? get selectedWeight => _selectedWeight;
+
   bool _isBreakdownLoading = false;
 
   /// Whether a [selectDay] re-query is in flight — lets the card show its own
@@ -116,10 +122,14 @@ class BiteAnalyticsController extends ChangeNotifier {
   bool get isBreakdownLoading => _isBreakdownLoading;
 
   /// Selects [day] for the breakdown card: normalises to local midnight, marks
-  /// the card loading, re-queries [BiteAnalytics.breakdownForDay], and notifies.
-  /// The rest of the screen's metrics stay put — only the breakdown follows.
+  /// the card loading, re-queries [BiteAnalytics.breakdownForDay] and the day's
+  /// weigh-in, and notifies. The rest of the screen's metrics stay put — only
+  /// the breakdown follows.
   Future<void> selectDay(DateTime day) async {
     _selectedDay = DateTime(day.year, day.month, day.day);
+    // Read synchronously with the day so the card's header — title and weight —
+    // switches together, rather than the weight lagging behind the spinner.
+    _selectedWeight = _weightRepository.getWeightForDay(_selectedDay);
     _isBreakdownLoading = true;
     notifyListeners();
     _selectedBreakdown = await _analytics.breakdownForDay(_selectedDay);
@@ -154,6 +164,7 @@ class BiteAnalyticsController extends ChangeNotifier {
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);
     _selectedDay = today;
     _selectedBreakdown = await _analytics.breakdownForDay(today);
+    _selectedWeight = _weightRepository.getWeightForDay(today);
     _mealsToday = _selectedBreakdown.meals.length;
     _averageMealsLast30 = await _analytics.averageMealsPerDay(from30, to);
     _averageMealSizeLast30 = await _analytics.averageMealSize(from30, to);

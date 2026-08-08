@@ -75,6 +75,7 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
               ),
               _MealBreakdownCard(
                 breakdown: _controller.selectedBreakdown,
+                weight: _controller.selectedWeight,
                 isToday: _controller.isSelectedDayToday,
                 isLoading: _controller.isBreakdownLoading,
                 onBackToToday: () => _controller.selectDay(DateTime.now()),
@@ -262,18 +263,24 @@ class _MealsSummaryRow extends StatelessWidget {
 /// The selected day's meal breakdown, framed in a titled card matching the
 /// daily-bites card. Tapping a chart bar changes [breakdown]; the title follows
 /// the day — "Today's meals" for today, the locale date otherwise — with a
-/// "Back to today" action while browsing another day. The [MealBreakdownList]
-/// carries its own empty state for a day with no bites, so the card is always
-/// shown once the log holds any bite at all.
+/// "Back to today" action while browsing another day, and the day's body
+/// [weight] under the title. The [MealBreakdownList] carries its own empty
+/// state for a day with no bites, so the card is always shown once the log
+/// holds any bite at all.
 class _MealBreakdownCard extends StatelessWidget {
   const _MealBreakdownCard({
     required this.breakdown,
+    required this.weight,
     required this.isToday,
     required this.isLoading,
     required this.onBackToToday,
   });
 
   final DayMealBreakdown breakdown;
+
+  /// The day's weigh-in, or null when it was not weighed.
+  final Weight? weight;
+
   final bool isToday;
   final bool isLoading;
   final VoidCallback onBackToToday;
@@ -304,6 +311,7 @@ class _MealBreakdownCard extends StatelessWidget {
                   ),
               ],
             ),
+            _WeightLine(weight: weight),
             const SizedBox(height: 8),
             if (isLoading)
               const Padding(
@@ -314,6 +322,45 @@ class _MealBreakdownCard extends StatelessWidget {
               MealBreakdownList(breakdown: breakdown),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The body weight recorded on the breakdown card's day, or a placeholder when
+/// that day was not weighed — weigh-ins are optional and days without one are
+/// common, so the line always holds its place rather than shifting the rows
+/// below it.
+class _WeightLine extends StatelessWidget {
+  const _WeightLine({required this.weight});
+
+  final Weight? weight;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final value = weight;
+    final text = value == null
+        ? 'No weigh-in'
+        : '${value.value.toStringAsFixed(1)} ${value.unit.symbol}';
+    return Semantics(
+      label: value == null ? 'No weigh-in' : 'Weight $text',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Icon(
+            Icons.monitor_weight_outlined,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
