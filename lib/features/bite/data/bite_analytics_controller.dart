@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:food_locker/core/where.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
@@ -109,11 +110,15 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// card's data. Empty (no meals, no snack bites) when the day has no bite.
   DayMealBreakdown get selectedBreakdown => _selectedBreakdown;
 
-  Weight? _selectedWeight;
-
   /// The weigh-in recorded on [selectedDay], or null when that day was not
   /// weighed — the body weight shown alongside the breakdown card.
-  Weight? get selectedWeight => _selectedWeight;
+  ///
+  /// Read off [dailyWeights] rather than the repository: the selection always
+  /// lands inside that window, since it comes from a chart bar or "back to
+  /// today". A day picker reaching past the window would need a wider load.
+  Weight? get selectedWeight => _dailyWeights.firstWhereOrNull(
+    (w) => DateTime(w.date.year, w.date.month, w.date.day) == _selectedDay,
+  );
 
   bool _isBreakdownLoading = false;
 
@@ -122,14 +127,11 @@ class BiteAnalyticsController extends ChangeNotifier {
   bool get isBreakdownLoading => _isBreakdownLoading;
 
   /// Selects [day] for the breakdown card: normalises to local midnight, marks
-  /// the card loading, re-queries [BiteAnalytics.breakdownForDay] and the day's
-  /// weigh-in, and notifies. The rest of the screen's metrics stay put — only
-  /// the breakdown follows.
+  /// the card loading, re-queries [BiteAnalytics.breakdownForDay], and notifies.
+  /// The rest of the screen's metrics stay put — only the breakdown and
+  /// [selectedWeight] follow.
   Future<void> selectDay(DateTime day) async {
     _selectedDay = DateTime(day.year, day.month, day.day);
-    // Read synchronously with the day so the card's header — title and weight —
-    // switches together, rather than the weight lagging behind the spinner.
-    _selectedWeight = _weightRepository.getWeightForDay(_selectedDay);
     _isBreakdownLoading = true;
     notifyListeners();
     _selectedBreakdown = await _analytics.breakdownForDay(_selectedDay);
@@ -164,7 +166,6 @@ class BiteAnalyticsController extends ChangeNotifier {
     _averageLastYear = await _analytics.averagePerDay(fromYear, to);
     _selectedDay = today;
     _selectedBreakdown = await _analytics.breakdownForDay(today);
-    _selectedWeight = _weightRepository.getWeightForDay(today);
     _mealsToday = _selectedBreakdown.meals.length;
     _averageMealsLast30 = await _analytics.averageMealsPerDay(from30, to);
     _averageMealSizeLast30 = await _analytics.averageMealSize(from30, to);
