@@ -135,6 +135,28 @@ void main() {
     expect(controller.selectedWeight, isNull);
   });
 
+  test('selectedWeight stays with the rendered breakdown while a selectDay is '
+      'in flight', () async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    await logCluster(today, 8, 12);
+    await logCluster(yesterday, 9, 20);
+    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
+    await weightRepo.saveWeight(Weight(date: yesterday, value: 81.2));
+
+    await controller.load();
+
+    final pending = controller.selectDay(yesterday);
+    // The breakdown card is still showing today, so the weight is today's.
+    expect(controller.selectedBreakdown.day, today);
+    expect(controller.selectedWeight?.value, 80.4);
+
+    await pending;
+
+    expect(controller.selectedWeight?.value, 81.2);
+  });
+
   test('selectedWeight is null when today was not weighed', () async {
     final now = DateTime.now();
     await logCluster(DateTime(now.year, now.month, now.day), 8, 12);
