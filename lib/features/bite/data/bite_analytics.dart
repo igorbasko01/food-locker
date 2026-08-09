@@ -77,6 +77,9 @@ class DayMealBreakdown {
   /// Bites outside any meal (snacks), including sub-threshold clusters' bites.
   final int snackBites;
 
+  /// Every bite logged on [day], meals and snacks together.
+  int get totalBites => meals.fold<int>(snackBites, (sum, m) => sum + m.count);
+
   @override
   String toString() =>
       'DayMealBreakdown(day: $day, meals: $meals, snackBites: $snackBites)';

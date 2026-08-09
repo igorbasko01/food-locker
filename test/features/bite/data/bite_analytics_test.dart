@@ -228,6 +228,21 @@ void main() {
       expect(breakdown.meals.map((m) => m.count), [12]);
       expect(breakdown.snackBites, 3);
     });
+
+    test('totalBites sums the meals and the snacks', () async {
+      await logEvery(DateTime(2026, 7, 15, 8), 12, const Duration(minutes: 1));
+      await logEvery(DateTime(2026, 7, 15, 8, 17), 3, const Duration(minutes: 1));
+      await logEvery(DateTime(2026, 7, 15, 13), 10, const Duration(minutes: 1));
+
+      final breakdown = await analytics.breakdownForDay(DateTime(2026, 7, 15));
+
+      expect(breakdown.totalBites, 25);
+    });
+
+    test('totalBites is 0 on an empty day', () async {
+      final breakdown = await analytics.breakdownForDay(DateTime(2026, 7, 15));
+      expect(breakdown.totalBites, 0);
+    });
   });
 
   group('averageMealsPerDay', () {
