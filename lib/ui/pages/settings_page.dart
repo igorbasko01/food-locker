@@ -10,6 +10,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _importing = false;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -32,6 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               children: [
                 ListTile(
+                  enabled: !_importing,
                   leading: Icon(Icons.download, color: theme.colorScheme.primary),
                   title: const Text('Export Data', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Save your weight history data into a zip file.'),
@@ -54,30 +57,67 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  enabled: !_importing,
                   leading: Icon(Icons.upload, color: theme.colorScheme.primary),
                   title: const Text('Import Data', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Restore your weight history data from a zip file.'),
-                  onTap: () async {
-                    try {
-                      await context.read<SerializationService>().importData(context);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Data imported successfully')),
-                        );
-                        setState(() {});
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
-                      }
-                    }
-                  },
+                  onTap: _importData,
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _importData() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final service = context.read<SerializationService>();
+    var progressShown = false;
+
+    try {
+      final imported = await service.importData(
+        context,
+        onRestoreStart: () {
+          if (!mounted) return;
+          progressShown = true;
+          setState(() => _importing = true);
+          messenger.showSnackBar(_importingSnackBar());
+        },
+      );
+      if (progressShown) messenger.removeCurrentSnackBar();
+      // A dismissed file picker imported nothing, so it gets no toast at all.
+      if (imported) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Data imported successfully')),
+        );
+      }
+    } catch (e) {
+      if (progressShown) messenger.removeCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text('Import failed: $e')));
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
+
+  /// Stays up until [_importData] removes it, since the restore has no
+  /// predictable duration.
+  SnackBar _importingSnackBar() {
+    return SnackBar(
+      duration: const Duration(days: 1),
+      content: Row(
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Theme.of(context).colorScheme.onInverseSurface,
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Text('Importing data...'),
         ],
       ),
     );
