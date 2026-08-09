@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:food_locker/core/where.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
@@ -109,6 +110,19 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// card's data. Empty (no meals, no snack bites) when the day has no bite.
   DayMealBreakdown get selectedBreakdown => _selectedBreakdown;
 
+  /// The weigh-in recorded on [selectedBreakdown]'s day, or null when that day
+  /// was not weighed.
+  ///
+  /// Keyed off the breakdown's day so it stays paired with the day the card is
+  /// rendering, which lags [selectedDay] while a [selectDay] is in flight.
+  /// Resolves against [dailyWeights], so a selection outside that window — one
+  /// a day picker could reach — would read null until the load widens.
+  Weight? get selectedWeight => _dailyWeights.firstWhereOrNull(
+    (w) =>
+        DateTime(w.date.year, w.date.month, w.date.day) ==
+        _selectedBreakdown.day,
+  );
+
   bool _isBreakdownLoading = false;
 
   /// Whether a [selectDay] re-query is in flight — lets the card show its own
@@ -117,7 +131,8 @@ class BiteAnalyticsController extends ChangeNotifier {
 
   /// Selects [day] for the breakdown card: normalises to local midnight, marks
   /// the card loading, re-queries [BiteAnalytics.breakdownForDay], and notifies.
-  /// The rest of the screen's metrics stay put — only the breakdown follows.
+  /// The rest of the screen's metrics stay put — only the breakdown and
+  /// [selectedWeight] follow.
   Future<void> selectDay(DateTime day) async {
     _selectedDay = DateTime(day.year, day.month, day.day);
     _isBreakdownLoading = true;

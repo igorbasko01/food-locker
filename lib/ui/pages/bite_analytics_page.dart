@@ -75,6 +75,7 @@ class _BiteAnalyticsPageState extends State<BiteAnalyticsPage> {
               ),
               _MealBreakdownCard(
                 breakdown: _controller.selectedBreakdown,
+                weight: _controller.selectedWeight,
                 isToday: _controller.isSelectedDayToday,
                 isLoading: _controller.isBreakdownLoading,
                 onBackToToday: () => _controller.selectDay(DateTime.now()),
@@ -268,12 +269,14 @@ class _MealsSummaryRow extends StatelessWidget {
 class _MealBreakdownCard extends StatelessWidget {
   const _MealBreakdownCard({
     required this.breakdown,
+    required this.weight,
     required this.isToday,
     required this.isLoading,
     required this.onBackToToday,
   });
 
   final DayMealBreakdown breakdown;
+  final Weight? weight;
   final bool isToday;
   final bool isLoading;
   final VoidCallback onBackToToday;
@@ -304,6 +307,7 @@ class _MealBreakdownCard extends StatelessWidget {
                   ),
               ],
             ),
+            _WeightLine(weight: weight),
             const SizedBox(height: 8),
             if (isLoading)
               const Padding(
@@ -314,6 +318,43 @@ class _MealBreakdownCard extends StatelessWidget {
               MealBreakdownList(breakdown: breakdown),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The breakdown card's body-weight line. An unweighed day keeps the line as a
+/// placeholder rather than dropping it, so the rows below don't shift.
+class _WeightLine extends StatelessWidget {
+  const _WeightLine({required this.weight});
+
+  final Weight? weight;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final value = weight;
+    final text = value == null
+        ? 'No weigh-in'
+        : '${value.value.toStringAsFixed(1)} ${value.unit.symbol}';
+    return Semantics(
+      label: value == null ? 'No weigh-in' : 'Weight $text',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Icon(
+            Icons.monitor_weight_outlined,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
