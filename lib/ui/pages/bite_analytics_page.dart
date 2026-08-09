@@ -263,10 +263,9 @@ class _MealsSummaryRow extends StatelessWidget {
 /// The selected day's meal breakdown, framed in a titled card matching the
 /// daily-bites card. Tapping a chart bar changes [breakdown]; the title follows
 /// the day — "Today's meals" for today, the locale date otherwise — with a
-/// "Back to today" action while browsing another day, and the day's body
-/// [weight] under the title. The [MealBreakdownList] carries its own empty
-/// state for a day with no bites, so the card is always shown once the log
-/// holds any bite at all.
+/// "Back to today" action while browsing another day. The [MealBreakdownList]
+/// carries its own empty state for a day with no bites, so the card is always
+/// shown once the log holds any bite at all.
 class _MealBreakdownCard extends StatelessWidget {
   const _MealBreakdownCard({
     required this.breakdown,
@@ -277,10 +276,7 @@ class _MealBreakdownCard extends StatelessWidget {
   });
 
   final DayMealBreakdown breakdown;
-
-  /// The day's weigh-in, or null when it was not weighed.
   final Weight? weight;
-
   final bool isToday;
   final bool isLoading;
   final VoidCallback onBackToToday;
@@ -327,10 +323,8 @@ class _MealBreakdownCard extends StatelessWidget {
   }
 }
 
-/// The body weight recorded on the breakdown card's day, or a placeholder when
-/// that day was not weighed — weigh-ins are optional and days without one are
-/// common, so the line always holds its place rather than shifting the rows
-/// below it.
+/// The breakdown card's body-weight line. An unweighed day keeps the line as a
+/// placeholder rather than dropping it, so the rows below don't shift.
 class _WeightLine extends StatelessWidget {
   const _WeightLine({required this.weight});
 

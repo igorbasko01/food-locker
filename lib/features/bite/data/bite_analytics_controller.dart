@@ -111,16 +111,12 @@ class BiteAnalyticsController extends ChangeNotifier {
   DayMealBreakdown get selectedBreakdown => _selectedBreakdown;
 
   /// The weigh-in recorded on [selectedBreakdown]'s day, or null when that day
-  /// was not weighed — the body weight shown alongside the breakdown card.
+  /// was not weighed.
   ///
-  /// Keyed off the breakdown's day, not [selectedDay], so it stays paired with
-  /// the day the card is actually rendering: while a [selectDay] is in flight
-  /// the card still shows the previous day's breakdown, and the weight holds
-  /// with it instead of jumping ahead.
-  ///
-  /// Read off [dailyWeights] rather than the repository: the selection always
-  /// lands inside that window, since it comes from a chart bar or "back to
-  /// today". A day picker reaching past the window would need a wider load.
+  /// Keyed off the breakdown's day so it stays paired with the day the card is
+  /// rendering, which lags [selectedDay] while a [selectDay] is in flight.
+  /// Resolves against [dailyWeights], so a selection outside that window — one
+  /// a day picker could reach — would read null until the load widens.
   Weight? get selectedWeight => _dailyWeights.firstWhereOrNull(
     (w) =>
         DateTime(w.date.year, w.date.month, w.date.day) ==
@@ -135,8 +131,8 @@ class BiteAnalyticsController extends ChangeNotifier {
 
   /// Selects [day] for the breakdown card: normalises to local midnight, marks
   /// the card loading, re-queries [BiteAnalytics.breakdownForDay], and notifies.
-  /// The rest of the screen's metrics stay put — only the breakdown, and the
-  /// [selectedWeight] riding on it, follow.
+  /// The rest of the screen's metrics stay put — only the breakdown and
+  /// [selectedWeight] follow.
   Future<void> selectDay(DateTime day) async {
     _selectedDay = DateTime(day.year, day.month, day.day);
     _isBreakdownLoading = true;
