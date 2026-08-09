@@ -87,7 +87,6 @@ class _SettingsPageState extends State<SettingsPage> {
         },
       );
       if (progressShown) messenger.removeCurrentSnackBar();
-      // A dismissed file picker imported nothing, so it gets no toast at all.
       if (imported) {
         messenger.showSnackBar(
           const SnackBar(content: Text('Data imported successfully')),
@@ -101,8 +100,8 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  /// Stays up until [_importData] removes it, since the restore has no
-  /// predictable duration.
+  /// The restore has no predictable length, so this stays up until
+  /// [_importData] removes it.
   SnackBar _importingSnackBar() {
     return SnackBar(
       duration: const Duration(days: 1),

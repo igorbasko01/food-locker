@@ -80,13 +80,12 @@ class SerializationService {
     );
   }
 
-  /// Returns whether a backup was actually restored — `false` means the user
-  /// dismissed the file picker, which is not an import and must not be
-  /// reported as one.
+  /// Returns whether a backup was actually restored — `false` means the file
+  /// picker was dismissed, which callers must not report as an import.
   ///
   /// [onRestoreStart] fires once a file is chosen and the restore is about to
-  /// begin, so callers can surface progress for the part that takes time
-  /// without leaving a message on screen while the picker is still open.
+  /// begin, so callers can show progress without leaving a message on screen
+  /// while the picker is still open.
   Future<bool> importData(BuildContext context, {VoidCallback? onRestoreStart}) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();

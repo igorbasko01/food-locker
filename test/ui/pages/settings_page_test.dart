@@ -6,8 +6,8 @@ import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
-/// Import feedback on [SettingsPage]: the restore reports itself while it runs,
-/// and only a real import reports success.
+/// Import feedback on [SettingsPage]: a running restore says so, and only a
+/// real import reports success.
 void main() {
   Future<void> pumpPage(WidgetTester tester, SerializationService service) {
     return tester.pumpWidget(
@@ -71,9 +71,8 @@ void main() {
   });
 }
 
-/// Stands in for the real import so the page's feedback can be driven without a
-/// file picker: [finishRestore] / [failRestore] decide when — and how — the
-/// restore ends.
+/// Replaces the file picker and the restore, holding the import open until
+/// [finishRestore] or [failRestore] ends it.
 class _FakeSerializationService extends SerializationService {
   _FakeSerializationService({this.cancelled = false});
 
