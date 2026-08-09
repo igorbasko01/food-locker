@@ -230,6 +230,8 @@ void main() {
     expect(find.text('15 bites'), findsOneWidget);
     expect(find.text('Snacks'), findsOneWidget);
     expect(find.text('5 bites'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
+    expect(find.text('32 bites'), findsOneWidget);
   });
 
   testWidgets('meal breakdown card shows its empty state when today is empty '
@@ -311,7 +313,8 @@ void main() {
     // back control.
     expect(find.text('Today\'s meals'), findsOneWidget);
     expect(find.text('Back to today'), findsNothing);
-    expect(find.text('12 bites'), findsOneWidget);
+    // The meal row and the day's total, which the lone meal accounts for.
+    expect(find.text('12 bites'), findsNWidgets(2));
 
     // Tap yesterday's bar → card follows it: back control appears, the today
     // title is gone, and yesterday's 20-bite meal shows.
@@ -320,7 +323,7 @@ void main() {
 
     expect(find.text('Today\'s meals'), findsNothing);
     expect(find.text('Back to today'), findsOneWidget);
-    expect(find.text('20 bites'), findsOneWidget);
+    expect(find.text('20 bites'), findsNWidgets(2));
 
     // Back to today resets the card.
     await tester.tap(find.text('Back to today'));
@@ -328,6 +331,6 @@ void main() {
 
     expect(find.text('Today\'s meals'), findsOneWidget);
     expect(find.text('Back to today'), findsNothing);
-    expect(find.text('12 bites'), findsOneWidget);
+    expect(find.text('12 bites'), findsNWidgets(2));
   });
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 
 /// The meal-by-meal breakdown of a single day: one row per meal with its bite
-/// count and time span, plus a trailing row for the day's snack total (every
-/// bite outside a qualifying meal).
+/// count and time span, a row for the day's snack total (every bite outside a
+/// qualifying meal), and a summary line with the day's total bites.
 ///
 /// A read-only projection of [DayMealBreakdown]. When the day has no bites yet
 /// — no meals and no snacks — it shows an empty state instead of blank rows.
@@ -27,6 +27,8 @@ class MealBreakdownList extends StatelessWidget {
         for (var i = 0; i < meals.length; i++)
           _MealRow(index: i + 1, meal: meals[i]),
         _SnackRow(bites: breakdown.snackBites),
+        const Divider(height: 1),
+        _TotalRow(bites: breakdown.totalBites),
       ],
     );
   }
@@ -109,6 +111,43 @@ class _SnackRow extends StatelessWidget {
               '$bites bites',
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Every bite logged on the day, meals and snacks together.
+class _TotalRow extends StatelessWidget {
+  const _TotalRow({required this.bites});
+
+  final int bites;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      label: 'Total, $bites bites',
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Total',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              '$bites bites',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
               ),
             ),
           ],
