@@ -37,6 +37,14 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Set only by the Build Test APK workflow, so a test build installs
+        // alongside the production app instead of replacing it.
+        val appIdSuffix = System.getenv("APP_ID_SUFFIX").orEmpty()
+        if (appIdSuffix.isNotEmpty()) {
+            applicationIdSuffix = appIdSuffix
+        }
+        manifestPlaceholders["appLabel"] = System.getenv("APP_LABEL") ?: "FoodLocker"
     }
 
     signingConfigs {
