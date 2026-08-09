@@ -10,7 +10,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _importing = false;
+  bool _busy = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,30 +34,15 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               children: [
                 ListTile(
-                  enabled: !_importing,
+                  enabled: !_busy,
                   leading: Icon(Icons.download, color: theme.colorScheme.primary),
                   title: const Text('Export Data', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Save your weight history data into a zip file.'),
-                  onTap: () async {
-                    try {
-                      await context.read<SerializationService>().exportData(context);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Data exported successfully')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
-                      }
-                    }
-                  },
+                  onTap: _exportData,
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  enabled: !_importing,
+                  enabled: !_busy,
                   leading: Icon(Icons.upload, color: theme.colorScheme.primary),
                   title: const Text('Import Data', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Restore your weight history data from a zip file.'),
@@ -71,6 +56,32 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _exportData() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final service = context.read<SerializationService>();
+
+    setState(() => _busy = true);
+    messenger.showSnackBar(_progressSnackBar('Exporting data...'));
+
+    try {
+      final exported = await service.exportData(
+        context,
+        onShareReady: messenger.removeCurrentSnackBar,
+      );
+      messenger.removeCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(exported ? 'Data exported successfully' : 'No data to export'),
+        ),
+      );
+    } catch (e) {
+      messenger.removeCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _importData() async {
     final messenger = ScaffoldMessenger.of(context);
     final service = context.read<SerializationService>();
@@ -80,12 +91,13 @@ class _SettingsPageState extends State<SettingsPage> {
       final imported = await service.importData(
         context,
         onRestoreStart: () {
-          if (!mounted) return;
           progressShown = true;
-          setState(() => _importing = true);
-          messenger.showSnackBar(_importingSnackBar());
+          messenger.showSnackBar(_progressSnackBar('Importing data...'));
+          if (mounted) setState(() => _busy = true);
         },
       );
+      // Only clear a toast this call put up: a dismissed picker shows none, and
+      // removing unconditionally would cut short whatever else is on screen.
       if (progressShown) messenger.removeCurrentSnackBar();
       if (imported) {
         messenger.showSnackBar(
@@ -96,30 +108,8 @@ class _SettingsPageState extends State<SettingsPage> {
       if (progressShown) messenger.removeCurrentSnackBar();
       messenger.showSnackBar(SnackBar(content: Text('Import failed: $e')));
     } finally {
-      if (mounted) setState(() => _importing = false);
+      if (mounted) setState(() => _busy = false);
     }
-  }
-
-  /// The restore has no predictable length, so this stays up until
-  /// [_importData] removes it.
-  SnackBar _importingSnackBar() {
-    return SnackBar(
-      duration: const Duration(days: 1),
-      content: Row(
-        children: [
-          SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Theme.of(context).colorScheme.onInverseSurface,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Text('Importing data...'),
-        ],
-      ),
-    );
   }
 
   Widget _buildHeader(ThemeData theme, String title) {
@@ -134,4 +124,30 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+}
+
+/// Export and restore have no predictable length, so this stays up until the
+/// caller removes it. The [Builder] reads the theme from the snackbar's own
+/// context, keeping the spinner legible on the inverse-surface background
+/// without depending on the page still being mounted.
+SnackBar _progressSnackBar(String message) {
+  return SnackBar(
+    duration: const Duration(days: 1),
+    content: Builder(
+      builder: (context) => Row(
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Theme.of(context).colorScheme.onInverseSurface,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(message),
+        ],
+      ),
+    ),
+  );
 }

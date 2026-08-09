@@ -28,14 +28,21 @@ class SerializationService {
 
   SerializationService();
 
-  Future<void> exportData(BuildContext context) async {
+  /// Returns whether there was anything to export — `false` means both stores
+  /// were empty and no file was produced, which callers must not report as a
+  /// completed export.
+  ///
+  /// [onShareReady] fires once the zip is written and the share sheet is about
+  /// to open, so callers can clear any progress indication before the sheet
+  /// covers it.
+  Future<bool> exportData(BuildContext context, {VoidCallback? onShareReady}) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
 
     final weights = weightRepo.getAllWeights();
     final bites = await _allBites(biteRepo);
 
-    if (weights.isEmpty && bites.isEmpty) return;
+    if (weights.isEmpty && bites.isEmpty) return false;
 
     // Pacing config rides along with real data rather than gating the export:
     // the default is always seeded, so it never on its own makes a backup
@@ -48,8 +55,11 @@ class SerializationService {
     final zipFile = File('${tempDir.path}/${generateZipFileName()}');
     await zipFile.writeAsBytes(zipData);
 
+    onShareReady?.call();
+
     // ignore: deprecated_member_use
     await Share.shareXFiles([XFile(zipFile.path)], text: 'Food Locker Backup');
+    return true;
   }
 
   /// Packs every dataset into a single backup zip — weights, bites, and the
