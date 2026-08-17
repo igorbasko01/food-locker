@@ -4,6 +4,7 @@ import 'package:food_locker/features/weight/data/in_memory_weight_repository.dar
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
 import 'package:food_locker/ui/theme.dart';
+import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
 
@@ -66,6 +67,33 @@ void main() {
     expect(find.text('71.0 kg'), findsOneWidget);
     expect(find.text(_dateLabel(oldDay)), findsNothing);
     expect(find.text('73.0 kg'), findsNothing);
+  });
+
+  testWidgets('picking a wider range reveals older entries', (tester) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastMonth = DateTime(today.year, today.month, today.day - 20);
+
+    await manager.addWeight(lastMonth, 73.0);
+
+    await pumpPage(tester, manager);
+
+    // The default range hides it, and the empty state names that range.
+    expect(find.text('Last 7 days'), findsOneWidget);
+    expect(
+      find.text('No weight entries in the last 7 days. Tap + to log your weight.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byType(HistoryRangeSelector));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Last 30 days').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text(_dateLabel(lastMonth)), findsOneWidget);
+    expect(find.text('73.0 kg'), findsOneWidget);
+    expect(manager.historyRange, HistoryRange.month);
   });
 
   testWidgets('shows the empty-state placeholder when a stat is missing', (

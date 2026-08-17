@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:food_locker/features/weight/data/history_range.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 
+export 'package:food_locker/features/weight/data/history_range.dart'
+    show HistoryRange;
 export 'package:food_locker/features/weight/data/weight_analytics.dart'
     show StreakType, OvereatingStats;
 
@@ -11,11 +14,8 @@ class WeightManager extends ChangeNotifier {
   final WeightAnalytics _analytics;
 
   // TODO: Add pagination for weight history loading to handle large datasets efficiently.
-
-  /// How many calendar days of weigh-ins [history] holds, today included.
-  static const historyDays = 7;
-
   List<Weight> _weights = [];
+  HistoryRange _historyRange = HistoryRange.week;
 
   WeightManager(this._weightRepository)
     : _analytics = WeightAnalytics(_weightRepository);
@@ -25,17 +25,27 @@ class WeightManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The last [historyDays] calendar days, newest first.
+  /// How far back [history] reaches.
+  HistoryRange get historyRange => _historyRange;
+
+  /// The weigh-ins inside [historyRange], newest first.
   List<Weight> get history {
     final sortedWeights = List<Weight>.from(_weights);
     sortedWeights.sort((a, b) => b.date.compareTo(a.date));
     return sortedWeights;
   }
 
+  void selectHistoryRange(HistoryRange range) {
+    if (range == _historyRange) return;
+    _historyRange = range;
+    _loadHistory();
+    notifyListeners();
+  }
+
   void _loadHistory() {
-    final now = DateTime.now();
-    final since = DateTime(now.year, now.month, now.day - (historyDays - 1));
-    _weights = _weightRepository.getWeightsSince(since);
+    _weights = _weightRepository.getWeightsSince(
+      _historyRange.startingFrom(DateTime.now()),
+    );
   }
 
   Future<void> addWeight(

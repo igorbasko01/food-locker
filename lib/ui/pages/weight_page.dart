@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
+import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:food_locker/ui/widgets/weight_chart.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +15,7 @@ class WeightPage extends StatelessWidget {
     return Consumer<WeightManager>(
       builder: (context, weightManager, child) {
         final history = weightManager.history;
+        final range = weightManager.historyRange;
 
         return Scaffold(
           floatingActionButton: FloatingActionButton(
@@ -48,24 +50,36 @@ class WeightPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
-                  child: Text(
-                    'History (Last 7 Days)',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'History',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      HistoryRangeSelector(
+                        selected: range,
+                        onSelected: weightManager.selectHistoryRange,
+                      ),
+                    ],
                   ),
                 ),
               ),
               if (history.isEmpty)
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.all(32.0),
+                    padding: const EdgeInsets.all(32.0),
                     child: Center(
-                      child: Text('No weight entries in the last 7 days. Tap + to log your weight.'),
+                      child: Text(
+                        'No weight entries in the ${range.label.toLowerCase()}. '
+                        'Tap + to log your weight.',
+                      ),
                     ),
                   ),
                 )

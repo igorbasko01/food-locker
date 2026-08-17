@@ -92,6 +92,56 @@ void main() {
         expect(manager.history, isEmpty);
       });
 
+      test('starts on the 7-day range', () {
+        expect(manager.historyRange, HistoryRange.week);
+      });
+
+      test('selecting a wider range brings older entries back', () async {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        await manager.addWeight(today, 75.0);
+        await manager.addWeight(
+          DateTime(today.year, today.month, today.day - 20),
+          78.0,
+        );
+
+        expect(manager.history.map((w) => w.value), [75.0]);
+
+        var notified = 0;
+        manager.addListener(() => notified++);
+        manager.selectHistoryRange(HistoryRange.month);
+
+        expect(manager.historyRange, HistoryRange.month);
+        expect(manager.history.map((w) => w.value), [75.0, 78.0]);
+        expect(notified, 1);
+      });
+
+      test('selecting a narrower range drops the entries outside it', () async {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        manager.selectHistoryRange(HistoryRange.year);
+        await manager.addWeight(today, 75.0);
+        await manager.addWeight(
+          DateTime(today.year, today.month - 3, today.day),
+          79.0,
+        );
+
+        expect(manager.history, hasLength(2));
+
+        manager.selectHistoryRange(HistoryRange.week);
+
+        expect(manager.history.map((w) => w.value), [75.0]);
+      });
+
+      test('re-selecting the current range does not notify', () {
+        var notified = 0;
+        manager.addListener(() => notified++);
+
+        manager.selectHistoryRange(HistoryRange.week);
+
+        expect(notified, 0);
+      });
+
       test('initialize loads the window from the repository', () async {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
