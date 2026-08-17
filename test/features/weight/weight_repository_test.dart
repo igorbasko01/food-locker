@@ -121,6 +121,23 @@ void main() {
       expect(values, {71.0, 72.0});
     });
 
+    test('getWeightsSince returns the weigh-ins newest first', () async {
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 10), value: 71.0));
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 14), value: 74.0));
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 12), value: 72.0));
+
+      final dates = repository
+          .getWeightsSince(DateTime(2023, 5, 10))
+          .map((w) => w.date)
+          .toList();
+
+      expect(dates, [
+        DateTime(2023, 5, 14),
+        DateTime(2023, 5, 12),
+        DateTime(2023, 5, 10),
+      ]);
+    });
+
     test('getWeightsSince is empty when every weigh-in predates it', () async {
       await repository.saveWeight(Weight(date: DateTime(2023, 5, 1), value: 70.0));
 

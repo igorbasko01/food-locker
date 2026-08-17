@@ -10,7 +10,7 @@ abstract class WeightRepository {
   /// Empty when the range holds none.
   List<Weight> getWeightsInRange(DateTime from, DateTime to);
 
-  /// Weigh-ins on or after [since]'s calendar day, in no particular order.
+  /// Weigh-ins on or after [since]'s calendar day, newest first.
   /// Unbounded at the top, so future-dated weigh-ins are included.
   List<Weight> getWeightsSince(DateTime since);
 
@@ -89,10 +89,12 @@ mixin WeightRepositoryHelper implements WeightRepository {
   @override
   List<Weight> getWeightsSince(DateTime since) {
     final sinceDay = DateTime(since.year, since.month, since.day);
-    return getAllWeights().where((w) {
+    final weights = getAllWeights().where((w) {
       final day = DateTime(w.date.year, w.date.month, w.date.day);
       return !day.isBefore(sinceDay);
     }).toList();
+    weights.sort((a, b) => b.date.compareTo(a.date));
+    return weights;
   }
 
   @override

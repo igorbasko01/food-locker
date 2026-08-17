@@ -21,8 +21,7 @@ class WeightManager extends ChangeNotifier {
     : _analytics = WeightAnalytics(_weightRepository);
 
   Future<void> initialize() async {
-    _loadHistory();
-    notifyListeners();
+    _reloadHistory();
   }
 
   /// How far back [history] reaches.
@@ -30,30 +29,31 @@ class WeightManager extends ChangeNotifier {
 
   /// The weigh-ins inside [historyRange], newest first.
   ///
-  /// The window edge is re-checked here rather than trusted from load time: the
-  /// repository query has no upper bound, so [_weights] stays a *superset* of
-  /// the range as the clock moves on, and an app left open across midnight
-  /// would otherwise keep showing the day that just fell out of range.
+  /// Already ordered by the repository, so reading is one in-range pass. The
+  /// range is re-checked here rather than trusted from load time: the query has
+  /// no upper bound, so [_weights] stays a *superset* of the range as the clock
+  /// moves on, and an app left open across midnight would otherwise keep
+  /// listing the day that just fell out of range.
   List<Weight> get history {
     final now = DateTime.now();
-    final sortedWeights = _weights
-        .where((weight) => _historyRange.includes(weight.date, now: now))
-        .toList();
-    sortedWeights.sort((a, b) => b.date.compareTo(a.date));
-    return sortedWeights;
+    return _weights
+        .where((weight) => _historyRange.covers(weight.date, asOf: now))
+        .toList(growable: false);
   }
 
   void selectHistoryRange(HistoryRange range) {
     if (range == _historyRange) return;
     _historyRange = range;
-    _loadHistory();
-    notifyListeners();
+    _reloadHistory();
   }
 
-  void _loadHistory() {
+  /// Reloads the window and notifies in one step, so no mutation path can load
+  /// without telling the UI.
+  void _reloadHistory() {
     _weights = _weightRepository.getWeightsSince(
-      _historyRange.startingFrom(DateTime.now()),
+      _historyRange.oldestDay(asOf: DateTime.now()),
     );
+    notifyListeners();
   }
 
   Future<void> addWeight(
@@ -64,8 +64,7 @@ class WeightManager extends ChangeNotifier {
     final entry = Weight(date: date, value: value, unit: unit);
     await _weightRepository.saveWeight(entry);
 
-    _loadHistory();
-    notifyListeners();
+    _reloadHistory();
   }
 
   Future<void> updateWeight(
@@ -84,15 +83,13 @@ class WeightManager extends ChangeNotifier {
     final entry = Weight(date: newDate, value: newValue, unit: unit);
     await _weightRepository.saveWeight(entry);
 
-    _loadHistory();
-    notifyListeners();
+    _reloadHistory();
   }
 
   Future<void> deleteWeight(DateTime date) async {
     await _weightRepository.deleteWeight(date);
 
-    _loadHistory();
-    notifyListeners();
+    _reloadHistory();
   }
 
   Weight? getWeightForDate(DateTime date) =>
