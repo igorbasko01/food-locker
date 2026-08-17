@@ -32,6 +32,42 @@ void main() {
       );
     });
 
+    test('includes the boundary day but not the one before it', () {
+      final now = DateTime(2024, 5, 20);
+
+      expect(
+        HistoryRange.week.includes(DateTime(2024, 5, 14, 8, 15), now: now),
+        isTrue,
+      );
+      expect(HistoryRange.week.includes(DateTime(2024, 5, 13), now: now), isFalse);
+      expect(HistoryRange.week.includes(DateTime(2024, 5, 20), now: now), isTrue);
+    });
+
+    test('includes days past today, so a future weigh-in stays visible', () {
+      expect(
+        HistoryRange.week.includes(
+          DateTime(2024, 6, 1),
+          now: DateTime(2024, 5, 20),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a range loaded yesterday drops the day that fell out overnight', () {
+      // The list was loaded on the 20th; by the 21st the 14th is out of range
+      // even though it is still in the loaded window.
+      final loadedDay = DateTime(2024, 5, 14);
+
+      expect(
+        HistoryRange.week.includes(loadedDay, now: DateTime(2024, 5, 20)),
+        isTrue,
+      );
+      expect(
+        HistoryRange.week.includes(loadedDay, now: DateTime(2024, 5, 21)),
+        isFalse,
+      );
+    });
+
     test('every range reaches strictly further back than the shorter ones', () {
       final now = DateTime(2024, 5, 20);
       final starts = HistoryRange.values

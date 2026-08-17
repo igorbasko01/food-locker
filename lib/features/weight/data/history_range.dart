@@ -25,4 +25,10 @@ enum HistoryRange {
       HistoryRange.year => DateTime(today.year - 1, today.month, today.day),
     };
   }
+
+  /// Whether [date]'s calendar day is inside this range as of [now].
+  bool includes(DateTime date, {required DateTime now}) {
+    final day = DateTime(date.year, date.month, date.day);
+    return !day.isBefore(startingFrom(now));
+  }
 }

@@ -29,8 +29,16 @@ class WeightManager extends ChangeNotifier {
   HistoryRange get historyRange => _historyRange;
 
   /// The weigh-ins inside [historyRange], newest first.
+  ///
+  /// The window edge is re-checked here rather than trusted from load time: the
+  /// repository query has no upper bound, so [_weights] stays a *superset* of
+  /// the range as the clock moves on, and an app left open across midnight
+  /// would otherwise keep showing the day that just fell out of range.
   List<Weight> get history {
-    final sortedWeights = List<Weight>.from(_weights);
+    final now = DateTime.now();
+    final sortedWeights = _weights
+        .where((weight) => _historyRange.includes(weight.date, now: now))
+        .toList();
     sortedWeights.sort((a, b) => b.date.compareTo(a.date));
     return sortedWeights;
   }
