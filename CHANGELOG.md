@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.17.0](https://github.com/igorbasko01/food-locker/compare/v1.16.1...v1.17.0) (2026-08-17)
+
+
+### Features
+
+* add side-by-side test APK build workflow ([#95](https://github.com/igorbasko01/food-locker/issues/95)) ([333ac71](https://github.com/igorbasko01/food-locker/commit/333ac7173ae5363122877a057889a0b5c8584643))
+* show a progress toast while importing or exporting a backup ([#96](https://github.com/igorbasko01/food-locker/issues/96)) ([f395723](https://github.com/igorbasko01/food-locker/commit/f395723d58aec310ab192713c30f4f887761ba5d))
+* show the day's total bites in the meal breakdown ([#94](https://github.com/igorbasko01/food-locker/issues/94)) ([a4ddcb7](https://github.com/igorbasko01/food-locker/commit/a4ddcb7eff1593f377523975b1c6472a24bcbac7))
+* show the selected day's body weight on bite analytics ([#93](https://github.com/igorbasko01/food-locker/issues/93)) ([7095b0a](https://github.com/igorbasko01/food-locker/commit/7095b0a23faa30705215c76b86011eb94244c063))
+
+
+### Bug Fixes
+
+* refresh bite tab count and current meal on tab switch and resume ([#91](https://github.com/igorbasko01/food-locker/issues/91)) ([1458a52](https://github.com/igorbasko01/food-locker/commit/1458a52d69f482ffbab2c565d08995c8ecf1a7cb))
+
 ## [1.16.1](https://github.com/igorbasko01/food-locker/compare/v1.16.0...v1.16.1) (2026-07-17)
 
 
