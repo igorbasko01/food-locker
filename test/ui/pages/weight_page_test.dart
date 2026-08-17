@@ -13,6 +13,14 @@ String _dateLabel(DateTime date) =>
 
 void main() {
   Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
+    // The chart takes a 1.5 aspect ratio of the full width, so on the default
+    // 800x600 surface the heading and the history list fall below the fold and
+    // never get built. Give the page a tall viewport instead of scrolling.
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
