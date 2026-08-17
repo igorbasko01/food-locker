@@ -50,9 +50,7 @@ class WeightManager extends ChangeNotifier {
   /// Reloads the window and notifies in one step, so no mutation path can load
   /// without telling the UI.
   void _reloadHistory() {
-    _weights = _weightRepository.getWeightsSince(
-      _historyRange.oldestDay(asOf: DateTime.now()),
-    );
+    _weights = _weightRepository.getWeightsSince(_historyRange.oldestDay());
     notifyListeners();
   }
 

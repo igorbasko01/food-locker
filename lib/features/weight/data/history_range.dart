@@ -3,8 +3,8 @@
 /// A range is only ever a *start day*: it has no upper bound, so a weigh-in
 /// dated in the future stays visible whichever range is picked.
 ///
-/// Both methods take the current time as an argument rather than reading the
-/// clock, so a range resolves to the same days under test as it does in the app.
+/// Both methods default to the current time and take [asOf] as an override, so
+/// callers stay short while tests can pin the clock and assert exact days.
 enum HistoryRange {
   week,
   month,
@@ -12,14 +12,16 @@ enum HistoryRange {
   halfYear,
   year;
 
-  /// The oldest calendar day this range covers, counting back from [asOf]'s day.
+  /// The oldest calendar day this range covers, counting back from [asOf]'s day
+  /// — today's when [asOf] is null.
   ///
   /// Day counts are inclusive of that day — [week] reaches 6 days back, so it
   /// spans 7 days. The two long ranges step by calendar month/year rather than
   /// by a fixed day count, so they land on the same day of the month regardless
   /// of month lengths and leap days.
-  DateTime oldestDay({required DateTime asOf}) {
-    final today = DateTime(asOf.year, asOf.month, asOf.day);
+  DateTime oldestDay({DateTime? asOf}) {
+    final on = asOf ?? DateTime.now();
+    final today = DateTime(on.year, on.month, on.day);
     return switch (this) {
       HistoryRange.week => DateTime(today.year, today.month, today.day - 6),
       HistoryRange.month => DateTime(today.year, today.month, today.day - 29),
@@ -29,8 +31,12 @@ enum HistoryRange {
     };
   }
 
-  /// Whether [date]'s calendar day is covered by this range as of [asOf].
-  bool covers(DateTime date, {required DateTime asOf}) {
+  /// Whether [date]'s calendar day is covered by this range as of [asOf] —
+  /// as of now when [asOf] is null.
+  ///
+  /// Pass [asOf] when judging a batch of dates, so they are all measured
+  /// against one instant rather than each re-reading the clock.
+  bool covers(DateTime date, {DateTime? asOf}) {
     final day = DateTime(date.year, date.month, date.day);
     return !day.isBefore(oldestDay(asOf: asOf));
   }

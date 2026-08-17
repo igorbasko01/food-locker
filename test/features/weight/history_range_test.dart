@@ -46,6 +46,31 @@ void main() {
     });
   });
 
+  group('HistoryRange without an asOf', () {
+    test('oldestDay counts back from today', () {
+      final now = DateTime.now();
+
+      expect(
+        HistoryRange.week.oldestDay(),
+        DateTime(now.year, now.month, now.day - 6),
+      );
+    });
+
+    test('covers measures against today', () {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      expect(
+        HistoryRange.week.covers(DateTime(today.year, today.month, today.day - 6)),
+        isTrue,
+      );
+      expect(
+        HistoryRange.week.covers(DateTime(today.year, today.month, today.day - 7)),
+        isFalse,
+      );
+    });
+  });
+
   group('HistoryRange.covers', () {
     test('covers the boundary day but not the one before it', () {
       final now = DateTime(2024, 5, 20);
