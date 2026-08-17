@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 
 void main() {
   group('WeightManager Statistics', () {
@@ -54,9 +55,9 @@ void main() {
       expect(manager.lowestAllTime, 65.0);
     });
 
-    group('historyLast7Days', () {
+    group('history', () {
       test('is empty when nothing is logged', () {
-        expect(manager.historyLast7Days, isEmpty);
+        expect(manager.history, isEmpty);
       });
 
       test('keeps the 7 calendar days ending today, newest first', () async {
@@ -70,15 +71,15 @@ void main() {
           );
         }
 
-        final recent = manager.historyLast7Days;
+        final history = manager.history;
 
-        expect(recent.length, 7);
-        expect(recent.first.value, 80.0);
-        expect(recent.last.value, 86.0);
-        expect(manager.history.length, 9);
+        expect(history.length, 7);
+        expect(history.first.value, 80.0);
+        expect(history.last.value, 86.0);
+        expect(repository.getAllWeights().length, 9);
       });
 
-      test('excludes entries older than the window even when history is full', () async {
+      test('drops entries older than the window', () async {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
 
@@ -87,8 +88,24 @@ void main() {
           90.0,
         );
 
-        expect(manager.history, hasLength(1));
-        expect(manager.historyLast7Days, isEmpty);
+        expect(repository.getAllWeights(), hasLength(1));
+        expect(manager.history, isEmpty);
+      });
+
+      test('initialize loads the window from the repository', () async {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        await repository.saveWeight(Weight(date: today, value: 75.0));
+        await repository.saveWeight(
+          Weight(
+            date: DateTime(today.year, today.month, today.day - 10),
+            value: 78.0,
+          ),
+        );
+
+        await manager.initialize();
+
+        expect(manager.history.map((w) => w.value), [75.0]);
       });
     });
 

@@ -14,7 +14,6 @@ class WeightPage extends StatelessWidget {
     return Consumer<WeightManager>(
       builder: (context, weightManager, child) {
         final history = weightManager.history;
-        final recentHistory = weightManager.historyLast7Days;
 
         return Scaffold(
           floatingActionButton: FloatingActionButton(
@@ -61,16 +60,12 @@ class WeightPage extends StatelessWidget {
                   ),
                 ),
               ),
-              if (recentHistory.isEmpty)
-                SliverToBoxAdapter(
+              if (history.isEmpty)
+                const SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(32.0),
+                    padding: EdgeInsets.all(32.0),
                     child: Center(
-                      child: Text(
-                        history.isEmpty
-                            ? 'No weight entries yet. Tap + to log your weight.'
-                            : 'No weight entries in the last 7 days.',
-                      ),
+                      child: Text('No weight entries in the last 7 days. Tap + to log your weight.'),
                     ),
                   ),
                 )
@@ -78,7 +73,7 @@ class WeightPage extends StatelessWidget {
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final item = recentHistory[index];
+                      final item = history[index];
                       // Format date nicely
                       final dateStr = '${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}';
 
@@ -118,7 +113,7 @@ class WeightPage extends StatelessWidget {
                         ),
                       );
                     },
-                    childCount: recentHistory.length,
+                    childCount: history.length,
                   ),
                 ),
               const SliverToBoxAdapter(

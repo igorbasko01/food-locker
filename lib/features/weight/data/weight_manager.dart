@@ -11,30 +11,31 @@ class WeightManager extends ChangeNotifier {
   final WeightAnalytics _analytics;
 
   // TODO: Add pagination for weight history loading to handle large datasets efficiently.
+
+  /// How many calendar days of weigh-ins [history] holds, today included.
+  static const historyDays = 7;
+
   List<Weight> _weights = [];
 
   WeightManager(this._weightRepository)
     : _analytics = WeightAnalytics(_weightRepository);
 
   Future<void> initialize() async {
-    _weights = _weightRepository.getAllWeights();
+    _loadHistory();
     notifyListeners();
   }
 
+  /// The last [historyDays] calendar days, newest first.
   List<Weight> get history {
     final sortedWeights = List<Weight>.from(_weights);
     sortedWeights.sort((a, b) => b.date.compareTo(a.date));
     return sortedWeights;
   }
 
-  /// The last 7 calendar days, today included, newest first.
-  List<Weight> get historyLast7Days {
+  void _loadHistory() {
     final now = DateTime.now();
-    final cutoff = DateTime(now.year, now.month, now.day - 6);
-    return history.where((weight) {
-      final day = DateTime(weight.date.year, weight.date.month, weight.date.day);
-      return !day.isBefore(cutoff);
-    }).toList();
+    final since = DateTime(now.year, now.month, now.day - (historyDays - 1));
+    _weights = _weightRepository.getWeightsSince(since);
   }
 
   Future<void> addWeight(
@@ -45,8 +46,7 @@ class WeightManager extends ChangeNotifier {
     final entry = Weight(date: date, value: value, unit: unit);
     await _weightRepository.saveWeight(entry);
 
-    // Refresh from repository to ensure consistency
-    _weights = _weightRepository.getAllWeights();
+    _loadHistory();
     notifyListeners();
   }
 
@@ -66,16 +66,14 @@ class WeightManager extends ChangeNotifier {
     final entry = Weight(date: newDate, value: newValue, unit: unit);
     await _weightRepository.saveWeight(entry);
 
-    // Refresh from repository to ensure consistency
-    _weights = _weightRepository.getAllWeights();
+    _loadHistory();
     notifyListeners();
   }
 
   Future<void> deleteWeight(DateTime date) async {
     await _weightRepository.deleteWeight(date);
 
-    // Refresh from repository to ensure consistency
-    _weights = _weightRepository.getAllWeights();
+    _loadHistory();
     notifyListeners();
   }
 

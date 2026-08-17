@@ -68,22 +68,6 @@ void main() {
     expect(find.text('73.0 kg'), findsNothing);
   });
 
-  testWidgets('tells the user when nothing was logged in the last 7 days', (
-    tester,
-  ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
-    final now = DateTime.now();
-    await manager.addWeight(now.subtract(const Duration(days: 30)), 73.0);
-
-    await pumpPage(tester, manager);
-
-    expect(find.text('No weight entries in the last 7 days.'), findsOneWidget);
-    expect(
-      find.text('No weight entries yet. Tap + to log your weight.'),
-      findsNothing,
-    );
-  });
-
   testWidgets('shows the empty-state placeholder when a stat is missing', (
     tester,
   ) async {
