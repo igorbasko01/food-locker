@@ -54,6 +54,44 @@ void main() {
       expect(manager.lowestAllTime, 65.0);
     });
 
+    group('historyLast7Days', () {
+      test('is empty when nothing is logged', () {
+        expect(manager.historyLast7Days, isEmpty);
+      });
+
+      test('keeps the 7 calendar days ending today, newest first', () async {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        for (var daysAgo = 0; daysAgo <= 8; daysAgo++) {
+          await manager.addWeight(
+            DateTime(today.year, today.month, today.day - daysAgo),
+            80.0 + daysAgo,
+          );
+        }
+
+        final recent = manager.historyLast7Days;
+
+        expect(recent.length, 7);
+        expect(recent.first.value, 80.0);
+        expect(recent.last.value, 86.0);
+        expect(manager.history.length, 9);
+      });
+
+      test('excludes entries older than the window even when history is full', () async {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        await manager.addWeight(
+          DateTime(today.year, today.month, today.day - 30),
+          90.0,
+        );
+
+        expect(manager.history, hasLength(1));
+        expect(manager.historyLast7Days, isEmpty);
+      });
+    });
+
     group('WeightManager Overeating & Streak Stats', () {
       test('continuous weight loss increases clean streak', () async {
         final today = DateTime.now();

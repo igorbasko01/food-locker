@@ -27,6 +27,16 @@ class WeightManager extends ChangeNotifier {
     return sortedWeights;
   }
 
+  /// The last 7 calendar days, today included, newest first.
+  List<Weight> get historyLast7Days {
+    final now = DateTime.now();
+    final cutoff = DateTime(now.year, now.month, now.day - 6);
+    return history.where((weight) {
+      final day = DateTime(weight.date.year, weight.date.month, weight.date.day);
+      return !day.isBefore(cutoff);
+    }).toList();
+  }
+
   Future<void> addWeight(
     DateTime date,
     double value, {

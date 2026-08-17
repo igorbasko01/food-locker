@@ -14,6 +14,7 @@ class WeightPage extends StatelessWidget {
     return Consumer<WeightManager>(
       builder: (context, weightManager, child) {
         final history = weightManager.history;
+        final recentHistory = weightManager.historyLast7Days;
 
         return Scaffold(
           floatingActionButton: FloatingActionButton(
@@ -52,7 +53,7 @@ class WeightPage extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
                   child: Text(
-                    'History',
+                    'History (Last 7 Days)',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -60,12 +61,16 @@ class WeightPage extends StatelessWidget {
                   ),
                 ),
               ),
-              if (history.isEmpty)
-                const SliverToBoxAdapter(
+              if (recentHistory.isEmpty)
+                SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.all(32.0),
+                    padding: const EdgeInsets.all(32.0),
                     child: Center(
-                      child: Text('No weight entries yet. Tap + to log your weight.'),
+                      child: Text(
+                        history.isEmpty
+                            ? 'No weight entries yet. Tap + to log your weight.'
+                            : 'No weight entries in the last 7 days.',
+                      ),
                     ),
                   ),
                 )
@@ -73,7 +78,7 @@ class WeightPage extends StatelessWidget {
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final item = history[index];
+                      final item = recentHistory[index];
                       // Format date nicely
                       final dateStr = '${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}';
 
@@ -113,7 +118,7 @@ class WeightPage extends StatelessWidget {
                         ),
                       );
                     },
-                    childCount: history.length,
+                    childCount: recentHistory.length,
                   ),
                 ),
               const SliverToBoxAdapter(
