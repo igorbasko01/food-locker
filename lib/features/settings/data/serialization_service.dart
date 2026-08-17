@@ -28,14 +28,21 @@ class SerializationService {
 
   SerializationService();
 
-  Future<void> exportData(BuildContext context) async {
+  /// Returns whether there was anything to export — `false` means both stores
+  /// were empty and no file was produced, which callers must not report as a
+  /// completed export.
+  ///
+  /// [onShareReady] fires once the zip is written and the share sheet is about
+  /// to open, so callers can clear any progress indication before the sheet
+  /// covers it.
+  Future<bool> exportData(BuildContext context, {VoidCallback? onShareReady}) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
 
     final weights = weightRepo.getAllWeights();
     final bites = await _allBites(biteRepo);
 
-    if (weights.isEmpty && bites.isEmpty) return;
+    if (weights.isEmpty && bites.isEmpty) return false;
 
     // Pacing config rides along with real data rather than gating the export:
     // the default is always seeded, so it never on its own makes a backup
@@ -48,8 +55,11 @@ class SerializationService {
     final zipFile = File('${tempDir.path}/${generateZipFileName()}');
     await zipFile.writeAsBytes(zipData);
 
+    onShareReady?.call();
+
     // ignore: deprecated_member_use
     await Share.shareXFiles([XFile(zipFile.path)], text: 'Food Locker Backup');
+    return true;
   }
 
   /// Packs every dataset into a single backup zip — weights, bites, and the
@@ -80,7 +90,13 @@ class SerializationService {
     );
   }
 
-  Future<void> importData(BuildContext context) async {
+  /// Returns whether a backup was actually restored — `false` means the file
+  /// picker was dismissed, which callers must not report as an import.
+  ///
+  /// [onRestoreStart] fires once a file is chosen and the restore is about to
+  /// begin, so callers can show progress without leaving a message on screen
+  /// while the picker is still open.
+  Future<bool> importData(BuildContext context, {VoidCallback? onRestoreStart}) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
 
@@ -90,12 +106,15 @@ class SerializationService {
     );
     final filePath = result?.files.single.path;
 
-    if (filePath == null) return;
+    if (filePath == null) return false;
+
+    onRestoreStart?.call();
 
     final file = File(filePath);
     final bytes = await file.readAsBytes();
 
     await restoreFromBackup(weightRepo, biteRepo, bytes);
+    return true;
   }
 
   /// Replaces both stores' contents with a backup zip — the destructive core of
