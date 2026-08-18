@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:food_locker/features/weight/data/history_range.dart';
+import 'package:food_locker/core/date_range.dart';
 
-extension HistoryRangeLabel on HistoryRange {
-  String get label => switch (this) {
-    HistoryRange.week => 'Last 7 days',
-    HistoryRange.month => 'Last 30 days',
-    HistoryRange.quarter => 'Last 90 days',
-    HistoryRange.halfYear => 'Last 6 months',
-    HistoryRange.year => 'Last year',
+/// The ranges the weight history offers, shortest first.
+const historyRangePresets = <DateRange>[
+  DateRange.lastDays(7),
+  DateRange.lastDays(30),
+  DateRange.lastDays(90),
+  DateRange.lastDays(180),
+  DateRange.lastDays(365),
+];
+
+extension HistoryRangeLabel on DateRange {
+  /// Rounded to the unit the span is closest to, so 180 days reads as months.
+  String get label => switch (days) {
+    180 => 'Last 6 months',
+    365 => 'Last year',
+    _ => 'Last $days days',
   };
 }
 
@@ -19,19 +27,19 @@ class HistoryRangeSelector extends StatelessWidget {
     required this.onSelected,
   });
 
-  final HistoryRange selected;
-  final ValueChanged<HistoryRange> onSelected;
+  final DateRange selected;
+  final ValueChanged<DateRange> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return PopupMenuButton<HistoryRange>(
+    return PopupMenuButton<DateRange>(
       initialValue: selected,
       tooltip: 'Change range',
       onSelected: onSelected,
       itemBuilder: (context) => [
-        for (final range in HistoryRange.values)
+        for (final range in historyRangePresets)
           PopupMenuItem(value: range, child: Text(range.label)),
       ],
       child: Padding(

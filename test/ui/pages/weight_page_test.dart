@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
@@ -99,7 +100,7 @@ void main() {
 
     expect(find.text(_dateLabel(lastMonth)), findsOneWidget);
     expect(find.text('73.0 kg'), findsOneWidget);
-    expect(manager.historyRange, HistoryRange.month);
+    expect(manager.historyRange, const DateRange.lastDays(30));
   });
 
   testWidgets('shows the empty-state placeholder when a stat is missing', (

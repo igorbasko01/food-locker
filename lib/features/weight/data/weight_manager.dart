@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:food_locker/features/weight/data/history_range.dart';
+import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 
-export 'package:food_locker/features/weight/data/history_range.dart'
-    show HistoryRange;
 export 'package:food_locker/features/weight/data/weight_analytics.dart'
     show StreakType, OvereatingStats;
 
@@ -15,7 +13,7 @@ class WeightManager extends ChangeNotifier {
 
   // TODO: Add pagination for weight history loading to handle large datasets efficiently.
   List<Weight> _weights = [];
-  HistoryRange _historyRange = HistoryRange.week;
+  DateRange _historyRange = const DateRange.lastDays(7);
 
   WeightManager(this._weightRepository)
     : _analytics = WeightAnalytics(_weightRepository);
@@ -24,7 +22,7 @@ class WeightManager extends ChangeNotifier {
     _reloadHistory();
   }
 
-  HistoryRange get historyRange => _historyRange;
+  DateRange get historyRange => _historyRange;
 
   /// The weigh-ins inside [historyRange], newest first.
   ///
@@ -39,7 +37,7 @@ class WeightManager extends ChangeNotifier {
         .toList(growable: false);
   }
 
-  void selectHistoryRange(HistoryRange range) {
+  void selectHistoryRange(DateRange range) {
     if (range == _historyRange) return;
     _historyRange = range;
     _reloadHistory();
