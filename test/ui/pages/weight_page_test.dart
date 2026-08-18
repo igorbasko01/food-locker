@@ -13,9 +13,8 @@ String _dateLabel(DateTime date) =>
 
 void main() {
   Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
-    // The chart takes a 1.5 aspect ratio of the full width, so on the default
-    // 800x600 surface the heading and the history list fall below the fold and
-    // never get built. Give the page a tall viewport instead of scrolling.
+    // The chart's 1.5 aspect ratio pushes the heading and the history list
+    // below the fold on the default 800x600 surface, so they never get built.
     tester.view.physicalSize = const Size(800, 2000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -87,7 +86,6 @@ void main() {
 
     await pumpPage(tester, manager);
 
-    // The default range hides it, and the empty state names that range.
     expect(find.text('Last 7 days'), findsOneWidget);
     expect(
       find.text('No weight entries in the last 7 days. Tap + to log your weight.'),

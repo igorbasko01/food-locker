@@ -12,9 +12,6 @@ extension HistoryRangeLabel on HistoryRange {
 }
 
 /// Picks how far back the weight history reaches.
-///
-/// A menu rather than a segmented control: the five labels don't fit a phone's
-/// width side by side, and a custom range can later join as one more item.
 class HistoryRangeSelector extends StatelessWidget {
   const HistoryRangeSelector({
     super.key,

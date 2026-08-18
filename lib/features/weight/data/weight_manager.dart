@@ -24,16 +24,14 @@ class WeightManager extends ChangeNotifier {
     _reloadHistory();
   }
 
-  /// How far back [history] reaches.
   HistoryRange get historyRange => _historyRange;
 
   /// The weigh-ins inside [historyRange], newest first.
   ///
-  /// Already ordered by the repository, so reading is one in-range pass. The
-  /// range is re-checked here rather than trusted from load time: the query has
-  /// no upper bound, so [_weights] stays a *superset* of the range as the clock
-  /// moves on, and an app left open across midnight would otherwise keep
-  /// listing the day that just fell out of range.
+  /// The range is re-checked on read, not trusted from load time: [_weights] is
+  /// loaded unbounded at the top, so it stays a superset as the clock moves on,
+  /// and an app left open across midnight would keep listing the day that fell
+  /// out of range.
   List<Weight> get history {
     final now = DateTime.now();
     return _weights
@@ -47,8 +45,7 @@ class WeightManager extends ChangeNotifier {
     _reloadHistory();
   }
 
-  /// Reloads the window and notifies in one step, so no mutation path can load
-  /// without telling the UI.
+  /// The one load path: every mutation reloads and notifies through here.
   void _reloadHistory() {
     _weights = _weightRepository.getWeightsSince(_historyRange.oldestDay());
     notifyListeners();
