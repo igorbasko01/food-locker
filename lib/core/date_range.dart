@@ -1,27 +1,24 @@
-/// A span of calendar days reaching back from a given day, today included.
+/// A span of calendar days reaching back from today, today included.
 ///
 /// The span is stored as a day count and resolved on read, so a range held
-/// across midnight still means the same thing. It has no upper bound: a date
-/// past the reference day is covered, so future-dated entries stay visible.
+/// across midnight still means the same thing. It has no upper bound: a future
+/// day is inside the range, so future-dated entries stay visible.
 class DateRange {
   const DateRange.lastDays(this.days) : assert(days > 0);
 
   final int days;
 
-  /// The oldest calendar day in the range as of [asOf] — today's when null.
+  /// The oldest calendar day in the range, counting back from [asOf]'s day —
+  /// today's when null. Tests pin [asOf]; the app leaves it to the clock.
   DateTime oldestDay({DateTime? asOf}) {
     final on = asOf ?? DateTime.now();
     return DateTime(on.year, on.month, on.day - (days - 1));
   }
 
-  /// Whether [date]'s calendar day falls in the range as of [asOf] — as of now
-  /// when [asOf] is null.
-  ///
-  /// Pass [asOf] when judging a batch of dates, so they are all measured
-  /// against one instant.
-  bool contains(DateTime date, {DateTime? asOf}) {
+  /// Whether [date]'s calendar day falls in the range right now.
+  bool contains(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
-    return !day.isBefore(oldestDay(asOf: asOf));
+    return !day.isBefore(oldestDay());
   }
 
   @override

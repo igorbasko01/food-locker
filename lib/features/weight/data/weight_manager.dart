@@ -30,12 +30,9 @@ class WeightManager extends ChangeNotifier {
   /// loaded unbounded at the top, so it stays a superset as the clock moves on,
   /// and an app left open across midnight would keep listing the day that fell
   /// out of range.
-  List<Weight> get history {
-    final now = DateTime.now();
-    return _weights
-        .where((weight) => _historyRange.contains(weight.date, asOf: now))
-        .toList(growable: false);
-  }
+  List<Weight> get history => _weights
+      .where((weight) => _historyRange.contains(weight.date))
+      .toList(growable: false);
 
   void selectHistoryRange(DateRange range) {
     if (range == _historyRange) return;

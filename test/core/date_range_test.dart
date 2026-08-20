@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_range.dart';
 
+DateTime day(DateTime from, int offset) =>
+    DateTime(from.year, from.month, from.day + offset);
+
 void main() {
   group('oldestDay', () {
     final now = DateTime(2024, 5, 20, 13, 45);
@@ -35,47 +38,49 @@ void main() {
         DateTime(today.year, today.month, today.day - 6),
       );
     });
+
+    test('moves with the clock, so a day drops out when the date rolls', () {
+      const range = DateRange.lastDays(7);
+
+      expect(range.oldestDay(asOf: DateTime(2024, 5, 20)), DateTime(2024, 5, 14));
+      expect(range.oldestDay(asOf: DateTime(2024, 5, 21)), DateTime(2024, 5, 15));
+    });
   });
 
   group('contains', () {
-    final now = DateTime(2024, 5, 20);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
 
     test('takes the oldest day but not the one before it', () {
       const range = DateRange.lastDays(7);
 
-      expect(range.contains(DateTime(2024, 5, 14, 8, 15), asOf: now), isTrue);
-      expect(range.contains(DateTime(2024, 5, 13), asOf: now), isFalse);
-      expect(range.contains(DateTime(2024, 5, 20), asOf: now), isTrue);
+      expect(range.contains(day(today, -6)), isTrue);
+      expect(range.contains(day(today, -7)), isFalse);
+    });
+
+    test('takes today whatever the time of day', () {
+      expect(
+        const DateRange.lastDays(7).contains(DateTime(
+          today.year,
+          today.month,
+          today.day,
+          23,
+          59,
+        )),
+        isTrue,
+      );
     });
 
     test('has no upper bound, so a future weigh-in stays visible', () {
-      expect(
-        const DateRange.lastDays(7).contains(DateTime(2024, 6, 1), asOf: now),
-        isTrue,
-      );
+      expect(const DateRange.lastDays(7).contains(day(today, 5)), isTrue);
     });
 
-    test('a day it covered yesterday falls out once the date rolls over', () {
-      const range = DateRange.lastDays(7);
-      final loadedDay = DateTime(2024, 5, 14);
-
-      expect(range.contains(loadedDay, asOf: now), isTrue);
-      expect(range.contains(loadedDay, asOf: DateTime(2024, 5, 21)), isFalse);
-    });
-
-    test('measures against today when no reference is given', () {
-      final today = DateTime.now();
-
-      expect(
-        const DateRange.lastDays(7)
-            .contains(DateTime(today.year, today.month, today.day - 6)),
-        isTrue,
-      );
-      expect(
-        const DateRange.lastDays(7)
-            .contains(DateTime(today.year, today.month, today.day - 7)),
-        isFalse,
-      );
+    test('a longer range takes what a shorter one leaves out', () {
+      expect(const DateRange.lastDays(7).contains(day(today, -20)), isFalse);
+      expect(const DateRange.lastDays(30).contains(day(today, -20)), isTrue);
     });
   });
 
