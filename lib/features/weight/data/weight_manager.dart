@@ -33,7 +33,7 @@ class WeightManager extends ChangeNotifier {
   List<Weight> get history {
     final now = DateTime.now();
     return _weights
-        .where((weight) => _historyRange.covers(weight.date, asOf: now))
+        .where((weight) => _historyRange.contains(weight.date, asOf: now))
         .toList(growable: false);
   }
 

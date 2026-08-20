@@ -37,20 +37,20 @@ void main() {
     });
   });
 
-  group('covers', () {
+  group('contains', () {
     final now = DateTime(2024, 5, 20);
 
     test('takes the oldest day but not the one before it', () {
       const range = DateRange.lastDays(7);
 
-      expect(range.covers(DateTime(2024, 5, 14, 8, 15), asOf: now), isTrue);
-      expect(range.covers(DateTime(2024, 5, 13), asOf: now), isFalse);
-      expect(range.covers(DateTime(2024, 5, 20), asOf: now), isTrue);
+      expect(range.contains(DateTime(2024, 5, 14, 8, 15), asOf: now), isTrue);
+      expect(range.contains(DateTime(2024, 5, 13), asOf: now), isFalse);
+      expect(range.contains(DateTime(2024, 5, 20), asOf: now), isTrue);
     });
 
     test('has no upper bound, so a future weigh-in stays visible', () {
       expect(
-        const DateRange.lastDays(7).covers(DateTime(2024, 6, 1), asOf: now),
+        const DateRange.lastDays(7).contains(DateTime(2024, 6, 1), asOf: now),
         isTrue,
       );
     });
@@ -59,8 +59,8 @@ void main() {
       const range = DateRange.lastDays(7);
       final loadedDay = DateTime(2024, 5, 14);
 
-      expect(range.covers(loadedDay, asOf: now), isTrue);
-      expect(range.covers(loadedDay, asOf: DateTime(2024, 5, 21)), isFalse);
+      expect(range.contains(loadedDay, asOf: now), isTrue);
+      expect(range.contains(loadedDay, asOf: DateTime(2024, 5, 21)), isFalse);
     });
 
     test('measures against today when no reference is given', () {
@@ -68,12 +68,12 @@ void main() {
 
       expect(
         const DateRange.lastDays(7)
-            .covers(DateTime(today.year, today.month, today.day - 6)),
+            .contains(DateTime(today.year, today.month, today.day - 6)),
         isTrue,
       );
       expect(
         const DateRange.lastDays(7)
-            .covers(DateTime(today.year, today.month, today.day - 7)),
+            .contains(DateTime(today.year, today.month, today.day - 7)),
         isFalse,
       );
     });

@@ -19,7 +19,7 @@ class DateRange {
   ///
   /// Pass [asOf] when judging a batch of dates, so they are all measured
   /// against one instant.
-  bool covers(DateTime date, {DateTime? asOf}) {
+  bool contains(DateTime date, {DateTime? asOf}) {
     final day = DateTime(date.year, date.month, date.day);
     return !day.isBefore(oldestDay(asOf: asOf));
   }
