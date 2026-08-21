@@ -42,7 +42,7 @@ class WeightManager extends ChangeNotifier {
 
   /// The one load path: every mutation reloads and notifies through here.
   void _reloadHistory() {
-    _weights = _weightRepository.getWeightsSince(_historyRange.oldestDay());
+    _weights = _weightRepository.getWeightsSince(_historyRange.from);
     notifyListeners();
   }
 

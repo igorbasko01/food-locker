@@ -16,16 +16,14 @@ class DateRange {
   final DateTime? to;
   final int days;
 
-  DateTime get from => oldestDay();
-
-  DateTime oldestDay({DateTime? asOf}) {
-    final end = to ?? asOf ?? DateTime.now();
+  DateTime get from {
+    final end = to ?? DateTime.now();
     return DateTime(end.year, end.month, end.day - (days - 1));
   }
 
   bool contains(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
-    if (day.isBefore(oldestDay())) return false;
+    if (day.isBefore(from)) return false;
     final end = to;
     return end == null || !day.isAfter(end);
   }
