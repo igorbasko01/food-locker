@@ -1,33 +1,44 @@
-/// A span of calendar days reaching back from today, today included.
-///
-/// The span is stored as a day count and resolved on read, so a range held
-/// across midnight still means the same thing. It has no upper bound: a future
-/// day is inside the range, so future-dated entries stay visible.
+/// A span of [days] calendar days ending at [to], or ending today and open
+/// above when [to] is null.
 class DateRange {
-  const DateRange.lastDays(this.days) : assert(days > 0);
+  const DateRange._(this.to, this.days) : assert(days > 0);
 
-  final int days;
+  const DateRange.lastDays(int days) : this._(null, days);
 
-  /// The oldest calendar day in the range, counting back from [asOf]'s day —
-  /// today's when null. Tests pin [asOf]; the app leaves it to the clock.
-  DateTime oldestDay({DateTime? asOf}) {
-    final on = asOf ?? DateTime.now();
-    return DateTime(on.year, on.month, on.day - (days - 1));
+  factory DateRange.between(DateTime from, DateTime to) {
+    final span = DateTime.utc(to.year, to.month, to.day)
+            .difference(DateTime.utc(from.year, from.month, from.day))
+            .inDays +
+        1;
+    return DateRange._(DateTime(to.year, to.month, to.day), span);
   }
 
-  /// Whether [date]'s calendar day falls in the range right now.
+  final DateTime? to;
+  final int days;
+
+  DateTime get from => oldestDay();
+
+  DateTime oldestDay({DateTime? asOf}) {
+    final end = to ?? asOf ?? DateTime.now();
+    return DateTime(end.year, end.month, end.day - (days - 1));
+  }
+
   bool contains(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
-    return !day.isBefore(oldestDay());
+    if (day.isBefore(oldestDay())) return false;
+    final end = to;
+    return end == null || !day.isAfter(end);
   }
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || (other is DateRange && other.days == days);
+      identical(this, other) ||
+      (other is DateRange && other.days == days && other.to == to);
 
   @override
-  int get hashCode => days.hashCode;
+  int get hashCode => Object.hash(to, days);
 
   @override
-  String toString() => 'DateRange.lastDays($days)';
+  String toString() =>
+      to == null ? 'DateRange.lastDays($days)' : 'DateRange($days days to $to)';
 }

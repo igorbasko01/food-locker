@@ -84,12 +84,72 @@ void main() {
     });
   });
 
-  test('ranges of the same length are equal', () {
-    expect(const DateRange.lastDays(30), const DateRange.lastDays(30));
-    expect(
-      const DateRange.lastDays(30).hashCode,
-      const DateRange.lastDays(30).hashCode,
-    );
-    expect(const DateRange.lastDays(30), isNot(const DateRange.lastDays(90)));
+  group('between', () {
+    test('spans both endpoints inclusively', () {
+      final range = DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 10));
+
+      expect(range.days, 10);
+      expect(range.from, DateTime(2024, 5, 1));
+      expect(range.to, DateTime(2024, 5, 10));
+    });
+
+    test('a single day is a span of one', () {
+      final range = DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 1));
+
+      expect(range.days, 1);
+      expect(range.from, DateTime(2024, 5, 1));
+    });
+
+    test('drops the time of day on both endpoints', () {
+      final range = DateRange.between(
+        DateTime(2024, 5, 1, 22, 30),
+        DateTime(2024, 5, 10, 6, 15),
+      );
+
+      expect(range.days, 10);
+      expect(range.to, DateTime(2024, 5, 10));
+    });
+
+    test('counts a span that crosses a leap day', () {
+      final range = DateRange.between(DateTime(2024, 2, 27), DateTime(2024, 3, 1));
+
+      expect(range.days, 4);
+    });
+
+    test('is anchored, so the clock does not move it', () {
+      final range = DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 10));
+
+      expect(range.oldestDay(asOf: DateTime(2030, 1, 1)), DateTime(2024, 5, 1));
+    });
+
+    test('is closed above', () {
+      final range = DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 10));
+
+      expect(range.contains(DateTime(2024, 5, 1)), isTrue);
+      expect(range.contains(DateTime(2024, 5, 10, 18, 0)), isTrue);
+      expect(range.contains(DateTime(2024, 4, 30)), isFalse);
+      expect(range.contains(DateTime(2024, 5, 11)), isFalse);
+    });
+  });
+
+  group('equality', () {
+    test('ranges of the same length are equal', () {
+      expect(const DateRange.lastDays(30), const DateRange.lastDays(30));
+      expect(
+        const DateRange.lastDays(30).hashCode,
+        const DateRange.lastDays(30).hashCode,
+      );
+      expect(const DateRange.lastDays(30), isNot(const DateRange.lastDays(90)));
+    });
+
+    test('anchored ranges compare on both the anchor and the span', () {
+      final range = DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 10));
+
+      expect(range, DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 10)));
+      expect(range.hashCode,
+          DateRange.between(DateTime(2024, 5, 1), DateTime(2024, 5, 10)).hashCode);
+      expect(range, isNot(DateRange.between(DateTime(2024, 5, 2), DateTime(2024, 5, 11))));
+      expect(range, isNot(const DateRange.lastDays(10)));
+    });
   });
 }
