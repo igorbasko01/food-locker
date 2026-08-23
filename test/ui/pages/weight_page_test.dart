@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
 import 'package:food_locker/ui/theme.dart';
+import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
 
+String _dateLabel(DateTime date) =>
+    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
 void main() {
   Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
+    // The chart's 1.5 aspect ratio pushes the heading and the history list
+    // below the fold on the default 800x600 surface, so they never get built.
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
@@ -43,6 +55,52 @@ void main() {
 
     // Each populated tile carries the kg unit in its sub-line.
     expect(find.widgetWithText(StatTile, 'kg'), findsNWidgets(3));
+  });
+
+  testWidgets('history list only lists the last 7 days of entries', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final recentDay = DateTime(today.year, today.month, today.day - 6);
+    final oldDay = DateTime(today.year, today.month, today.day - 7);
+
+    await manager.addWeight(recentDay, 71.0);
+    await manager.addWeight(oldDay, 73.0);
+
+    await pumpPage(tester, manager);
+
+    expect(find.text(_dateLabel(recentDay)), findsOneWidget);
+    expect(find.text('71.0 kg'), findsOneWidget);
+    expect(find.text(_dateLabel(oldDay)), findsNothing);
+    expect(find.text('73.0 kg'), findsNothing);
+  });
+
+  testWidgets('picking a wider range reveals older entries', (tester) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastMonth = DateTime(today.year, today.month, today.day - 20);
+
+    await manager.addWeight(lastMonth, 73.0);
+
+    await pumpPage(tester, manager);
+
+    expect(find.text('Last 7 days'), findsOneWidget);
+    expect(
+      find.text('No weight entries in the last 7 days. Tap + to log your weight.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byType(HistoryRangeSelector));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Last 30 days').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text(_dateLabel(lastMonth)), findsOneWidget);
+    expect(find.text('73.0 kg'), findsOneWidget);
+    expect(manager.historyRange, const DateRange.lastDays(30));
   });
 
   testWidgets('shows the empty-state placeholder when a stat is missing', (

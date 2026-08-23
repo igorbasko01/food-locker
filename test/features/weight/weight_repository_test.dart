@@ -107,6 +107,43 @@ void main() {
       );
     });
 
+    test('getWeightsSince keeps the day itself and everything after it', () async {
+      final since = DateTime(2023, 5, 10);
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 9), value: 70.0));
+      await repository.saveWeight(Weight(date: since, value: 71.0));
+      // Stored with a time component, and dated past `since` — both still count.
+      await repository.saveWeight(
+        Weight(date: DateTime(2023, 5, 12, 14, 30), value: 72.0),
+      );
+
+      final values = repository.getWeightsSince(since).map((w) => w.value).toSet();
+
+      expect(values, {71.0, 72.0});
+    });
+
+    test('getWeightsSince returns the weigh-ins newest first', () async {
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 10), value: 71.0));
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 14), value: 74.0));
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 12), value: 72.0));
+
+      final dates = repository
+          .getWeightsSince(DateTime(2023, 5, 10))
+          .map((w) => w.date)
+          .toList();
+
+      expect(dates, [
+        DateTime(2023, 5, 14),
+        DateTime(2023, 5, 12),
+        DateTime(2023, 5, 10),
+      ]);
+    });
+
+    test('getWeightsSince is empty when every weigh-in predates it', () async {
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 1), value: 70.0));
+
+      expect(repository.getWeightsSince(DateTime(2023, 6, 1)), isEmpty);
+    });
+
     test('getOldestWeightDate returns oldest date', () async {
       expect(repository.getOldestWeightDate(), isNull);
 
