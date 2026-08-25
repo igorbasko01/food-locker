@@ -368,8 +368,8 @@ void main() {
   group('SerializationService confirmAndRestore', () {
     final service = SerializationService();
 
-    /// A full backup — weights, bites and pacing config — so a declined
-    /// confirmation can be shown to spare every store, not just weights.
+    /// A full backup, so a decline can be shown to spare every store, not just
+    /// weights.
     List<int> fullBackup() => service.encodeBackup(
           [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
           [const Bite(id: 1, atMs: 1000)],
@@ -437,8 +437,7 @@ void main() {
         fileName: 'food_locker_20260101120000.zip',
         onConfirm: (fileName) async {
           asked.add(fileName);
-          // The gate is what protects the data: nothing may have been cleared
-          // by the time the user is asked.
+          // Nothing may have been cleared by the time the user is asked.
           expect(weightRepo.operations, isEmpty);
           return true;
         },

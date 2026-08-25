@@ -48,7 +48,7 @@ void main() {
         find.textContaining(_FakeSerializationService.fileName),
         findsOneWidget,
       );
-      // Nothing has started: the restore waits behind the dialog.
+      // The restore waits behind the dialog.
       expect(find.text('Importing data...'), findsNothing);
     });
 
@@ -155,7 +155,6 @@ class _FakeSerializationService extends SerializationService {
   /// Export only: both stores were empty.
   final bool empty;
 
-  /// The name the picker resolved, as handed to the confirmation.
   static const fileName = 'food_locker_20260101120000.zip';
 
   final _work = Completer<void>();

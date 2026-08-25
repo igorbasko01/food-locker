@@ -14,8 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Asks the user to confirm replacing their data with the backup [fileName].
-/// Returning `false` — including a dismissed dialog — must leave every store
-/// untouched.
+/// Returning `false` leaves every store untouched.
 typedef ConfirmRestore = Future<bool> Function(String fileName);
 
 class SerializationService {
@@ -100,8 +99,7 @@ class SerializationService {
   /// may report as an import.
   ///
   /// [onConfirm] gates the restore once a file is chosen, so the page can own
-  /// the modal while the sequencing stays here. Omitting it restores without
-  /// asking.
+  /// the modal; omitting it restores without asking.
   ///
   /// [onRestoreStart] fires once the restore is about to begin, so callers can
   /// show progress without leaving a message on screen while the picker or the
@@ -123,8 +121,7 @@ class SerializationService {
 
     if (picked == null || filePath == null) return false;
 
-    // Reading the file ahead of the confirmation is safe: nothing is written
-    // until [confirmAndRestore] clears the gate.
+    // Reading the file writes nothing; the gate below is what guards the stores.
     final bytes = await File(filePath).readAsBytes();
 
     return confirmAndRestore(
@@ -137,10 +134,9 @@ class SerializationService {
     );
   }
 
-  /// Gates the destructive [restoreFromBackup] behind [onConfirm], kept apart
-  /// from the picker and file I/O so the decline path stays unit-testable.
-  /// A declined confirmation returns `false` without touching a store, reading
-  /// to callers exactly like a dismissed picker.
+  /// Gates the destructive [restoreFromBackup] behind [onConfirm], apart from
+  /// the picker and file I/O so the decline path stays unit-testable. Declining
+  /// returns `false` without touching a store.
   @visibleForTesting
   Future<bool> confirmAndRestore(
     WeightRepository weightRepo,

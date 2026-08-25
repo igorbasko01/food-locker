@@ -114,8 +114,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   /// An import replaces what is already stored, so it asks first — and names
-  /// the chosen file, since picking the wrong zip is the easiest way to get
-  /// here by mistake. A dismissed dialog reads as a decline.
+  /// the file, since picking the wrong zip is the likely mistake.
   Future<bool> _confirmImport(String fileName) async {
     if (!mounted) return false;
 
