@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -85,6 +87,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _importData() async {
     final messenger = ScaffoldMessenger.of(context);
     final service = context.read<SerializationService>();
+    final weightManager = context.read<WeightManager>();
+    final biteManager = context.read<BiteManager>();
     var progressShown = false;
 
     try {
@@ -101,6 +105,11 @@ class _SettingsPageState extends State<SettingsPage> {
       // removing unconditionally would cut short whatever else is on screen.
       if (progressShown) messenger.removeCurrentSnackBar();
       if (imported) {
+        // A restore writes through the repositories, leaving both managers on
+        // what they loaded before it. Re-read here rather than leaning on a tab
+        // refreshing when it becomes visible.
+        await weightManager.refresh();
+        await biteManager.refresh();
         messenger.showSnackBar(
           const SnackBar(content: Text('Data imported successfully')),
         );

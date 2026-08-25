@@ -184,6 +184,27 @@ void main() {
       manager.dispose();
     });
   });
+
+  test('refresh adopts thresholds that were replaced in the store', () {
+    fakeAsync((async) {
+      final repo = _FakeBiteRepository(config: config);
+      final manager = BiteManager(repo, onReachedClear: () async {});
+
+      manager.initialize();
+      async.flushMicrotasks();
+      expect(manager.b2, const Duration(seconds: 30));
+
+      // What a restore does: the config history is replaced underneath the
+      // manager.
+      repo.config = const PacingConfig(id: 2, effectiveMs: 0, b1S: 40, b2S: 90);
+      manager.refresh();
+      async.flushMicrotasks();
+
+      expect(manager.b2, const Duration(seconds: 90));
+
+      manager.dispose();
+    });
+  });
 }
 
 /// An in-memory [BiteRepository] with synchronous-ish futures so the pacing
@@ -192,7 +213,7 @@ class _FakeBiteRepository implements BiteRepository {
   _FakeBiteRepository({this.config, List<DateTime>? bites})
       : _bites = [...?bites];
 
-  final PacingConfig? config;
+  PacingConfig? config;
   final List<DateTime> _bites;
 
   @override

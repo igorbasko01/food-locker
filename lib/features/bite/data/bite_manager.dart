@@ -117,9 +117,12 @@ class BiteManager extends ChangeNotifier {
   /// count rolls to the new local day, [currentMealBites] drops to 0 once the
   /// sitting has ended, and the pacing reference is re-seeded from the last
   /// stored bite. Cheap enough to run every time the Bite tab becomes visible.
+  ///
+  /// The thresholds are re-read on every call: a backup restore can replace the
+  /// config history underneath the manager.
   Future<void> refresh() async {
     final now = clock.now();
-    _pacingConfig ??= await _repository.pacingConfigAt(now);
+    _pacingConfig = await _repository.pacingConfigAt(now) ?? _pacingConfig;
     await _refreshTodayCount();
 
     final last = await _repository.lastBite();

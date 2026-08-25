@@ -22,6 +22,13 @@ class WeightManager extends ChangeNotifier {
     _reloadHistory();
   }
 
+  /// Re-reads the store, for callers that replaced its contents without going
+  /// through this manager — a backup restore. Ordinary mutations reload
+  /// themselves.
+  Future<void> refresh() async {
+    _reloadHistory();
+  }
+
   DateRange get historyRange => _historyRange;
 
   /// The weigh-ins inside [historyRange], newest first.

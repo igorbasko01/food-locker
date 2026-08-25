@@ -249,4 +249,44 @@ void main() {
       });
     });
   });
+
+  group('WeightManager refresh', () {
+    test('picks up entries written straight to the repository', () async {
+      final repository = InMemoryWeightRepository();
+      final manager = WeightManager(repository);
+      await manager.initialize();
+
+      // What a restore does: writes through the repository, never through the
+      // manager.
+      await repository.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      expect(manager.history, isEmpty);
+
+      await manager.refresh();
+
+      expect(manager.history.single.value, 71.5);
+    });
+
+    test('drops entries the repository no longer holds', () async {
+      final repository = InMemoryWeightRepository();
+      final manager = WeightManager(repository);
+      await manager.addWeight(DateTime.now(), 80.0);
+      expect(manager.history, hasLength(1));
+
+      await repository.clear();
+      await manager.refresh();
+
+      expect(manager.history, isEmpty);
+    });
+
+    test('notifies listeners so the tab rebuilds', () async {
+      final repository = InMemoryWeightRepository();
+      final manager = WeightManager(repository);
+      var notifications = 0;
+      manager.addListener(() => notifications++);
+
+      await manager.refresh();
+
+      expect(notifications, 1);
+    });
+  });
 }
