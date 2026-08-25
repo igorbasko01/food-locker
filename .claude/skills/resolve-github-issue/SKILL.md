@@ -61,6 +61,10 @@ Never commit to `main`.
 - Cover the acceptance criteria with tests, mirroring `lib/` under `test/`.
   Prefer `InMemoryWeightRepository` and `BiteDatabase.forTesting` over real
   stores.
+- Once the change is written, run the **concise-comments** skill
+  (`Skill(concise-comments)`) over the diff and apply its edits, so every
+  comment you added or touched matches the repo's house style before you
+  commit.
 
 If the issue turns out to be far larger than it reads, already fixed on `main`,
 or resting on a wrong premise: stop, comment on the issue with what you found,
