@@ -104,8 +104,35 @@ again. Never skip, disable or delete a test to get green, and never push an
 empty commit to re-trigger CI. After 5 failed rounds, stop pushing and comment
 on the PR with what still fails and why.
 
-## 8. Stop
+## 8. Hand the PR to a fresh reviewer
 
-One issue, one PR. Report the PR link, the issue it closes, and a short summary
-of the change and how it was verified. Leave the PR for human review — never
-merge it, and never close the issue by hand (`Closes #<N>` does that on merge).
+Once the checks are green, get a second pair of eyes on the PR before a human
+sees it. You have just spent a whole session convincing yourself this code is
+correct, which is exactly the wrong state of mind to review it from — so the
+review goes to an agent that starts cold.
+
+Spawn a subagent with the `Agent` tool and give it nothing but the target:
+
+> Review pull request #`<PR>` in `igorbasko01/food-locker` using the `review-pr`
+> skill. Post your findings as a comment on the PR. Do not push commits, approve,
+> or merge.
+
+Do not brief it on the issue, your reasoning, or which parts you think are
+fine — the value of the review is that it re-derives all of that from the diff.
+
+When it reports back: fix defects that are real and inside the issue's scope,
+push, and let the checks re-run. Everything else — larger refactors, findings
+about code the PR did not touch, suggestions you disagree with — stays as the
+reviewer's comment for the human to weigh. Do not widen the PR to chase them,
+and do not delete or resolve the comment.
+
+If no subagent mechanism exists in the environment, run the `review-pr` skill
+yourself as a deliberate second read, and say in your final report that the
+review was not independent.
+
+## 9. Stop
+
+One issue, one PR. Report the PR link, the issue it closes, a short summary of
+the change and how it was verified, and what the review turned up. Leave the PR
+for human review — never merge it, and never close the issue by hand
+(`Closes #<N>` does that on merge).
