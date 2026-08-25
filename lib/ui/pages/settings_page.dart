@@ -45,7 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   enabled: !_busy,
                   leading: Icon(Icons.upload, color: theme.colorScheme.primary),
                   title: const Text('Import Data', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Restore your weight history data from a zip file.'),
+                  subtitle: const Text('Replace your data with a backup zip file.'),
                   onTap: _importData,
                 ),
               ],
@@ -90,6 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final imported = await service.importData(
         context,
+        onConfirm: _confirmImport,
         onRestoreStart: () {
           progressShown = true;
           messenger.showSnackBar(_progressSnackBar('Importing data...'));
@@ -110,6 +111,40 @@ class _SettingsPageState extends State<SettingsPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// An import replaces what is already stored, so it asks first — and names
+  /// the file, since picking the wrong zip is the likely mistake.
+  Future<bool> _confirmImport(String fileName) async {
+    if (!mounted) return false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return AlertDialog(
+          title: const Text('Replace all data?'),
+          content: Text(
+            'Importing "$fileName" permanently replaces your weight history, '
+            'and the bite log and pacing settings when the backup contains '
+            'them. This cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Replace'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
   }
 
   Widget _buildHeader(ThemeData theme, String title) {

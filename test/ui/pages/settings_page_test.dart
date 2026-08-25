@@ -26,14 +26,51 @@ void main() {
     await tester.pump(const Duration(milliseconds: 750));
   }
 
+  /// Taps Import and answers the confirmation dialog it raises.
+  Future<void> tapImport(WidgetTester tester, {required bool confirm}) async {
+    await tester.tap(find.text('Import Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(confirm ? 'Replace' : 'Cancel'));
+    await tester.pump();
+  }
+
   group('import', () {
-    testWidgets('shows a progress toast while restoring, then the success toast',
+    testWidgets('asks before restoring, naming the file it would replace',
         (tester) async {
       final service = _FakeSerializationService();
       await pumpPage(tester, service);
 
       await tester.tap(find.text('Import Data'));
-      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Replace all data?'), findsOneWidget);
+      expect(
+        find.textContaining(_FakeSerializationService.fileName),
+        findsOneWidget,
+      );
+      // The restore waits behind the dialog.
+      expect(find.text('Importing data...'), findsNothing);
+    });
+
+    testWidgets('reports nothing when the confirmation is cancelled',
+        (tester) async {
+      final service = _FakeSerializationService();
+      await pumpPage(tester, service);
+
+      await tapImport(tester, confirm: false);
+      await pumpToast(tester);
+
+      expect(find.text('Replace all data?'), findsNothing);
+      expect(find.text('Importing data...'), findsNothing);
+      expect(find.text('Data imported successfully'), findsNothing);
+    });
+
+    testWidgets('shows a progress toast while restoring, then the success toast',
+        (tester) async {
+      final service = _FakeSerializationService();
+      await pumpPage(tester, service);
+
+      await tapImport(tester, confirm: true);
 
       expect(find.text('Importing data...'), findsOneWidget);
       expect(find.text('Data imported successfully'), findsNothing);
@@ -62,8 +99,7 @@ void main() {
       final service = _FakeSerializationService();
       await pumpPage(tester, service);
 
-      await tester.tap(find.text('Import Data'));
-      await tester.pump();
+      await tapImport(tester, confirm: true);
 
       expect(find.text('Importing data...'), findsOneWidget);
 
@@ -119,6 +155,8 @@ class _FakeSerializationService extends SerializationService {
   /// Export only: both stores were empty.
   final bool empty;
 
+  static const fileName = 'food_locker_20260101120000.zip';
+
   final _work = Completer<void>();
 
   void finish() => _work.complete();
@@ -126,8 +164,13 @@ class _FakeSerializationService extends SerializationService {
   void fail(String message) => _work.completeError(message);
 
   @override
-  Future<bool> importData(BuildContext context, {VoidCallback? onRestoreStart}) async {
+  Future<bool> importData(
+    BuildContext context, {
+    ConfirmRestore? onConfirm,
+    VoidCallback? onRestoreStart,
+  }) async {
     if (cancelled) return false;
+    if (onConfirm != null && !await onConfirm(fileName)) return false;
     onRestoreStart?.call();
     await _work.future;
     return true;

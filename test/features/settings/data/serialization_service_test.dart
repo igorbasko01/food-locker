@@ -364,4 +364,100 @@ void main() {
       expect(biteRepo.configOperations, isEmpty);
     });
   });
+
+  group('SerializationService confirmAndRestore', () {
+    final service = SerializationService();
+
+    /// A full backup, so a decline can be shown to spare every store, not just
+    /// weights.
+    List<int> fullBackup() => service.encodeBackup(
+          [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+          [const Bite(id: 1, atMs: 1000)],
+          [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
+        );
+
+    test('leaves every store untouched when the confirmation is declined',
+        () async {
+      final weightRepo = _RecordingWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      weightRepo.operations.clear(); // ignore the setup save
+      final biteRepo = _RecordingBiteRepository();
+      var restoreStarted = false;
+
+      final restored = await service.confirmAndRestore(
+        weightRepo,
+        biteRepo,
+        fullBackup(),
+        fileName: 'backup.zip',
+        onConfirm: (_) async => false,
+        onRestoreStart: () => restoreStarted = true,
+      );
+
+      expect(restored, isFalse);
+      expect(restoreStarted, isFalse);
+      expect(weightRepo.operations, isEmpty);
+      expect(biteRepo.operations, isEmpty);
+      expect(biteRepo.configOperations, isEmpty);
+      expect(weightRepo.getAllWeights().single.value, 99.9);
+    });
+
+    test('restores when the confirmation is accepted', () async {
+      final weightRepo = InMemoryWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      final biteRepo = _RecordingBiteRepository();
+      var restoreStarted = false;
+
+      final restored = await service.confirmAndRestore(
+        weightRepo,
+        biteRepo,
+        fullBackup(),
+        fileName: 'backup.zip',
+        onConfirm: (_) async => true,
+        onRestoreStart: () => restoreStarted = true,
+      );
+
+      expect(restored, isTrue);
+      expect(restoreStarted, isTrue);
+      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(biteRepo.loggedMs, [1000]);
+      expect(biteRepo.savedConfigs, hasLength(1));
+    });
+
+    test('asks before touching a store, and names the file it would replace',
+        () async {
+      final weightRepo = _RecordingWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      weightRepo.operations.clear();
+      final asked = <String>[];
+
+      await service.confirmAndRestore(
+        weightRepo,
+        _RecordingBiteRepository(),
+        fullBackup(),
+        fileName: 'food_locker_20260101120000.zip',
+        onConfirm: (fileName) async {
+          asked.add(fileName);
+          // Nothing may have been cleared by the time the user is asked.
+          expect(weightRepo.operations, isEmpty);
+          return true;
+        },
+      );
+
+      expect(asked, ['food_locker_20260101120000.zip']);
+    });
+
+    test('restores without asking when no confirmation is supplied', () async {
+      final weightRepo = InMemoryWeightRepository();
+
+      final restored = await service.confirmAndRestore(
+        weightRepo,
+        _RecordingBiteRepository(),
+        fullBackup(),
+        fileName: 'backup.zip',
+      );
+
+      expect(restored, isTrue);
+      expect(weightRepo.getAllWeights().single.value, 75.5);
+    });
+  });
 }
