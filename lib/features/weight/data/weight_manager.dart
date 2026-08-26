@@ -41,6 +41,9 @@ class WeightManager extends ChangeNotifier {
       .where((weight) => _historyRange.contains(weight.date))
       .toList(growable: false);
 
+  /// Whether the store holds any weigh-in at all, in or out of [historyRange].
+  bool get hasAnyWeights => _weightRepository.getAllWeights().isNotEmpty;
+
   void selectHistoryRange(DateRange range) {
     if (range == _historyRange) return;
     _historyRange = range;

@@ -17,6 +17,13 @@ extension HistoryRangeLabel on DateRange {
     365 => 'Last year',
     _ => 'Last $days days',
   };
+
+  /// The span title-cased for a heading, as in 'Latest 30 Days of Weight'.
+  String get headingSpan => switch (days) {
+    180 => '6 Months',
+    365 => 'Year',
+    _ => '$days Days',
+  };
 }
 
 /// Picks how far back the weight history reaches.

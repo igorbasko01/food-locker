@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
 import 'package:food_locker/ui/widgets/app_version_label.dart';
+import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/longest_streak_banner.dart';
 import 'package:food_locker/ui/widgets/streak_banner.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
@@ -17,7 +19,7 @@ class HomePage extends StatelessWidget {
     final weightManager = context.watch<WeightManager>();
     final stats = weightManager.overeatingStats;
     final history = weightManager.history;
-    final latest7 = history.take(7).toList();
+    final range = weightManager.historyRange;
 
     return Scaffold(
       body: CustomScrollView(
@@ -60,7 +62,7 @@ class HomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Latest 7 Days of Weight',
+                    'Latest ${range.headingSpan} of Weight',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -74,7 +76,11 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          _buildHistorySection(latest7, history),
+          _buildHistorySection(
+            history,
+            range: range,
+            storeIsEmpty: !weightManager.hasAnyWeights,
+          ),
           const SliverToBoxAdapter(
             child: AppVersionLabel(),
           ),
@@ -99,16 +105,23 @@ class HomePage extends StatelessWidget {
     }
   }
 
-  Widget _buildHistorySection(List<Weight> latest7, List<Weight> history) {
-    if (latest7.isEmpty) {
-      return const SliverToBoxAdapter(
+  Widget _buildHistorySection(
+    List<Weight> history, {
+    required DateRange range,
+    required bool storeIsEmpty,
+  }) {
+    if (history.isEmpty) {
+      return SliverToBoxAdapter(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
           child: Center(
             child: Text(
-              'No weight entries yet.\nTap "Log Weight" above to get started!',
+              storeIsEmpty
+                  ? 'No weight entries yet.\nTap "Log Weight" above to get started!'
+                  : 'No weight entries in the ${range.label.toLowerCase()}.\n'
+                        'Tap "Log Weight" above to add one.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, height: 1.5),
+              style: const TextStyle(color: Colors.grey, height: 1.5),
             ),
           ),
         ),
@@ -118,7 +131,7 @@ class HomePage extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          final item = latest7[index];
+          final item = history[index];
           // Compute difference with previous day (which is at index + 1 in sorted descending list)
           double? diff;
           if (index + 1 < history.length) {
@@ -130,7 +143,7 @@ class HomePage extends StatelessWidget {
             diff: diff,
           );
         },
-        childCount: latest7.length,
+        childCount: history.length,
       ),
     );
   }
