@@ -2,18 +2,39 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/features/bite/data/bite_analytics.dart';
+import 'package:food_locker/features/bite/data/bite_database.dart';
+import 'package:food_locker/features/bite/data/bite_manager.dart';
+import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
-/// Backup feedback on [SettingsPage]: work in flight says so, and only work
-/// that actually moved data reports success.
+/// Backup feedback on [SettingsPage]: work in flight says so, only work
+/// that actually moved data reports success, and a restore leaves no manager
+/// holding what it read before the import.
 void main() {
-  Future<void> pumpPage(WidgetTester tester, SerializationService service) {
+  Future<void> pumpPage(
+    WidgetTester tester,
+    SerializationService service, {
+    WeightManager? weightManager,
+    BiteManager? biteManager,
+  }) {
     return tester.pumpWidget(
       MaterialApp(
-        home: Provider<SerializationService>.value(
-          value: service,
+        home: MultiProvider(
+          providers: [
+            Provider<SerializationService>.value(value: service),
+            ChangeNotifierProvider<WeightManager>.value(
+              value: weightManager ?? WeightManager(InMemoryWeightRepository()),
+            ),
+            ChangeNotifierProvider<BiteManager>.value(
+              value: biteManager ?? _biteManager(_FakeBiteRepository()),
+            ),
+          ],
           child: const SettingsPage(),
         ),
       ),
@@ -94,6 +115,44 @@ void main() {
       expect(find.text('Data imported successfully'), findsNothing);
     });
 
+    testWidgets('leaves no manager holding pre-import data', (tester) async {
+      final weightRepo = InMemoryWeightRepository();
+      final biteRepo = _FakeBiteRepository(
+        config: const PacingConfig(id: 1, effectiveMs: 0, b1S: 12, b2S: 25),
+      );
+      final weightManager = WeightManager(weightRepo);
+      final biteManager = _biteManager(biteRepo);
+      await weightManager.initialize();
+      await biteManager.initialize();
+
+      final restored = Weight(date: DateTime.now(), value: 71.5);
+      final service = _FakeSerializationService(
+        // Stands in for the restore: replaces what is stored without going
+        // through either manager.
+        onRestore: () async {
+          await weightRepo.saveWeight(restored);
+          biteRepo.config =
+              const PacingConfig(id: 2, effectiveMs: 0, b1S: 40, b2S: 90);
+        },
+      );
+      await pumpPage(
+        tester,
+        service,
+        weightManager: weightManager,
+        biteManager: biteManager,
+      );
+
+      expect(weightManager.history, isEmpty);
+      expect(biteManager.b2, const Duration(seconds: 25));
+
+      await tapImport(tester, confirm: true);
+      service.finish();
+      await pumpToast(tester);
+
+      expect(weightManager.history.single.value, restored.value);
+      expect(biteManager.b2, const Duration(seconds: 90));
+    });
+
     testWidgets('replaces the progress toast with the failure toast',
         (tester) async {
       final service = _FakeSerializationService();
@@ -147,7 +206,14 @@ void main() {
 /// Replaces the file picker, the restore, and the share sheet, holding the work
 /// open until [finish] or [fail] ends it.
 class _FakeSerializationService extends SerializationService {
-  _FakeSerializationService({this.cancelled = false, this.empty = false});
+  _FakeSerializationService({
+    this.cancelled = false,
+    this.empty = false,
+    this.onRestore,
+  });
+
+  /// Import only: what the restore writes to the stores once it is let through.
+  final Future<void> Function()? onRestore;
 
   /// Import only: the user dismissed the file picker.
   final bool cancelled;
@@ -173,6 +239,7 @@ class _FakeSerializationService extends SerializationService {
     if (onConfirm != null && !await onConfirm(fileName)) return false;
     onRestoreStart?.call();
     await _work.future;
+    await onRestore?.call();
     return true;
   }
 
@@ -183,4 +250,58 @@ class _FakeSerializationService extends SerializationService {
     onShareReady?.call();
     return true;
   }
+}
+
+/// A [BiteManager] over [repo] with the device haptic stubbed out.
+BiteManager _biteManager(BiteRepository repo) =>
+    BiteManager(repo, onReachedClear: () async {});
+
+/// An in-memory [BiteRepository] whose [config] a test can swap, the way a
+/// restore replaces the stored threshold history.
+class _FakeBiteRepository implements BiteRepository {
+  _FakeBiteRepository({this.config});
+
+  PacingConfig? config;
+
+  final List<DateTime> _bites = [];
+
+  @override
+  Future<void> logBite(DateTime at) async => _bites.add(at);
+
+  @override
+  Future<Bite?> lastBite() async => _bites.isEmpty
+      ? null
+      : Bite(id: _bites.length, atMs: _bites.last.millisecondsSinceEpoch);
+
+  @override
+  Future<List<Bite>> bitesInRange(DateTime from, DateTime to) async {
+    var id = 0;
+    return [
+      for (final at in _bites)
+        if (!at.isBefore(from) && at.isBefore(to))
+          Bite(id: ++id, atMs: at.millisecondsSinceEpoch),
+    ];
+  }
+
+  @override
+  Future<int> biteCount(DateTime from, DateTime to) async =>
+      _bites.where((at) => !at.isBefore(from) && at.isBefore(to)).length;
+
+  @override
+  Future<List<DailyBiteCount>> dailyBiteCounts(DateTime from, DateTime to) async => [];
+
+  @override
+  Future<void> setPacingConfig(PacingConfig cfg) async => config = cfg;
+
+  @override
+  Future<PacingConfig?> pacingConfigAt(DateTime instant) async => config;
+
+  @override
+  Future<List<PacingConfig>> allPacingConfigs() async => [?config];
+
+  @override
+  Future<void> clearBites() async => _bites.clear();
+
+  @override
+  Future<void> clearPacingConfigs() async => config = null;
 }
