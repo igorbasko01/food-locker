@@ -16,6 +16,10 @@ abstract class WeightRepository {
 
   Future<void> deleteWeight(DateTime date);
   Future<void> clear();
+
+  /// Whether the store holds no weigh-in. Implementations answer from the
+  /// store's own bookkeeping rather than by reading the entries.
+  bool get isEmpty;
   
   /// Returns the lowest weight recorded since [since] (inclusive).
   /// If [since] is null, returns the all-time lowest weight.

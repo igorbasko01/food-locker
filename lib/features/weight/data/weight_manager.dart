@@ -42,7 +42,7 @@ class WeightManager extends ChangeNotifier {
       .toList(growable: false);
 
   /// Whether the store holds any weigh-in at all, in or out of [historyRange].
-  bool get hasAnyWeights => _weightRepository.getAllWeights().isNotEmpty;
+  bool get hasAnyWeights => !_weightRepository.isEmpty;
 
   void selectHistoryRange(DateRange range) {
     if (range == _historyRange) return;

@@ -31,4 +31,7 @@ class InMemoryWeightRepository with WeightRepositoryHelper implements WeightRepo
     invalidateCache();
     _weights.clear();
   }
+
+  @override
+  bool get isEmpty => _weights.isEmpty;
 }

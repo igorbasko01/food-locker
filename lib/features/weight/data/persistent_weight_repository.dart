@@ -34,4 +34,7 @@ class PersistentWeightRepository with WeightRepositoryHelper implements WeightRe
     invalidateCache();
     await _box.clear();
   }
+
+  @override
+  bool get isEmpty => _box.isEmpty;
 }
