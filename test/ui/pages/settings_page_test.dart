@@ -287,6 +287,32 @@ void main() {
       expect(find.text('Clearing data...'), findsNothing);
       expect(find.textContaining('Clear failed'), findsOneWidget);
     });
+
+    testWidgets('re-reads the managers when the clear fails part way',
+        (tester) async {
+      final weightRepo = InMemoryWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      final weightManager = WeightManager(weightRepo);
+      await weightManager.initialize();
+      final service = _FakeSerializationService(onClear: weightRepo.clear);
+      await pumpPage(
+        tester,
+        service,
+        weightManager: weightManager,
+        weightRepo: weightRepo,
+      );
+
+      expect(weightManager.history, hasLength(1));
+
+      await tapClear(tester, confirm: true);
+      service.fail('boom');
+      await pumpToast(tester);
+
+      expect(find.textContaining('Clear failed'), findsOneWidget);
+      // The weights are gone whatever the toast says, so the tab must not go
+      // on listing them.
+      expect(weightManager.history, isEmpty);
+    });
   });
 
   group('export', () {
@@ -329,10 +355,15 @@ class _FakeSerializationService extends SerializationService {
     this.cancelled = false,
     this.empty = false,
     this.onRestore,
+    this.onClear,
   });
 
   /// Import only: what the restore writes to the stores once it is let through.
   final Future<void> Function()? onRestore;
+
+  /// Clear only: what the clear deletes before the work is allowed to end, so a
+  /// failure can land on a store that was already emptied part way.
+  final Future<void> Function()? onClear;
 
   /// Import only: the user dismissed the file picker.
   final bool cancelled;
@@ -367,6 +398,7 @@ class _FakeSerializationService extends SerializationService {
     WeightRepository weightRepo,
     BiteRepository biteRepo,
   ) async {
+    await onClear?.call();
     await _work.future;
   }
 

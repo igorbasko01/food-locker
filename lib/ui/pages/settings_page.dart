@@ -193,16 +193,17 @@ class _SettingsPageState extends State<SettingsPage> {
 
     try {
       await service.clearAllData(weightRepo, biteRepo);
-      // The clear goes straight through the repositories, so both managers
-      // are still serving what they last read.
-      await weightManager.refresh();
-      await biteManager.refresh();
       messenger.removeCurrentSnackBar();
       messenger.showSnackBar(const SnackBar(content: Text('All data cleared')));
     } catch (e) {
       messenger.removeCurrentSnackBar();
       messenger.showSnackBar(SnackBar(content: Text('Clear failed: $e')));
     } finally {
+      // The clear goes straight through the repositories, so both managers are
+      // still serving what they last read. A clear that failed part way still
+      // deleted something, so they are re-read either way.
+      await weightManager.refresh();
+      await biteManager.refresh();
       if (mounted) setState(() => _busy = false);
     }
   }
