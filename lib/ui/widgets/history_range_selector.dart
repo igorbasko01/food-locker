@@ -10,16 +10,11 @@ const historyRangePresets = <DateRange>[
   DateRange.lastDays(365),
 ];
 
-extension HistoryRangeLabel on DateRange {
-  /// Rounded to the unit the span is closest to, so 180 days reads as months.
-  String get label => switch (days) {
-    180 => 'Last 6 months',
-    365 => 'Last year',
-    _ => 'Last $days days',
-  };
-
-  /// The span title-cased for a heading, as in 'Latest 30 Days of Weight'.
-  String get headingSpan => switch (days) {
+extension HistoryRangeSpan on DateRange {
+  /// Title-cased for headings ('Latest 30 Days of Weight'); lowercase it for
+  /// prose ('the last 30 days'). Rounded to the unit the span is closest to,
+  /// so 180 days reads as months.
+  String get span => switch (days) {
     180 => '6 Months',
     365 => 'Year',
     _ => '$days Days',
@@ -47,7 +42,10 @@ class HistoryRangeSelector extends StatelessWidget {
       onSelected: onSelected,
       itemBuilder: (context) => [
         for (final range in historyRangePresets)
-          PopupMenuItem(value: range, child: Text(range.label)),
+          PopupMenuItem(
+            value: range,
+            child: Text('Last ${range.span.toLowerCase()}'),
+          ),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -55,7 +53,7 @@ class HistoryRangeSelector extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              selected.label,
+              'Last ${selected.span.toLowerCase()}',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
               ),

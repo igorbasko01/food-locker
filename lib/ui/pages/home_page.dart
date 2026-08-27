@@ -62,7 +62,7 @@ class HomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Latest ${range.headingSpan} of Weight',
+                    'Latest ${range.span} of Weight',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -118,7 +118,7 @@ class HomePage extends StatelessWidget {
             child: Text(
               storeIsEmpty
                   ? 'No weight entries yet.\nTap "Log Weight" above to get started!'
-                  : 'No weight entries in the ${range.label.toLowerCase()}.\n'
+                  : 'No weight entries in the last ${range.span.toLowerCase()}.\n'
                         'Tap "Log Weight" above to add one.',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey, height: 1.5),
