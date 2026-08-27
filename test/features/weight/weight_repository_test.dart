@@ -157,5 +157,19 @@ void main() {
 
       expect(repository.getOldestWeightDate(), date2);
     });
+
+    test('isEmpty tracks whether the store holds anything', () async {
+      expect(repository.isEmpty, isTrue);
+
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 1), value: 70.0));
+      expect(repository.isEmpty, isFalse);
+
+      await repository.deleteWeight(DateTime(2023, 5, 1));
+      expect(repository.isEmpty, isTrue);
+
+      await repository.saveWeight(Weight(date: DateTime(2023, 5, 2), value: 71.0));
+      await repository.clear();
+      expect(repository.isEmpty, isTrue);
+    });
   });
 }

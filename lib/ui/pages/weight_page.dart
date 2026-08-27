@@ -77,7 +77,7 @@ class WeightPage extends StatelessWidget {
                     padding: const EdgeInsets.all(32.0),
                     child: Center(
                       child: Text(
-                        'No weight entries in the ${range.label.toLowerCase()}. '
+                        'No weight entries in the last ${range.span.toLowerCase()}. '
                         'Tap + to log your weight.',
                       ),
                     ),
