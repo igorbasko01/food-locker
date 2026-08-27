@@ -10,29 +10,36 @@ import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 /// Backup feedback on [SettingsPage]: work in flight says so, only work
-/// that actually moved data reports success, and a restore leaves no manager
-/// holding what it read before the import.
+/// that actually moved data reports success, and neither a restore nor a clear
+/// leaves a manager holding what it read beforehand.
 void main() {
   Future<void> pumpPage(
     WidgetTester tester,
     SerializationService service, {
     WeightManager? weightManager,
     BiteManager? biteManager,
+    WeightRepository? weightRepo,
+    BiteRepository? biteRepo,
   }) {
+    final weights = weightRepo ?? InMemoryWeightRepository();
+    final bites = biteRepo ?? _FakeBiteRepository();
     return tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
           providers: [
             Provider<SerializationService>.value(value: service),
+            Provider<WeightRepository>.value(value: weights),
+            Provider<BiteRepository>.value(value: bites),
             ChangeNotifierProvider<WeightManager>.value(
-              value: weightManager ?? WeightManager(InMemoryWeightRepository()),
+              value: weightManager ?? WeightManager(weights),
             ),
             ChangeNotifierProvider<BiteManager>.value(
-              value: biteManager ?? _biteManager(_FakeBiteRepository()),
+              value: biteManager ?? _biteManager(bites),
             ),
           ],
           child: const SettingsPage(),
@@ -52,6 +59,14 @@ void main() {
     await tester.tap(find.text('Import Data'));
     await tester.pumpAndSettle();
     await tester.tap(find.text(confirm ? 'Replace' : 'Cancel'));
+    await tester.pump();
+  }
+
+  /// Taps Clear All Data and answers the confirmation dialog it raises.
+  Future<void> tapClear(WidgetTester tester, {required bool confirm}) async {
+    await tester.tap(find.text('Clear All Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(confirm ? 'Clear' : 'Cancel'));
     await tester.pump();
   }
 
@@ -170,6 +185,110 @@ void main() {
     });
   });
 
+  group('clear', () {
+    /// Far enough back that a seeded bite is past any pacing threshold, so it
+    /// never leaves a ticker running through the test.
+    DateTime startOfToday() {
+      final now = DateTime.now();
+      return DateTime(now.year, now.month, now.day);
+    }
+
+    testWidgets('asks before deleting anything', (tester) async {
+      final weightRepo = InMemoryWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
+
+      await tester.tap(find.text('Clear All Data'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Clear all data?'), findsOneWidget);
+      expect(weightRepo.getAllWeights(), hasLength(1));
+    });
+
+    testWidgets('cancelling leaves the stores untouched', (tester) async {
+      final weightRepo = InMemoryWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
+
+      await tapClear(tester, confirm: false);
+      await pumpToast(tester);
+
+      expect(find.text('Clear all data?'), findsNothing);
+      expect(weightRepo.getAllWeights(), hasLength(1));
+      expect(find.text('All data cleared'), findsNothing);
+    });
+
+    testWidgets('confirming empties both stores and the managers with them',
+        (tester) async {
+      final weightRepo = InMemoryWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      final biteRepo = _FakeBiteRepository(
+        config: const PacingConfig(id: 1, effectiveMs: 0, b1S: 12, b2S: 25),
+      );
+      await biteRepo.logBite(startOfToday());
+      final weightManager = WeightManager(weightRepo);
+      final biteManager = _biteManager(biteRepo);
+      await weightManager.initialize();
+      await biteManager.initialize();
+
+      await pumpPage(
+        tester,
+        SerializationService(),
+        weightManager: weightManager,
+        biteManager: biteManager,
+        weightRepo: weightRepo,
+        biteRepo: biteRepo,
+      );
+
+      expect(weightManager.history, hasLength(1));
+      expect(biteManager.todayCount, 1);
+      expect(biteManager.b2, const Duration(seconds: 25));
+
+      await tapClear(tester, confirm: true);
+      await pumpToast(tester);
+
+      expect(weightRepo.getAllWeights(), isEmpty);
+      expect(weightManager.history, isEmpty);
+      expect(biteManager.todayCount, 0);
+      // Back to a fresh install's thresholds rather than the cleared ones.
+      expect(biteManager.b2, const Duration(seconds: 30));
+      expect(find.text('All data cleared'), findsOneWidget);
+    });
+
+    testWidgets('shows a progress toast while clearing, then the success toast',
+        (tester) async {
+      final service = _FakeSerializationService();
+      await pumpPage(tester, service);
+
+      await tapClear(tester, confirm: true);
+
+      expect(find.text('Clearing data...'), findsOneWidget);
+      expect(find.text('All data cleared'), findsNothing);
+
+      service.finish();
+      await pumpToast(tester);
+
+      expect(find.text('Clearing data...'), findsNothing);
+      expect(find.text('All data cleared'), findsOneWidget);
+    });
+
+    testWidgets('replaces the progress toast with the failure toast',
+        (tester) async {
+      final service = _FakeSerializationService();
+      await pumpPage(tester, service);
+
+      await tapClear(tester, confirm: true);
+
+      expect(find.text('Clearing data...'), findsOneWidget);
+
+      service.fail('boom');
+      await pumpToast(tester);
+
+      expect(find.text('Clearing data...'), findsNothing);
+      expect(find.textContaining('Clear failed'), findsOneWidget);
+    });
+  });
+
   group('export', () {
     testWidgets('shows a progress toast while exporting, then the success toast',
         (tester) async {
@@ -241,6 +360,14 @@ class _FakeSerializationService extends SerializationService {
     await _work.future;
     await onRestore?.call();
     return true;
+  }
+
+  @override
+  Future<void> clearAllData(
+    WeightRepository weightRepo,
+    BiteRepository biteRepo,
+  ) async {
+    await _work.future;
   }
 
   @override

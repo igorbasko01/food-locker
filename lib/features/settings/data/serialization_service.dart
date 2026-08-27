@@ -154,6 +154,24 @@ class SerializationService {
     return true;
   }
 
+  /// Erases every stored dataset — the clear half of [restoreFromBackup] with
+  /// nothing restored after it, so a user can start over without reinstalling.
+  /// Kept apart from the picker and file I/O so it stays unit-testable.
+  ///
+  /// The thresholds are seeded back to [defaultPacingConfig] rather than left
+  /// absent: the store seeds them only when the database is first opened, so a
+  /// clear mid-session would otherwise leave the pacing view with no effective
+  /// config until the next app start.
+  Future<void> clearAllData(
+    WeightRepository weightRepo,
+    BiteRepository biteRepo,
+  ) async {
+    await weightRepo.clear();
+    await biteRepo.clearBites();
+    await biteRepo.clearPacingConfigs();
+    await biteRepo.setPacingConfig(defaultPacingConfig);
+  }
+
   /// Replaces both stores' contents with a backup zip — the destructive core of
   /// [importData], kept separate from the file-picker and file-I/O plumbing so
   /// the clear-then-restore path stays unit-testable.

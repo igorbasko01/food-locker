@@ -98,18 +98,27 @@ class BiteDatabase extends _$BiteDatabase {
         .getSingleOrNull();
   }
 
-  /// Seeds the v1 starting thresholds (`b1 = 15 s`, `b2 = 30 s`) on first run.
-  ///
-  /// Effective from the epoch (`effective_ms = 0`) so that every bite — past or
-  /// present — resolves to it. Idempotent: a no-op once any config row exists,
-  /// so it never clobbers a user's retuned thresholds.
+  /// Seeds [defaultPacingConfig] on first run. Idempotent: a no-op once any
+  /// config row exists, so it never clobbers a user's retuned thresholds.
   Future<void> _seedDefaultPacingConfig() async {
     final existing = await (select(
       pacingConfigs,
     )..limit(1)).getSingleOrNull();
     if (existing != null) return;
     await into(pacingConfigs).insert(
-      PacingConfigsCompanion.insert(effectiveMs: 0, b1S: 15, b2S: 30),
+      PacingConfigsCompanion.insert(
+        effectiveMs: defaultPacingConfig.effectiveMs,
+        b1S: defaultPacingConfig.b1S,
+        b2S: defaultPacingConfig.b2S,
+      ),
     );
   }
 }
+
+/// The v1 starting thresholds: seeded on first run, and written back whenever
+/// the config history is cleared outright.
+///
+/// Effective from the epoch so that every bite — past or present — resolves to
+/// it. The `id` is store-assigned on insert, so the 0 here is a placeholder.
+const PacingConfig defaultPacingConfig =
+    PacingConfig(id: 0, effectiveMs: 0, b1S: 15, b2S: 30);
