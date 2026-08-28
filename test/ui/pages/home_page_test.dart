@@ -18,8 +18,8 @@ void main() {
       DateTime(today.year, today.month, today.day - days);
 
   Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
-    // The header and the two banners push the history list below the fold on
-    // the default 800x600 surface, so its tiles never get built.
+    // The header pushes the history list below the fold on the default
+    // 800x600 surface, so its tiles never get built.
     tester.view.physicalSize = const Size(800, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
