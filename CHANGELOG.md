@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.18.0](https://github.com/igorbasko01/food-locker/compare/v1.17.0...v1.18.0) (2026-08-28)
+
+
+### Features
+
+* clear all stored data from Settings ([#101](https://github.com/igorbasko01/food-locker/issues/101)) ([#111](https://github.com/igorbasko01/food-locker/issues/111)) ([4fedd5e](https://github.com/igorbasko01/food-locker/commit/4fedd5ea3aa803b5961b8657269e398b66587f71))
+* pick the weight history range from five presets ([#97](https://github.com/igorbasko01/food-locker/issues/97)) ([b6373d6](https://github.com/igorbasko01/food-locker/commit/b6373d62e9451bf5c607792bd05a4a59833dd665))
+
+
+### Bug Fixes
+
+* confirm before an import replaces stored data ([#106](https://github.com/igorbasko01/food-locker/issues/106)) ([a300ef4](https://github.com/igorbasko01/food-locker/commit/a300ef4f6377cc01cac74fc4ebcce26b0ead5837))
+* name the selected history range on Home ([#99](https://github.com/igorbasko01/food-locker/issues/99)) ([#110](https://github.com/igorbasko01/food-locker/issues/110)) ([044e429](https://github.com/igorbasko01/food-locker/commit/044e429664bc9b350471770d95f16e1bfe5a08a1))
+* refresh the managers after a backup restore ([#98](https://github.com/igorbasko01/food-locker/issues/98)) ([#109](https://github.com/igorbasko01/food-locker/issues/109)) ([265b4d9](https://github.com/igorbasko01/food-locker/commit/265b4d9587d9b6a877502dfef9b85efed60def98))
+
 ## [1.17.0](https://github.com/igorbasko01/food-locker/compare/v1.16.1...v1.17.0) (2026-08-17)
 
 
