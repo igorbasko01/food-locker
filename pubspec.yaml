@@ -1,7 +1,7 @@
 name: food_locker
 description: "Track your daily weight and pace your eating one bite at a time — a local-first Flutter app."
 publish_to: 'none'
-version: 1.17.0
+version: 1.18.0
 
 environment:
   sdk: ^3.10.4
