@@ -5,7 +5,7 @@ A Flutter application for tracking your daily weight and pacing your eating, one
 ## Features
 
 - **Daily Weight Tracking**: Log one weight entry per day, in kilograms or pounds.
-- **Analytics & Insights**: See your lowest weight all-time and over the last 7 / 30 days, plus "clean" vs. "overeating" streaks derived from day-over-day changes.
+- **Analytics & Insights**: See your lowest weight all-time and over the last 7 / 30 days.
 - **Weight History & Chart**: Browse past entries and visualize trends with a chart (`fl_chart`).
 - **Bite Counting & Pacing**: Tap once per bite to count your bites for the day, with a colour-coded timer that paces you between bites (too soon → hold on → clear) and a haptic buzz when it's a good time for the next one. Bites are never blocked — the pacing is feedback, not a lockout.
 - **Backup & Restore**: Export all your data — weight and bites — to a zip file and import it back later from the Settings tab.

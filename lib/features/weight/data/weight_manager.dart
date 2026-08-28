@@ -4,9 +4,6 @@ import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 
-export 'package:food_locker/features/weight/data/weight_analytics.dart'
-    show StreakType, OvereatingStats;
-
 class WeightManager extends ChangeNotifier {
   final WeightRepository _weightRepository;
   final WeightAnalytics _analytics;
@@ -98,6 +95,4 @@ class WeightManager extends ChangeNotifier {
   double? get lowestAllTime => _analytics.lowestAllTime;
   double? get lowestLast30Days => _analytics.lowestLast30Days;
   double? get lowestLast7Days => _analytics.lowestLast7Days;
-
-  OvereatingStats get overeatingStats => _analytics.calculateOvereatingStats();
 }

@@ -33,8 +33,8 @@ Key layering for the weight feature:
 
 - **`Weight` / `WeightUnit`** (`weight.dart`) — Hive-annotated domain model.
 - **`WeightRepository`** — abstract persistence interface. `WeightRepositoryHelper` is a mixin providing shared lowest-weight logic + caching. Three implementations exist: `PersistentWeightRepository` (Hive-backed, production), `InMemoryWeightRepository` (tests), and it is injected as a `Provider<WeightRepository>` so callers depend on the interface, not the box.
-- **`WeightManager extends ChangeNotifier`** — the UI-facing state holder (`ChangeNotifierProvider`). It owns the in-memory `_weights` list and, after every mutation, re-reads from the repository and `notifyListeners()` to stay consistent. Wraps `WeightAnalytics` and re-exports its `StreakType`/`OvereatingStats` types.
-- **`WeightAnalytics`** — pure computation over the repository (lowest all-time / last 30 / last 7 days, overeating & streak stats).
+- **`WeightManager extends ChangeNotifier`** — the UI-facing state holder (`ChangeNotifierProvider`). It owns the in-memory `_weights` list and, after every mutation, re-reads from the repository and `notifyListeners()` to stay consistent. Wraps `WeightAnalytics`.
+- **`WeightAnalytics`** — pure computation over the repository (lowest all-time / last 30 / last 7 days).
 
 Dates are treated as day-granular throughout: repository keys and equality normalize to `(year, month, day)`, so "one entry per day" is the invariant. When adding mutation paths, follow the existing pattern (write through the repository, then refresh `_weights` from it).
 
