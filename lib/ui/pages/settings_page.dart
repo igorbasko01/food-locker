@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
+import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
+import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -51,6 +53,26 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTap: _importData,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildHeader(theme, 'Danger Zone'),
+          Card(
+            elevation: 0,
+            color: theme.colorScheme.errorContainer.withValues(alpha: 0.2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: theme.colorScheme.error.withValues(alpha: 0.4),
+                width: 1,
+              ),
+            ),
+            child: ListTile(
+              enabled: !_busy,
+              leading: Icon(Icons.delete_forever, color: theme.colorScheme.error),
+              title: const Text('Clear All Data', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Permanently delete all weight and bite data.'),
+              onTap: _clearAllData,
             ),
           ),
         ],
@@ -147,6 +169,70 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Replace'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
+  }
+
+  Future<void> _clearAllData() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final service = context.read<SerializationService>();
+    final weightRepo = context.read<WeightRepository>();
+    final biteRepo = context.read<BiteRepository>();
+    final weightManager = context.read<WeightManager>();
+    final biteManager = context.read<BiteManager>();
+
+    if (!await _confirmClear() || !mounted) return;
+
+    setState(() => _busy = true);
+    messenger.showSnackBar(_progressSnackBar('Clearing data...'));
+
+    try {
+      await service.clearAllData(weightRepo, biteRepo);
+      messenger.removeCurrentSnackBar();
+      messenger.showSnackBar(const SnackBar(content: Text('All data cleared')));
+    } catch (e) {
+      messenger.removeCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text('Clear failed: $e')));
+    } finally {
+      // The clear goes straight through the repositories, so both managers are
+      // still serving what they last read. A clear that failed part way still
+      // deleted something, so they are re-read either way.
+      await weightManager.refresh();
+      await biteManager.refresh();
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// A clear is unrecoverable, so it asks first and points at the export that
+  /// would have made the data recoverable.
+  Future<bool> _confirmClear() async {
+    if (!mounted) return false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return AlertDialog(
+          title: const Text('Clear all data?'),
+          content: const Text(
+            'This permanently deletes your weight history, the bite log and '
+            'your pacing settings. It cannot be undone — export a backup first '
+            'if you might want any of it back.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Clear'),
             ),
           ],
         );

@@ -1,8 +1,10 @@
 import 'package:archive/archive.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
@@ -458,6 +460,61 @@ void main() {
 
       expect(restored, isTrue);
       expect(weightRepo.getAllWeights().single.value, 75.5);
+    });
+  });
+
+  group('SerializationService clearAllData', () {
+    final service = SerializationService();
+
+    test('empties every dataset and reseeds the default thresholds', () async {
+      final weightRepo = _RecordingWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime(2026, 1, 1), value: 80));
+      final biteRepo = _RecordingBiteRepository();
+      await biteRepo.logBite(DateTime(2026, 1, 1, 12));
+      await biteRepo.setPacingConfig(
+        const PacingConfig(id: 1, effectiveMs: 0, b1S: 40, b2S: 90),
+      );
+      weightRepo.operations.clear();
+      biteRepo.operations.clear();
+      biteRepo.configOperations.clear();
+
+      await service.clearAllData(weightRepo, biteRepo);
+
+      expect(weightRepo.operations, ['clear']);
+      expect(weightRepo.getAllWeights(), isEmpty);
+      expect(biteRepo.operations, ['clear']);
+      expect(biteRepo.loggedMs, isEmpty);
+      // The retuned version goes with the rest; the default replaces it.
+      expect(biteRepo.configOperations, ['clear', 'set']);
+      expect(biteRepo.savedConfigs.single.b1S, defaultPacingConfig.b1S);
+      expect(biteRepo.savedConfigs.single.b2S, defaultPacingConfig.b2S);
+      expect(biteRepo.savedConfigs.single.effectiveMs, 0);
+    });
+
+    test('leaves the bite store readable, on the default config', () async {
+      final db = BiteDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      final biteRepo = DriftBiteRepository(db);
+      final weightRepo = InMemoryWeightRepository();
+      await weightRepo.saveWeight(Weight(date: DateTime(2026, 1, 1), value: 80));
+      await biteRepo.logBite(DateTime(2026, 1, 1, 12));
+      await biteRepo.setPacingConfig(
+        const PacingConfig(id: 0, effectiveMs: 1, b1S: 40, b2S: 90),
+      );
+
+      await service.clearAllData(weightRepo, biteRepo);
+
+      expect(weightRepo.getAllWeights(), isEmpty);
+      expect(
+        await biteRepo.bitesInRange(DateTime(2026), DateTime(2027)),
+        isEmpty,
+      );
+      // A fresh install's state: one config version, effective from the epoch.
+      final config = await biteRepo.pacingConfigAt(DateTime(2026, 6, 1));
+      expect(config, isNotNull);
+      expect(config!.b1S, defaultPacingConfig.b1S);
+      expect(config.b2S, defaultPacingConfig.b2S);
+      expect(await biteRepo.allPacingConfigs(), hasLength(1));
     });
   });
 }
