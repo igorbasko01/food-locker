@@ -5,6 +5,7 @@ import 'package:food_locker/features/weight/data/in_memory_weight_repository.dar
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/theme.dart';
+import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
 import 'package:provider/provider.dart';
 
@@ -126,5 +127,39 @@ void main() {
 
     expect(find.byType(WeightHistoryTile), findsNWidgets(10));
     expect(find.text(_dateLabel(daysAgo(9))), findsOneWidget);
+  });
+
+  testWidgets('the heatmap sits under the title block once a week has data', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    // Four weeks of daily weigh-ins, so a full week clears the four-entry
+    // threshold whatever weekday the test runs on.
+    for (var day = 0; day < 28; day++) {
+      await manager.addWeight(daysAgo(day), 70.0 + day);
+    }
+
+    await pumpPage(tester, manager);
+
+    expect(find.byType(WeeklyChangeHeatmap), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byType(WeeklyChangeHeatmap)).dy,
+      greaterThan(tester.getTopLeft(find.text('Weight Locker')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.byType(WeeklyChangeHeatmap)).dy,
+      lessThan(tester.getTopLeft(find.text('Latest 7 Days of Weight')).dy),
+    );
+  });
+
+  testWidgets('the heatmap stays hidden while no week has data', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    await manager.addWeight(today, 72.0);
+
+    await pumpPage(tester, manager);
+
+    expect(find.byType(WeeklyChangeHeatmap), findsNothing);
   });
 }
