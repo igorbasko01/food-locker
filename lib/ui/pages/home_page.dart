@@ -35,7 +35,7 @@ class HomePage extends StatelessWidget {
                   Text('Weight Locker', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text(
-                    'Track your progress. Stay clean.',
+                    'Track your progress.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
