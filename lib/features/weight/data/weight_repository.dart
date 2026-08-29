@@ -24,9 +24,6 @@ abstract class WeightRepository {
   /// Returns the lowest weight recorded since [since] (inclusive).
   /// If [since] is null, returns the all-time lowest weight.
   double? getLowestWeight({DateTime? since});
-
-  /// Returns the date of the oldest weight record, or null if empty.
-  DateTime? getOldestWeightDate();
 }
 
 mixin WeightRepositoryHelper implements WeightRepository {
@@ -99,14 +96,5 @@ mixin WeightRepositoryHelper implements WeightRepository {
     }).toList();
     weights.sort((a, b) => b.date.compareTo(a.date));
     return weights;
-  }
-
-  @override
-  DateTime? getOldestWeightDate() {
-    final weights = getAllWeights();
-    if (weights.isEmpty) return null;
-    return weights
-        .map((w) => w.date)
-        .reduce((a, b) => a.isBefore(b) ? a : b);
   }
 }

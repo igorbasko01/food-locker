@@ -5,8 +5,8 @@ import 'package:food_locker/features/bite/data/meal_clustering.dart';
 /// Total bites on a single local calendar day.
 ///
 /// A read-time projection of the append-only bite log: [day] is normalised to
-/// local midnight (`DateTime(y, m, d)`), so it doubles as the `[day, day.nextDay)`
-/// window's lower bound and compares cleanly against other per-day metrics.
+/// local midnight (`DateTime(y, m, d)`), so it doubles as the lower bound of the
+/// day's half-open window and compares cleanly against other per-day metrics.
 class DailyBiteCount {
   const DailyBiteCount({required this.day, required this.count});
 

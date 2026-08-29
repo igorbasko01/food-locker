@@ -5,8 +5,6 @@ import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
 import 'package:food_locker/ui/widgets/app_version_label.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
-import 'package:food_locker/ui/widgets/longest_streak_banner.dart';
-import 'package:food_locker/ui/widgets/streak_banner.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
 import 'package:provider/provider.dart';
 
@@ -17,7 +15,6 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final weightManager = context.watch<WeightManager>();
-    final stats = weightManager.overeatingStats;
     final history = weightManager.history;
     final range = weightManager.historyRange;
 
@@ -38,7 +35,7 @@ class HomePage extends StatelessWidget {
                   Text('Weight Locker', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text(
-                    'Track your progress. Stay clean.',
+                    'Track your progress.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -48,16 +45,8 @@ class HomePage extends StatelessWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                StreakBanner(stats: stats),
-                LongestStreakBanner(stats: stats),
-              ],
-            ),
-          ),
-          SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

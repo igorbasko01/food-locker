@@ -144,20 +144,6 @@ void main() {
       expect(repository.getWeightsSince(DateTime(2023, 6, 1)), isEmpty);
     });
 
-    test('getOldestWeightDate returns oldest date', () async {
-      expect(repository.getOldestWeightDate(), isNull);
-
-      final date1 = DateTime(2023, 5, 12);
-      final date2 = DateTime(2023, 5, 10);
-      final date3 = DateTime(2023, 5, 15);
-
-      await repository.saveWeight(Weight(date: date1, value: 80.0));
-      await repository.saveWeight(Weight(date: date2, value: 75.0));
-      await repository.saveWeight(Weight(date: date3, value: 78.0));
-
-      expect(repository.getOldestWeightDate(), date2);
-    });
-
     test('isEmpty tracks whether the store holds anything', () async {
       expect(repository.isEmpty, isTrue);
 
