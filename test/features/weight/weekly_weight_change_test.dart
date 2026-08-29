@@ -63,6 +63,13 @@ void main() {
       expect(weeks.first.weekStart, DateTime(2026, 7, 19));
     });
 
+    test('rejects a grid with no weeks in it', () {
+      expect(
+        () => analytics.weeklyChanges(weeks: 0, asOf: asOf),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
     test('a store with no weigh-ins yields 52 empty weeks', () {
       final weeks = analytics.weeklyChanges(asOf: asOf);
 

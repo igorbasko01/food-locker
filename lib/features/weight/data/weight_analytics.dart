@@ -29,6 +29,7 @@ class WeightAnalytics {
     int weeks = heatmapWeeks,
     DateTime? asOf,
   }) {
+    assert(weeks > 0);
     final weekStarts = _weekStartsEndingAt(asOf ?? DateTime.now(), weeks);
     final entriesByWeek = <DateTime, List<Weight>>{};
 

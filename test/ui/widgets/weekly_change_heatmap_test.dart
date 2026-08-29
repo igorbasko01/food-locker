@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/weight_analytics.dart';
 import 'package:food_locker/ui/widgets/weekly_change_color.dart';
 import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 
@@ -46,7 +47,12 @@ void main() {
       findsNWidgets(WeeklyChangeHeatmap.rows),
     );
     expect(cellColors(tester), hasLength(52));
-    expect(WeeklyChangeHeatmap.rows * WeeklyChangeHeatmap.columns, 52);
+    // The grid must hold exactly the weeks analytics supplies: the list is
+    // oldest-first, so a grid too small would silently drop the newest weeks.
+    expect(
+      WeeklyChangeHeatmap.rows * WeeklyChangeHeatmap.columns,
+      WeightAnalytics.heatmapWeeks,
+    );
   });
 
   testWidgets('a week under the entry threshold is drawn as no data', (
