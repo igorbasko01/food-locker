@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
@@ -317,11 +318,12 @@ void main() {
     expect(find.text('12 bites'), findsNWidgets(2));
 
     // Tap yesterday's bar → card follows it: back control appears, the today
-    // title is gone, and yesterday's 20-bite meal shows.
+    // title gives way to yesterday's date, and its 20-bite meal shows.
     tapBar(tester, 0);
     await tester.pumpAndSettle();
 
     expect(find.text('Today\'s meals'), findsNothing);
+    expect(find.text(fullDate(yesterday)), findsOneWidget);
     expect(find.text('Back to today'), findsOneWidget);
     expect(find.text('20 bites'), findsNWidgets(2));
 

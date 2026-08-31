@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 class AddWeightDialog extends StatefulWidget {
@@ -71,7 +72,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
                     });
                   }
                 },
-                child: Text('${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}'),
+                child: Text(fullDate(_selectedDate)),
               ),
             ],
           ),

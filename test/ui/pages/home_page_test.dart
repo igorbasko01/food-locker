@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
@@ -8,9 +9,6 @@ import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
 import 'package:provider/provider.dart';
-
-String _dateLabel(DateTime date) =>
-    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
 void main() {
   final now = DateTime.now();
@@ -107,7 +105,7 @@ void main() {
     manager.selectHistoryRange(const DateRange.lastDays(30));
     await tester.pump();
 
-    expect(find.text(_dateLabel(daysAgo(20))), findsOneWidget);
+    expect(find.text(fullDate(daysAgo(20))), findsOneWidget);
   });
 
   testWidgets('the history lists every entry in the selected range', (
@@ -126,7 +124,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(WeightHistoryTile), findsNWidgets(10));
-    expect(find.text(_dateLabel(daysAgo(9))), findsOneWidget);
+    expect(find.text(fullDate(daysAgo(9))), findsOneWidget);
   });
 
   testWidgets('the heatmap sits under the title block once a week has data', (

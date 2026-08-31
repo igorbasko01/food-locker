@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:intl/intl.dart';
 
-/// Locale-aware numeric date formatting for charts and stat tiles.
+/// Locale-aware numeric date formatting for every date the app displays.
 ///
 /// Dates are drawn in the device locale's field order — `7/14` under `en_US`,
 /// `14/7` under `en_GB` — as numbers, never month names. Both helpers default to
@@ -14,7 +14,7 @@ import 'package:intl/intl.dart';
 String shortDate(DateTime date, [String? locale]) =>
     DateFormat.Md(locale ?? _deviceLocale).format(date);
 
-/// Numeric year/month/day in [locale] order, for chart tooltips.
+/// Numeric year/month/day in [locale] order, the default where space allows.
 String fullDate(DateTime date, [String? locale]) =>
     DateFormat.yMd(locale ?? _deviceLocale).format(date);
 

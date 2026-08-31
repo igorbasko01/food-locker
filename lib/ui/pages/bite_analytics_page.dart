@@ -284,7 +284,7 @@ class _MealBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = isToday ? 'Today\'s meals' : shortDate(breakdown.day);
+    final title = isToday ? 'Today\'s meals' : fullDate(breakdown.day);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
