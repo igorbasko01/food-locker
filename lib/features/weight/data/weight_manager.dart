@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:food_locker/core/date_range.dart';
+import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -95,4 +96,7 @@ class WeightManager extends ChangeNotifier {
   double? get lowestAllTime => _analytics.lowestAllTime;
   double? get lowestLast30Days => _analytics.lowestLast30Days;
   double? get lowestLast7Days => _analytics.lowestLast7Days;
+
+  /// The last year of weekly weight change, oldest first, for the Home heatmap.
+  List<WeeklyWeightChange> get weeklyChanges => _analytics.weeklyChanges();
 }

@@ -5,6 +5,7 @@ import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
 import 'package:food_locker/ui/widgets/app_version_label.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
+import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,7 @@ class HomePage extends StatelessWidget {
     final weightManager = context.watch<WeightManager>();
     final history = weightManager.history;
     final range = weightManager.historyRange;
+    final weeklyChanges = weightManager.weeklyChanges;
 
     return Scaffold(
       body: CustomScrollView(
@@ -44,6 +46,13 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
+          if (weeklyChanges.any((week) => week.hasData))
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: WeeklyChangeHeatmap(weeks: weeklyChanges),
+              ),
+            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
