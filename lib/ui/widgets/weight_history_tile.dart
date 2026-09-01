@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
@@ -15,7 +16,7 @@ class WeightHistoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dateStr = '${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}';
+    final dateStr = fullDate(item.date);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),

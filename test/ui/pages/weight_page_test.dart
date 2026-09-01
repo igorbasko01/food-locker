@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
@@ -8,9 +9,6 @@ import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
-
-String _dateLabel(DateTime date) =>
-    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
 void main() {
   Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
@@ -71,9 +69,9 @@ void main() {
 
     await pumpPage(tester, manager);
 
-    expect(find.text(_dateLabel(recentDay)), findsOneWidget);
+    expect(find.text(fullDate(recentDay)), findsOneWidget);
     expect(find.text('71.0 kg'), findsOneWidget);
-    expect(find.text(_dateLabel(oldDay)), findsNothing);
+    expect(find.text(fullDate(oldDay)), findsNothing);
     expect(find.text('73.0 kg'), findsNothing);
   });
 
@@ -98,7 +96,7 @@ void main() {
     await tester.tap(find.text('Last 30 days').last);
     await tester.pumpAndSettle();
 
-    expect(find.text(_dateLabel(lastMonth)), findsOneWidget);
+    expect(find.text(fullDate(lastMonth)), findsOneWidget);
     expect(find.text('73.0 kg'), findsOneWidget);
     expect(manager.historyRange, const DateRange.lastDays(30));
   });

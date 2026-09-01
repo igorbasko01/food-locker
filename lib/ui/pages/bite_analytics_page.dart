@@ -182,7 +182,7 @@ class _StatTilesRow extends StatelessWidget {
               child: StatTile(
                 label: '30-day max',
                 value: max == null ? '—' : max.count.toString(),
-                subLabel: max == null ? null : _formatDay(max.day),
+                subLabel: max == null ? null : shortDate(max.day),
               ),
             ),
           ],
@@ -194,10 +194,6 @@ class _StatTilesRow extends StatelessWidget {
   /// A whole-bite figure, with `—` for the no-qualifying-day case (average 0).
   static String _formatAverage(double average) =>
       average == 0 ? '—' : average.toStringAsFixed(0);
-
-  /// A day in the device locale's numeric order, matching the daily-bites
-  /// chart's axis labels.
-  static String _formatDay(DateTime day) => shortDate(day);
 }
 
 /// A meals summary: today's meal count, the 30-day average meals per day, and
@@ -284,7 +280,7 @@ class _MealBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = isToday ? 'Today\'s meals' : shortDate(breakdown.day);
+    final title = isToday ? 'Today\'s meals' : fullDate(breakdown.day);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
