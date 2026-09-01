@@ -25,4 +25,15 @@ void main() {
     expect(_fields(fullDate(date, 'en_US')), [7, 14, 2026]); // 7/14/2026
     expect(_fields(fullDate(date, 'en_GB')), [14, 7, 2026]); // 14/7/2026
   });
+
+  test('shortTime follows the locale clock convention', () {
+    final afternoon = DateTime(2026, 7, 14, 13, 30);
+
+    // en_US is 12-hour with a day period; the separator before it is locale
+    // data (a narrow no-break space in current CLDR), so match on the parts.
+    expect(shortTime(afternoon, 'en_US'), startsWith('1:30'));
+    expect(shortTime(afternoon, 'en_US'), contains('PM'));
+
+    expect(shortTime(afternoon, 'en_GB'), '13:30');
+  });
 }

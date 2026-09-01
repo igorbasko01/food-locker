@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 
 /// The meal-by-meal breakdown of a single day: one row per meal with its bite
@@ -68,7 +69,7 @@ class _MealRow extends StatelessWidget {
                   Text('Meal $index', style: theme.textTheme.titleSmall),
                   const SizedBox(height: 2),
                   Text(
-                    '${_formatTime(meal.start)} – ${_formatTime(meal.end)}',
+                    '${shortTime(meal.start)} – ${shortTime(meal.end)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -155,12 +156,4 @@ class _TotalRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A local time as `h:mm AM/PM`, 12-hour with no leading zero on the hour.
-String _formatTime(DateTime at) {
-  final hour12 = at.hour % 12 == 0 ? 12 : at.hour % 12;
-  final minute = at.minute.toString().padLeft(2, '0');
-  final period = at.hour < 12 ? 'AM' : 'PM';
-  return '$hour12:$minute $period';
 }

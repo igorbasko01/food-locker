@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/meal_breakdown_list.dart';
+
+String _span(int fromHour, int fromMinute, int toHour, int toMinute) =>
+    '${shortTime(DateTime(2026, 7, 16, fromHour, fromMinute))} – '
+    '${shortTime(DateTime(2026, 7, 16, toHour, toMinute))}';
 
 void main() {
   Future<void> pumpList(WidgetTester tester, DayMealBreakdown breakdown) async {
@@ -47,9 +52,9 @@ void main() {
     expect(find.text('5 bites'), findsOneWidget);
     expect(find.text('Total'), findsOneWidget);
     expect(find.text('32 bites'), findsOneWidget);
-    // A morning and an afternoon meal read as 12-hour times.
-    expect(find.text('8:00 AM – 8:11 AM'), findsOneWidget);
-    expect(find.text('1:30 PM – 1:44 PM'), findsOneWidget);
+    // Each meal's span reads as a pair of locale-formatted clock times.
+    expect(find.text(_span(8, 0, 8, 11)), findsOneWidget);
+    expect(find.text(_span(13, 30, 13, 44)), findsOneWidget);
   });
 
   testWidgets('renders the snack total on an all-snack day with no meals', (
