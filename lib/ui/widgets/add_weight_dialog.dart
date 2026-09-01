@@ -72,7 +72,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
                     });
                   }
                 },
-                child: Text(fullDate(_selectedDate)),
+                child: Text(fullDateWithWeekday(_selectedDate)),
               ),
             ],
           ),

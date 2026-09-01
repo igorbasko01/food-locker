@@ -105,7 +105,7 @@ void main() {
     manager.selectHistoryRange(const DateRange.lastDays(30));
     await tester.pump();
 
-    expect(find.text(fullDate(daysAgo(20))), findsOneWidget);
+    expect(find.text(fullDateWithWeekday(daysAgo(20))), findsOneWidget);
   });
 
   testWidgets('the history lists every entry in the selected range', (
@@ -124,7 +124,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(WeightHistoryTile), findsNWidgets(10));
-    expect(find.text(fullDate(daysAgo(9))), findsOneWidget);
+    expect(find.text(fullDateWithWeekday(daysAgo(9))), findsOneWidget);
   });
 
   testWidgets('the heatmap sits under the title block once a week has data', (

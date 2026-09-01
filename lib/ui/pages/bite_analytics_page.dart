@@ -182,7 +182,7 @@ class _StatTilesRow extends StatelessWidget {
               child: StatTile(
                 label: '30-day max',
                 value: max == null ? '—' : max.count.toString(),
-                subLabel: max == null ? null : shortDate(max.day),
+                subLabel: max == null ? null : shortDateWithWeekday(max.day),
               ),
             ),
           ],
@@ -280,7 +280,9 @@ class _MealBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = isToday ? 'Today\'s meals' : fullDate(breakdown.day);
+    final title = isToday
+        ? 'Today\'s meals'
+        : fullDateWithWeekday(breakdown.day);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),

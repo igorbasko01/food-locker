@@ -74,7 +74,7 @@ void main() {
 
   Future<void> pumpPage(WidgetTester tester) async {
     // Pin the locale so the 30-day-max tile's date renders deterministically
-    // (`shortDate` formats against the platform locale).
+    // (`shortDateWithWeekday` formats against the platform locale).
     tester.platformDispatcher.localeTestValue = const Locale('en', 'US');
     addTearDown(tester.platformDispatcher.clearLocaleTestValue);
     await tester.pumpWidget(
@@ -127,7 +127,7 @@ void main() {
     expect(
       find.descendant(
         of: maxTile,
-        matching: find.text('${yesterday.month}/${yesterday.day}'),
+        matching: find.text(shortDateWithWeekday(yesterday)),
       ),
       findsOneWidget,
     );
@@ -323,7 +323,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Today\'s meals'), findsNothing);
-    expect(find.text(fullDate(yesterday)), findsOneWidget);
+    expect(find.text(fullDateWithWeekday(yesterday)), findsOneWidget);
     expect(find.text('Back to today'), findsOneWidget);
     expect(find.text('20 bites'), findsNWidgets(2));
 
