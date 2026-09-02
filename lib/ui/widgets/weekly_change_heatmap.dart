@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/ui/widgets/weekly_change_color.dart';
