@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/ui/widgets/weekly_change_color.dart';
+import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
 
 /// A year of weekly weight change as a grid of coloured cells.
 ///
 /// Fills row by row, oldest top-left to newest bottom-right, so the last cell
-/// is the week in progress. Unlabelled and non-interactive by design.
+/// is the week in progress. Holding a cell names the week it covers and the
+/// weigh-ins its colour came from.
 class WeeklyChangeHeatmap extends StatelessWidget {
   const WeeklyChangeHeatmap({super.key, required this.weeks});
 
@@ -24,33 +26,65 @@ class WeeklyChangeHeatmap extends StatelessWidget {
           Row(
             children: [
               for (var column = 0; column < columns; column++)
-                Expanded(child: _Cell(color: _colorAt(row * columns + column))),
+                Expanded(child: _Cell(week: _weekAt(row * columns + column))),
             ],
           ),
       ],
     );
   }
 
-  Color _colorAt(int index) => index < weeks.length
-      ? weeklyChangeColor(weeks[index])
-      : weeklyChangeNoDataColor;
+  WeeklyWeightChange? _weekAt(int index) =>
+      index < weeks.length ? weeks[index] : null;
 }
 
-class _Cell extends StatelessWidget {
-  const _Cell({required this.color});
+class _Cell extends StatefulWidget {
+  const _Cell({required this.week});
 
-  final Color color;
+  /// The week this cell draws, or null past the end of the grid.
+  final WeeklyWeightChange? week;
+
+  @override
+  State<_Cell> createState() => _CellState();
+}
+
+class _CellState extends State<_Cell> {
+  final GlobalKey<TooltipState> _tooltip = GlobalKey<TooltipState>();
 
   @override
   Widget build(BuildContext context) {
+    final week = widget.week;
+    final summary = weeklyChangeSummary(week);
+
     return Padding(
       padding: const EdgeInsets.all(2),
       child: AspectRatio(
         aspectRatio: 1,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
+        child: Semantics(
+          label: summary.join('. '),
+          excludeSemantics: true,
+          child: Tooltip(
+            key: _tooltip,
+            message: summary.join('\n'),
+            // Shown and hidden below, so the week reads for exactly as long
+            // as the finger is down.
+            triggerMode: TooltipTriggerMode.manual,
+            enableTapToDismiss: false,
+            excludeFromSemantics: true,
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (_) =>
+                  _tooltip.currentState?.ensureTooltipVisible(),
+              onPointerUp: (_) => Tooltip.dismissAllToolTips(),
+              onPointerCancel: (_) => Tooltip.dismissAllToolTips(),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: week == null
+                      ? weeklyChangeNoDataColor
+                      : weeklyChangeColor(week),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
           ),
         ),
       ),

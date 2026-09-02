@@ -131,8 +131,8 @@ void main() {
     tester,
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
-    // Four weeks of daily weigh-ins, so a full week clears the four-entry
-    // threshold whatever weekday the test runs on.
+    // Four weeks of daily weigh-ins, so a full week clears the span gate
+    // whatever weekday the test runs on.
     for (var day = 0; day < 28; day++) {
       await manager.addWeight(daysAgo(day), 70.0 + day);
     }

@@ -47,19 +47,34 @@ class WeightAnalytics {
   }
 
   static WeeklyWeightChange _change(DateTime weekStart, List<Weight>? entries) {
-    if (entries == null || entries.length < WeeklyWeightChange.minEntries) {
+    if (entries == null || entries.isEmpty) {
       return WeeklyWeightChange(weekStart: weekStart);
     }
 
     entries.sort((a, b) => a.date.compareTo(b.date));
     final first = entries.first;
     final last = entries.last;
+    if (_daysBetween(first.date, last.date) < WeeklyWeightChange.minSpanDays) {
+      return WeeklyWeightChange(weekStart: weekStart);
+    }
+
     return WeeklyWeightChange(
       weekStart: weekStart,
       delta: last.value - first.value,
       unit: last.unit,
+      firstDate: first.date,
+      firstValue: first.value,
+      lastDate: last.date,
+      lastValue: last.value,
     );
   }
+
+  /// Calendar days from [from] to [to], counted on UTC midnights so a
+  /// daylight-saving shift inside the week cannot shorten the span.
+  static int _daysBetween(DateTime from, DateTime to) =>
+      DateTime.utc(to.year, to.month, to.day)
+          .difference(DateTime.utc(from.year, from.month, from.day))
+          .inDays;
 
   /// The Sunday opening [date]'s week, at local midnight. Dart counts Mon=1…
   /// Sun=7, so `% 7` maps Sunday to a zero offset.

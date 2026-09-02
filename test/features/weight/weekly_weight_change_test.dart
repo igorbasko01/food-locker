@@ -100,16 +100,46 @@ void main() {
       expect(current.isGain, isTrue);
     });
 
-    test('needs at least four weigh-ins in the week', () async {
-      await logRun(DateTime(2026, 8, 9), [80.0, 79.0, 78.0]);
+    test('needs the week\'s weigh-ins three days apart', () async {
+      // Sunday and Monday: a two-day blip, not a week.
+      await logRun(DateTime(2026, 8, 9), [80.0, 79.0]);
 
       expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isFalse);
     });
 
-    test('four weigh-ins is enough', () async {
-      await logRun(DateTime(2026, 8, 9), [80.0, 79.0, 78.0, 77.0]);
+    test('a three-day span is enough', () async {
+      await log(DateTime(2026, 8, 9), 80.0);
+      await log(DateTime(2026, 8, 12), 79.0);
 
       expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isTrue);
+    });
+
+    test('a Sunday and a Saturday alone span the whole week', () async {
+      await log(DateTime(2026, 8, 9), 80.0);
+      await log(DateTime(2026, 8, 15), 79.0);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.hasData, isTrue);
+      expect(current.delta, closeTo(-1.0, 1e-9));
+    });
+
+    test('three consecutive days fall short of the span', () async {
+      // The store keeps one entry per day, so it takes four consecutive
+      // entries to span three days.
+      await logRun(DateTime(2026, 8, 10), [80.0, 79.0, 78.0]);
+
+      expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isFalse);
+    });
+
+    test('a lone weigh-in reports nothing rather than a flat week', () async {
+      await log(DateTime(2026, 8, 12), 80.0);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.hasData, isFalse);
+      expect(current.delta, isNull);
+      expect(current.level, isNull);
     });
 
     test('never carries across a week boundary', () async {
@@ -129,7 +159,7 @@ void main() {
 
     test('splits a Saturday-to-Sunday run at the boundary', () async {
       // Thursday the 6th through Tuesday the 11th splits three days either
-      // side of the boundary, so neither week reaches four.
+      // side of the boundary, so neither week spans three days.
       await logRun(DateTime(2026, 8, 6), [90.0, 89.0, 88.0, 87.0, 86.0, 85.0]);
 
       final weeks = analytics.weeklyChanges(asOf: asOf);
@@ -163,6 +193,35 @@ void main() {
       expect(filled, hasLength(1));
       expect(filled.single.weekStart, DateTime(2026, 6, 7));
       expect(filled.single.delta, closeTo(1.5, 1e-9));
+    });
+
+    test('carries the two weigh-ins it compared', () async {
+      await log(DateTime(2026, 8, 9), 80.0);
+      await log(DateTime(2026, 8, 11), 79.5);
+      await log(DateTime(2026, 8, 14), 78.4);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.firstDate, DateTime(2026, 8, 9));
+      expect(current.firstValue, 80.0);
+      expect(current.lastDate, DateTime(2026, 8, 14));
+      expect(current.lastValue, 78.4);
+      expect(
+        current.delta,
+        closeTo(current.lastValue! - current.firstValue!, 1e-9),
+      );
+    });
+
+    test('a week under the gate carries no weigh-ins either', () async {
+      await logRun(DateTime(2026, 8, 9), [80.0, 79.0]);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.firstDate, isNull);
+      expect(current.firstValue, isNull);
+      expect(current.lastDate, isNull);
+      expect(current.lastValue, isNull);
+      expect(current.unit, isNull);
     });
 
     test('takes its unit from the week\'s last weigh-in', () async {

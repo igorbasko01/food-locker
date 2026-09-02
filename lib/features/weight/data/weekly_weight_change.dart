@@ -4,21 +4,44 @@ import 'package:food_locker/features/weight/data/weight.dart';
 ///
 /// Intra-week only: [delta] is the week's last weigh-in minus its first, so
 /// nothing carries across a week boundary and every week stands on its own. A
-/// week under [minEntries] weigh-ins reports no [delta] at all.
+/// week whose weigh-ins span fewer than [minSpanDays] days reports no [delta]
+/// at all.
 class WeeklyWeightChange {
-  const WeeklyWeightChange({required this.weekStart, this.delta, this.unit});
+  const WeeklyWeightChange({
+    required this.weekStart,
+    this.delta,
+    this.unit,
+    this.firstDate,
+    this.firstValue,
+    this.lastDate,
+    this.lastValue,
+  });
 
-  /// Weigh-ins a week needs before it reports a [delta].
-  static const int minEntries = 4;
+  /// Days a week's first and last weigh-in must lie apart before it reports a
+  /// [delta].
+  ///
+  /// The span states directly what a delta has to measure — the week, not a
+  /// two-day blip: a Sunday and a Saturday qualify on two weigh-ins, a Monday
+  /// and Tuesday never do. A lone weigh-in spans zero days, so its
+  /// `last - first == 0` cannot render as a faint loss.
+  static const int minSpanDays = 3;
 
   /// The Sunday opening the week, at local midnight.
   final DateTime weekStart;
 
-  /// Last weigh-in of the week minus its first, or null under [minEntries].
+  /// Last weigh-in of the week minus its first, or null under [minSpanDays].
   final double? delta;
 
   /// The unit [delta] is expressed in; null exactly when [delta] is.
   final WeightUnit? unit;
+
+  /// The week's first weigh-in, [delta]'s baseline; null when [delta] is.
+  final DateTime? firstDate;
+  final double? firstValue;
+
+  /// The week's last weigh-in, [delta]'s far end; null when [delta] is.
+  final DateTime? lastDate;
+  final double? lastValue;
 
   bool get hasData => delta != null;
 
@@ -42,12 +65,25 @@ class WeeklyWeightChange {
       other is WeeklyWeightChange &&
       other.weekStart == weekStart &&
       other.delta == delta &&
-      other.unit == unit;
+      other.unit == unit &&
+      other.firstDate == firstDate &&
+      other.firstValue == firstValue &&
+      other.lastDate == lastDate &&
+      other.lastValue == lastValue;
 
   @override
-  int get hashCode => Object.hash(weekStart, delta, unit);
+  int get hashCode => Object.hash(
+    weekStart,
+    delta,
+    unit,
+    firstDate,
+    firstValue,
+    lastDate,
+    lastValue,
+  );
 
   @override
   String toString() =>
-      'WeeklyWeightChange(weekStart: $weekStart, delta: $delta, unit: $unit)';
+      'WeeklyWeightChange(weekStart: $weekStart, delta: $delta, unit: $unit, '
+      'first: $firstValue on $firstDate, last: $lastValue on $lastDate)';
 }

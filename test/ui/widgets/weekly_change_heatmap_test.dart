@@ -5,6 +5,7 @@ import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
 import 'package:food_locker/ui/widgets/weekly_change_color.dart';
 import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
+import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
 
 void main() {
   WeeklyWeightChange week(int index, {double? delta, WeightUnit? unit}) =>
@@ -35,6 +36,14 @@ void main() {
       .widgetList<DecoratedBox>(cells())
       .map((box) => (box.decoration as BoxDecoration).color)
       .toList();
+
+  Finder tooltips() => find.descendant(
+    of: find.byType(WeeklyChangeHeatmap),
+    matching: find.byType(Tooltip),
+  );
+
+  String tooltipAt(WidgetTester tester, int index) =>
+      tester.widgetList<Tooltip>(tooltips()).elementAt(index).message!;
 
   testWidgets('draws 52 cells in 4 rows of 13', (tester) async {
     await pump(tester, emptyYear());
@@ -118,5 +127,85 @@ void main() {
       colors.skip(1).every((color) => color == weeklyChangeNoDataColor),
       isTrue,
     );
+  });
+
+  group('cell summaries', () {
+    // A week that gained: Tuesday's weigh-in through Saturday's.
+    final gainingWeek = WeeklyWeightChange(
+      weekStart: DateTime(2026, 3, 8),
+      delta: 0.6,
+      unit: WeightUnit.kilograms,
+      firstDate: DateTime(2026, 3, 10),
+      firstValue: 82.4,
+      lastDate: DateTime(2026, 3, 14),
+      lastValue: 83.0,
+    );
+    final losingWeek = WeeklyWeightChange(
+      weekStart: DateTime(2026, 3, 15),
+      delta: -1.2,
+      unit: WeightUnit.kilograms,
+      firstDate: DateTime(2026, 3, 15),
+      firstValue: 83.0,
+      lastDate: DateTime(2026, 3, 21),
+      lastValue: 81.8,
+    );
+
+    List<WeeklyWeightChange> yearOpeningWith(List<WeeklyWeightChange> first) =>
+        [...first, ...emptyYear().skip(first.length)];
+
+    testWidgets('every cell carries its week as a tooltip', (tester) async {
+      await pump(tester, yearOpeningWith([gainingWeek, losingWeek]));
+
+      expect(tooltips(), findsNWidgets(52));
+      expect(tooltipAt(tester, 0), weeklyChangeSummary(gainingWeek).join('\n'));
+      expect(tooltipAt(tester, 1), weeklyChangeSummary(losingWeek).join('\n'));
+    });
+
+    testWidgets('a week under the gate says so rather than staying blank', (
+      tester,
+    ) async {
+      await pump(tester, emptyYear());
+
+      final summary = tooltipAt(tester, 0);
+      expect(summary, weeklyChangeSummary(emptyYear().first).join('\n'));
+      expect(summary, contains('No weigh-ins'));
+    });
+
+    testWidgets('a cell past the end of the list reads as no data', (
+      tester,
+    ) async {
+      await pump(tester, [gainingWeek]);
+
+      expect(tooltipAt(tester, 1), weeklyChangeSummary(null).join('\n'));
+    });
+
+    testWidgets('the tooltip lasts as long as the cell is held', (
+      tester,
+    ) async {
+      await pump(tester, yearOpeningWith([gainingWeek]));
+      final summary = tooltipAt(tester, 0);
+
+      final gesture = await tester.startGesture(tester.getCenter(cells().at(0)));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text(summary), findsOneWidget);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(find.text(summary), findsNothing);
+    });
+
+    testWidgets('each cell is readable without holding it', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pump(tester, yearOpeningWith([gainingWeek]));
+
+      expect(
+        find.bySemanticsLabel(weeklyChangeSummary(gainingWeek).join('. ')),
+        findsOneWidget,
+      );
+
+      handle.dispose();
+    });
   });
 }
