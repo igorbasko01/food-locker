@@ -8,12 +8,21 @@ import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
 
 void main() {
-  WeeklyWeightChange week(int index, {double? delta, WeightUnit? unit}) =>
-      WeeklyWeightChange(
-        weekStart: DateTime(2026, 8, 9 - 7 * index),
-        delta: delta,
-        unit: delta == null ? null : unit ?? WeightUnit.kilograms,
-      );
+  /// The week [index] grids back from the 9th of August, gaining or losing
+  /// [delta] between a Sunday and a Friday weigh-in.
+  WeeklyWeightChange week(int index, {double? delta, WeightUnit? unit}) {
+    final start = DateTime(2026, 8, 9 - 7 * index);
+    if (delta == null) return WeeklyWeightChange(weekStart: start);
+    return WeeklyWeightChange(
+      weekStart: start,
+      delta: delta,
+      unit: unit ?? WeightUnit.kilograms,
+      firstDate: start,
+      firstValue: 80.0,
+      lastDate: DateTime(start.year, start.month, start.day + 5),
+      lastValue: 80.0 + delta,
+    );
+  }
 
   List<WeeklyWeightChange> emptyYear() =>
       [for (var i = 51; i >= 0; i--) week(i)];

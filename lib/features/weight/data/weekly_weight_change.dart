@@ -15,7 +15,21 @@ class WeeklyWeightChange {
     this.firstValue,
     this.lastDate,
     this.lastValue,
-  });
+  }) : assert(
+         delta == null
+             ? unit == null &&
+                   firstDate == null &&
+                   firstValue == null &&
+                   lastDate == null &&
+                   lastValue == null
+             : unit != null &&
+                   firstDate != null &&
+                   firstValue != null &&
+                   lastDate != null &&
+                   lastValue != null,
+         'a week reports its delta together with the two weigh-ins and the '
+         'unit behind it, or reports nothing at all',
+       );
 
   /// Days a week's first and last weigh-in must lie apart before it reports a
   /// [delta].

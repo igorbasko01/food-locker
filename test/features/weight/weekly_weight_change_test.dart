@@ -236,12 +236,19 @@ void main() {
   });
 
   group('intensity levels', () {
-    WeeklyWeightChange change(double? delta, [WeightUnit? unit]) =>
-        WeeklyWeightChange(
-          weekStart: DateTime(2026, 8, 9),
-          delta: delta,
-          unit: delta == null ? null : unit ?? WeightUnit.kilograms,
-        );
+    WeeklyWeightChange change(double? delta, [WeightUnit? unit]) {
+      final weekStart = DateTime(2026, 8, 9);
+      if (delta == null) return WeeklyWeightChange(weekStart: weekStart);
+      return WeeklyWeightChange(
+        weekStart: weekStart,
+        delta: delta,
+        unit: unit ?? WeightUnit.kilograms,
+        firstDate: weekStart,
+        firstValue: 80.0,
+        lastDate: DateTime(2026, 8, 14),
+        lastValue: 80.0 + delta,
+      );
+    }
 
     test('a week with no delta has no level', () {
       expect(change(null).level, isNull);
