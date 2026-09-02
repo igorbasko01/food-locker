@@ -53,15 +53,17 @@ void main() {
     expect(summary.last, '+1.4 lbs');
   });
 
-  test('a week under the span gate says so instead of reading as flat', () {
+  test('a week without a delta says so instead of reading as flat', () {
     final summary = weeklyChangeSummary(
       WeeklyWeightChange(weekStart: weekStart),
       'en_US',
     );
 
+    // The same line serves a week nothing was logged in and one whose
+    // weigh-ins sat too close together.
     expect(summary, [
       'Sun, 3/8 – Sat, 3/14',
-      'No weigh-ins at least ${WeeklyWeightChange.minSpanDays} days apart',
+      'No weigh-ins far enough apart to compare',
     ]);
   });
 

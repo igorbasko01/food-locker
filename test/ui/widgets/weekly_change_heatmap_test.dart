@@ -205,6 +205,24 @@ void main() {
       expect(find.text(summary), findsNothing);
     });
 
+    testWidgets('a press that turns into a scroll drops the tooltip', (
+      tester,
+    ) async {
+      await pump(tester, yearOpeningWith([gainingWeek]));
+      final summary = tooltipAt(tester, 0);
+
+      final gesture = await tester.startGesture(tester.getCenter(cells().at(0)));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text(summary), findsOneWidget);
+
+      await gesture.moveBy(const Offset(0, -60));
+      await tester.pumpAndSettle();
+
+      expect(find.text(summary), findsNothing);
+
+      await gesture.up();
+    });
+
     testWidgets('each cell is readable without holding it', (tester) async {
       final handle = tester.ensureSemantics();
       await pump(tester, yearOpeningWith([gainingWeek]));

@@ -49,6 +49,26 @@ class _Cell extends StatefulWidget {
 
 class _CellState extends State<_Cell> {
   final GlobalKey<TooltipState> _tooltip = GlobalKey<TooltipState>();
+  Offset? _pressOrigin;
+
+  void _showTooltip(PointerDownEvent event) {
+    _pressOrigin = event.position;
+    _tooltip.currentState?.ensureTooltipVisible();
+  }
+
+  /// A finger that travels is scrolling Home, not reading a cell, and the
+  /// overlay stays where it opened rather than following the page.
+  void _dismissIfDragged(PointerMoveEvent event) {
+    final origin = _pressOrigin;
+    if (origin != null && (event.position - origin).distance > kTouchSlop) {
+      _dismissTooltip();
+    }
+  }
+
+  void _dismissTooltip([PointerEvent? event]) {
+    _pressOrigin = null;
+    Tooltip.dismissAllToolTips();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +92,10 @@ class _CellState extends State<_Cell> {
             excludeFromSemantics: true,
             child: Listener(
               behavior: HitTestBehavior.opaque,
-              onPointerDown: (_) =>
-                  _tooltip.currentState?.ensureTooltipVisible(),
-              onPointerUp: (_) => Tooltip.dismissAllToolTips(),
-              onPointerCancel: (_) => Tooltip.dismissAllToolTips(),
+              onPointerDown: _showTooltip,
+              onPointerMove: _dismissIfDragged,
+              onPointerUp: _dismissTooltip,
+              onPointerCancel: _dismissTooltip,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: week == null
