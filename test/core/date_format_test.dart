@@ -26,6 +26,25 @@ void main() {
     expect(_fields(fullDate(date, 'en_GB')), [14, 7, 2026]); // 14/7/2026
   });
 
+  test('the WithWeekday variants keep the locale field order', () {
+    expect(_fields(shortDateWithWeekday(date, 'en_US')), [7, 14]);
+    expect(_fields(shortDateWithWeekday(date, 'en_GB')), [14, 7]);
+    expect(_fields(fullDateWithWeekday(date, 'en_US')), [7, 14, 2026]);
+    expect(_fields(fullDateWithWeekday(date, 'en_GB')), [14, 7, 2026]);
+  });
+
+  test('the WithWeekday variants name the weekday in three letters', () {
+    // Narrow weekday names collide (Sunday and Saturday are both `S`), so the
+    // abbreviated form is the point of these helpers.
+    expect(shortDateWithWeekday(date, 'en_US'), startsWith('Tue'));
+    expect(fullDateWithWeekday(date, 'en_US'), startsWith('Tue'));
+  });
+
+  test('the numeric variants stay free of the weekday, for chart axes', () {
+    expect(shortDate(date, 'en_US'), isNot(contains('Tue')));
+    expect(fullDate(date, 'en_US'), isNot(contains('Tue')));
+  });
+
   test('shortTime follows the locale clock convention', () {
     final afternoon = DateTime(2026, 7, 14, 13, 30);
 

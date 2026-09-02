@@ -21,6 +21,6 @@ void main() {
 
     await pumpDialog(tester, date);
 
-    expect(find.text(fullDate(date)), findsOneWidget);
+    expect(find.text(fullDateWithWeekday(date)), findsOneWidget);
   });
 }

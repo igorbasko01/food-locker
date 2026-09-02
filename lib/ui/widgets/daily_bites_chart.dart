@@ -168,7 +168,7 @@ class DailyBitesChart extends StatelessWidget {
       );
     }
     if (selected != null) {
-      summary.write(' Selected day ${fullDate(selected)}.');
+      summary.write(' Selected day ${fullDateWithWeekday(selected)}.');
     }
     final semanticsLabel = summary.toString();
 
@@ -285,7 +285,7 @@ class DailyBitesChart extends StatelessWidget {
               final weightLine =
                   weight == null ? '' : '\n${weight.toStringAsFixed(1)} kg';
               return BarTooltipItem(
-                '${fullDate(day)}\n${rod.toY.toInt()} bites$weightLine',
+                '${fullDateWithWeekday(day)}\n${rod.toY.toInt()} bites$weightLine',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

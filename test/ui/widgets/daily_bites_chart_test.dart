@@ -161,7 +161,7 @@ void main() {
     expect(
       find.bySemanticsLabel(
         'Daily bites bar chart, 2 days. Highest day 60 bites. '
-        'Selected day ${fullDate(DateTime(2026, 1, 2))}.',
+        'Selected day ${fullDateWithWeekday(DateTime(2026, 1, 2))}.',
       ),
       findsOneWidget,
     );

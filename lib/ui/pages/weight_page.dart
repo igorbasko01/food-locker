@@ -89,7 +89,7 @@ class WeightPage extends StatelessWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final item = history[index];
-                      final dateStr = fullDate(item.date);
+                      final dateStr = fullDateWithWeekday(item.date);
 
                       return Dismissible(
                         key: ValueKey(item.date),

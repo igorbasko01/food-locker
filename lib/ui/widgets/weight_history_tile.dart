@@ -16,7 +16,7 @@ class WeightHistoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dateStr = fullDate(item.date);
+    final dateStr = fullDateWithWeekday(item.date);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
