@@ -91,6 +91,12 @@ class _CellState extends State<_Cell> {
             triggerMode: TooltipTriggerMode.manual,
             enableTapToDismiss: false,
             excludeFromSemantics: true,
+            // Above the cell and clear of the fingertip holding it: the
+            // offset is measured from the cell's centre, and a cell is a few
+            // millimetres across. Flutter drops it below for a cell too near
+            // the top to fit.
+            preferBelow: false,
+            verticalOffset: 36,
             child: Listener(
               behavior: HitTestBehavior.opaque,
               onPointerDown: _showTooltip,

@@ -205,6 +205,26 @@ void main() {
       expect(find.text(summary), findsNothing);
     });
 
+    testWidgets('the tooltip opens clear of the finger holding the cell', (
+      tester,
+    ) async {
+      // A cell in the last row, so there is room above it to open into.
+      final weeks = emptyYear();
+      weeks[51] = week(0, delta: 0.6);
+      await pump(tester, weeks);
+
+      final summary = tooltipAt(tester, 51);
+      final cell = tester.getRect(cells().at(51));
+
+      final gesture = await tester.startGesture(cell.center);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(tester.getRect(find.text(summary)).bottom, lessThan(cell.top));
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('a press that turns into a scroll drops the tooltip', (
       tester,
     ) async {
