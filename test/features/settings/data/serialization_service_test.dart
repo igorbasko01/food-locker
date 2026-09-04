@@ -187,7 +187,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup);
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
 
       final restored = repo.getAllWeights();
       expect(restored.map((w) => w.value), containsAll([75.5, 75.0]));
@@ -206,7 +206,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup);
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
 
       // clear must come first, then one save per restored weight.
       expect(repo.operations, ['clear', 'save', 'save']);
@@ -220,6 +220,7 @@ void main() {
         repo,
         _RecordingBiteRepository(),
         codec.encode([]),
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(repo.getAllWeights(), isEmpty);
@@ -237,6 +238,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       // clear must come first, then one log per restored bite.
@@ -257,6 +259,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.loggedMs, [1000]);
@@ -274,6 +277,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       // The bite log is a real (empty) snapshot: cleared, nothing logged.
@@ -291,6 +295,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.operations, isEmpty);
@@ -313,6 +318,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       // clear must come first, then one set per restored version.
@@ -340,6 +346,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.savedConfigs, hasLength(1));
@@ -363,6 +370,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.configOperations, isEmpty);
@@ -395,6 +403,7 @@ void main() {
         fileName: 'backup.zip',
         onConfirm: (_) async => false,
         onRestoreStart: () => restoreStarted = true,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(restored, isFalse);
@@ -418,6 +427,7 @@ void main() {
         fileName: 'backup.zip',
         onConfirm: (_) async => true,
         onRestoreStart: () => restoreStarted = true,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(restored, isTrue);
@@ -445,6 +455,7 @@ void main() {
           expect(weightRepo.operations, isEmpty);
           return true;
         },
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(asked, ['food_locker_20260101120000.zip']);
@@ -458,6 +469,7 @@ void main() {
         _RecordingBiteRepository(),
         fullBackup(),
         fileName: 'backup.zip',
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(restored, isTrue);
@@ -480,7 +492,7 @@ void main() {
       biteRepo.operations.clear();
       biteRepo.configOperations.clear();
 
-      await service.clearAllData(weightRepo, biteRepo);
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: InMemorySettingsRepository());
 
       expect(weightRepo.operations, ['clear']);
       expect(weightRepo.getAllWeights(), isEmpty);
@@ -504,7 +516,7 @@ void main() {
         const PacingConfig(id: 0, effectiveMs: 1, b1S: 40, b2S: 90),
       );
 
-      await service.clearAllData(weightRepo, biteRepo);
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: InMemorySettingsRepository());
 
       expect(weightRepo.getAllWeights(), isEmpty);
       expect(

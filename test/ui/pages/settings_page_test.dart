@@ -491,7 +491,7 @@ class _FakeSerializationService extends SerializationService {
   Future<void> clearAllData(
     WeightRepository weightRepo,
     BiteRepository biteRepo, {
-    SettingsRepository? settingsRepo,
+    required SettingsRepository settingsRepo,
   }) async {
     await onClear?.call();
     await _work.future;

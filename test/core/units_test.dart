@@ -43,6 +43,23 @@ void main() {
     });
   });
 
+  group('roundedFeetInches', () {
+    test('rounds the inches to the places asked for', () {
+      final split = roundedFeetInches(177.8, 1);
+
+      expect(split.feet, 5);
+      expect(split.inches, 10);
+    });
+
+    test('a height just under a foot boundary carries instead of reading 12', () {
+      // 182.8 cm is 5' 11.97", which rounds to twelve inches at one decimal.
+      final split = roundedFeetInches(182.8, 1);
+
+      expect(split.feet, 6);
+      expect(split.inches, 0);
+    });
+  });
+
   group('formatHeight', () {
     test('metric drops a trailing zero but keeps a real decimal', () {
       expect(formatHeight(178, MeasurementSystem.metric), '178 cm');

@@ -46,7 +46,7 @@ class _HeightDialogState extends State<HeightDialog> {
     final height = widget.initialHeightCm;
     if (height != null) {
       _centimetresController.text = formatLengthValue(height);
-      final split = centimetresToFeetInches(height);
+      final split = roundedFeetInches(height, 1);
       _feetController.text = '${split.feet}';
       _inchesController.text = formatLengthValue(split.inches);
     }

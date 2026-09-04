@@ -30,6 +30,17 @@ FeetInches centimetresToFeetInches(double centimetres) {
 double feetInchesToCentimetres(int feet, double inches) =>
     inchesToCentimetres(feet * inchesPerFoot + inches);
 
+/// [centimetres] as feet and inches rounded to [decimals] places, carrying a
+/// rounded-up twelve into the next foot so no display or field ever reads
+/// `5' 12"`.
+FeetInches roundedFeetInches(double centimetres, int decimals) {
+  final split = centimetresToFeetInches(centimetres);
+  final inches = double.parse(split.inches.toStringAsFixed(decimals));
+  return inches >= inchesPerFoot
+      ? FeetInches(split.feet + 1, 0)
+      : FeetInches(split.feet, inches);
+}
+
 /// A bare number with at most one decimal and no trailing `.0`, so a whole
 /// height reads `178` rather than `178.0`.
 String formatLengthValue(double value) {
@@ -43,13 +54,6 @@ String formatHeight(double centimetres, MeasurementSystem system) {
     return '${formatLengthValue(centimetres)} cm';
   }
 
-  final split = centimetresToFeetInches(centimetres);
-  var feet = split.feet;
-  var inches = split.inches.round();
-  // Rounding 11.6" up would otherwise print 12".
-  if (inches == inchesPerFoot) {
-    feet += 1;
-    inches = 0;
-  }
-  return "$feet' $inches\"";
+  final split = roundedFeetInches(centimetres, 0);
+  return "${split.feet}' ${formatLengthValue(split.inches)}\"";
 }

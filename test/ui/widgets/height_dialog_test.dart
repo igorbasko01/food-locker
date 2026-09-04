@@ -139,6 +139,28 @@ void main() {
       expect(popped, 178.23);
     });
 
+    testWidgets('a height that rounds to twelve inches pre-fills as the next foot',
+        (tester) async {
+      // 182.8 cm is 5' 11.97": pre-filling it as 5 ft / 12 in would show a
+      // height the dialog itself rejects.
+      await openDialog(
+        tester,
+        initialHeightCm: 182.8,
+        system: MeasurementSystem.imperial,
+      );
+
+      String textOf(Key key) =>
+          tester.widget<TextField>(find.byKey(key)).controller!.text;
+
+      expect(textOf(HeightDialog.feetFieldKey), '6');
+      expect(textOf(HeightDialog.inchesFieldKey), '0');
+
+      await tester.enterText(find.byKey(HeightDialog.feetFieldKey), '5');
+      await save(tester);
+
+      expect(popped, closeTo(152.4, 1e-9));
+    });
+
     testWidgets('rejects twelve inches rather than rolling over a foot',
         (tester) async {
       await openDialog(tester, system: MeasurementSystem.imperial);

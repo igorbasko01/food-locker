@@ -152,7 +152,7 @@ class SerializationService {
     WeightRepository weightRepo,
     BiteRepository biteRepo,
     List<int> zipBytes, {
-    SettingsRepository? settingsRepo,
+    required SettingsRepository settingsRepo,
     required String fileName,
     ConfirmRestore? onConfirm,
     VoidCallback? onRestoreStart,
@@ -181,14 +181,14 @@ class SerializationService {
   Future<void> clearAllData(
     WeightRepository weightRepo,
     BiteRepository biteRepo, {
-    SettingsRepository? settingsRepo,
+    required SettingsRepository settingsRepo,
   }) async {
     await weightRepo.clear();
     await biteRepo.clearBites();
     await biteRepo.clearPacingConfigs();
     await biteRepo.setPacingConfig(defaultPacingConfig);
     // Back to unanswered rather than to a default body.
-    await settingsRepo?.setHeightCm(null);
+    await settingsRepo.setHeightCm(null);
   }
 
   /// Replaces every store's contents with a backup zip — the destructive core
@@ -200,15 +200,12 @@ class SerializationService {
   /// replaced; bites, the pacing config and the profile are replaced only when
   /// the archive actually carries their entry, so restoring an older
   /// weight-only backup leaves them alone rather than wiping them.
-  ///
-  /// [settingsRepo] is optional only for tests that don't exercise the profile
-  /// entry; the app always passes one, and without it a backup's height is
-  /// decoded and dropped.
+
   Future<void> restoreFromBackup(
     WeightRepository weightRepo,
     BiteRepository biteRepo,
     List<int> zipBytes, {
-    SettingsRepository? settingsRepo,
+    required SettingsRepository settingsRepo,
   }) async {
     final archive = ZipDecoder().decodeBytes(zipBytes);
 
@@ -247,7 +244,7 @@ class SerializationService {
     }
 
     final profile = const ProfileBackupCodec().fromArchive(archive);
-    if (profile != null && settingsRepo != null) {
+    if (profile != null) {
       // A present entry is a full snapshot, so a backup taken before a height
       // was entered restores the unanswered state rather than keeping this
       // device's.
