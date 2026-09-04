@@ -122,7 +122,15 @@ jobs:
         fi
 
         # The squash subject has to stay `chore(main): release X.Y.Z` so
-        # release-please recognises its own release commit on `main`.
-        gh pr merge "$number" --repo "$REPO" --squash --subject "$title" --body ""
+        # release-please recognises its own release commit on `main`, and
+        # --match-head-commit refuses the merge if release-please force-pushed
+        # after the checks above were read - otherwise the green checks that
+        # let the merge through could belong to a commit that is no longer the
+        # one being merged.
+        if ! gh pr merge "$number" --repo "$REPO" --squash \
+          --match-head-commit "$sha" --subject "$title" --body ""; then
+          note "Not merged: the merge call failed - see the step log. The head commit may have moved since its checks were read."
+          exit 1
+        fi
 
-        note "Merged. release-please will tag the release, and build_release.yml will attach the APK to it."
+        note "Merged \`${sha:0:7}\`. release-please will tag the release, and build_release.yml will attach the APK to it."
