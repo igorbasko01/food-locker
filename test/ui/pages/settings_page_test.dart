@@ -2,16 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
+import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
+import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:provider/provider.dart';
 
 /// Backup feedback on [SettingsPage]: work in flight says so, only work
@@ -25,9 +30,12 @@ void main() {
     BiteManager? biteManager,
     WeightRepository? weightRepo,
     BiteRepository? biteRepo,
+    SettingsRepository? settingsRepo,
+    SettingsManager? settingsManager,
   }) {
     final weights = weightRepo ?? InMemoryWeightRepository();
     final bites = biteRepo ?? _FakeBiteRepository();
+    final settings = settingsRepo ?? InMemorySettingsRepository();
     return tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
@@ -35,11 +43,15 @@ void main() {
             Provider<SerializationService>.value(value: service),
             Provider<WeightRepository>.value(value: weights),
             Provider<BiteRepository>.value(value: bites),
+            Provider<SettingsRepository>.value(value: settings),
             ChangeNotifierProvider<WeightManager>.value(
               value: weightManager ?? WeightManager(weights),
             ),
             ChangeNotifierProvider<BiteManager>.value(
               value: biteManager ?? _biteManager(bites),
+            ),
+            ChangeNotifierProvider<SettingsManager>.value(
+              value: settingsManager ?? SettingsManager(settings),
             ),
           ],
           child: const SettingsPage(),
@@ -62,13 +74,93 @@ void main() {
     await tester.pump();
   }
 
-  /// Taps Clear All Data and answers the confirmation dialog it raises.
+  /// Taps Clear All Data and answers the confirmation dialog it raises. The
+  /// action sits at the bottom of a scrolling page, so it is brought into view
+  /// first.
   Future<void> tapClear(WidgetTester tester, {required bool confirm}) async {
+    await tester.ensureVisible(find.text('Clear All Data'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Clear All Data'));
     await tester.pumpAndSettle();
     await tester.tap(find.text(confirm ? 'Clear' : 'Cancel'));
     await tester.pump();
   }
+
+  group('profile', () {
+    testWidgets('an unanswered height says so rather than showing a default',
+        (tester) async {
+      await pumpPage(tester, SerializationService());
+
+      expect(find.text('Not set'), findsOneWidget);
+    });
+
+    testWidgets('a stored height shows in the active system', (tester) async {
+      await pumpPage(
+        tester,
+        SerializationService(),
+        settingsRepo: InMemorySettingsRepository(heightCm: 177.8),
+      );
+
+      expect(find.text('177.8 cm'), findsOneWidget);
+
+      await tester.tap(find.text('Imperial'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("5' 10\""), findsOneWidget);
+    });
+
+    testWidgets('the height dialog stores what it returns', (tester) async {
+      final settingsRepo = InMemorySettingsRepository();
+      await pumpPage(
+        tester,
+        SerializationService(),
+        settingsRepo: settingsRepo,
+      );
+
+      await tester.tap(find.text('Height'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(HeightDialog.centimetresFieldKey),
+        '178',
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(settingsRepo.heightCm, 178);
+      expect(find.text('178 cm'), findsOneWidget);
+    });
+
+    testWidgets('the chosen measurement system is stored', (tester) async {
+      final settingsRepo = InMemorySettingsRepository();
+      await pumpPage(
+        tester,
+        SerializationService(),
+        settingsRepo: settingsRepo,
+      );
+
+      await tester.tap(find.text('Imperial'));
+      await tester.pumpAndSettle();
+
+      expect(settingsRepo.measurementSystem, MeasurementSystem.imperial);
+    });
+
+    testWidgets('a clear leaves no height on the page', (tester) async {
+      final settingsRepo = InMemorySettingsRepository(heightCm: 177.8);
+      await pumpPage(
+        tester,
+        SerializationService(),
+        settingsRepo: settingsRepo,
+      );
+
+      expect(find.text('177.8 cm'), findsOneWidget);
+
+      await tapClear(tester, confirm: true);
+      await pumpToast(tester);
+
+      expect(settingsRepo.heightCm, isNull);
+      expect(find.text('Not set'), findsOneWidget);
+    });
+  });
 
   group('import', () {
     testWidgets('asks before restoring, naming the file it would replace',
@@ -198,6 +290,8 @@ void main() {
       await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
       await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
 
+      await tester.ensureVisible(find.text('Clear All Data'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Clear All Data'));
       await tester.pumpAndSettle();
 
@@ -396,8 +490,9 @@ class _FakeSerializationService extends SerializationService {
   @override
   Future<void> clearAllData(
     WeightRepository weightRepo,
-    BiteRepository biteRepo,
-  ) async {
+    BiteRepository biteRepo, {
+    SettingsRepository? settingsRepo,
+  }) async {
     await onClear?.call();
     await _work.future;
   }

@@ -6,6 +6,8 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
+import 'package:food_locker/features/settings/data/profile_backup_codec.dart';
+import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -42,18 +44,22 @@ class SerializationService {
   Future<bool> exportData(BuildContext context, {VoidCallback? onShareReady}) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
+    final settingsRepo = context.read<SettingsRepository>();
 
     final weights = weightRepo.getAllWeights();
     final bites = await _allBites(biteRepo);
+    // A height is something the user entered, so it counts as data worth
+    // exporting on its own — unlike the pacing thresholds, which are seeded.
+    final heightCm = settingsRepo.heightCm;
 
-    if (weights.isEmpty && bites.isEmpty) return false;
+    if (weights.isEmpty && bites.isEmpty && heightCm == null) return false;
 
     // Pacing config rides along with real data rather than gating the export:
     // the default is always seeded, so it never on its own makes a backup
     // "non-empty".
     final configs = await biteRepo.allPacingConfigs();
 
-    final zipData = encodeBackup(weights, bites, configs);
+    final zipData = encodeBackup(weights, bites, configs, heightCm: heightCm);
 
     final tempDir = await getTemporaryDirectory();
     final zipFile = File('${tempDir.path}/${generateZipFileName()}');
@@ -66,20 +72,22 @@ class SerializationService {
     return true;
   }
 
-  /// Packs every dataset into a single backup zip — weights, bites, and the
-  /// pacing-config history. Each dataset owns its own codec; the coordination —
-  /// one archive, one file per dataset — lives here so a single export call
-  /// spans both stores.
+  /// Packs every dataset into a single backup zip — weights, bites, the
+  /// pacing-config history, and the profile. Each dataset owns its own codec;
+  /// the coordination — one archive, one file per dataset — lives here so a
+  /// single export call spans every store.
   @visibleForTesting
   List<int> encodeBackup(
     List<Weight> weights,
     List<Bite> bites,
-    List<PacingConfig> configs,
-  ) {
+    List<PacingConfig> configs, {
+    double? heightCm,
+  }) {
     final archive = Archive()
       ..addFile(const WeightBackupCodec().toArchiveFile(weights))
       ..addFile(const BiteBackupCodec().toArchiveFile(bites))
-      ..addFile(const PacingConfigBackupCodec().toArchiveFile(configs));
+      ..addFile(const PacingConfigBackupCodec().toArchiveFile(configs))
+      ..addFile(const ProfileBackupCodec().toArchiveFile(heightCm));
     return ZipEncoder().encode(archive);
   }
 
@@ -111,6 +119,7 @@ class SerializationService {
   }) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
+    final settingsRepo = context.read<SettingsRepository>();
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -128,6 +137,7 @@ class SerializationService {
       weightRepo,
       biteRepo,
       bytes,
+      settingsRepo: settingsRepo,
       fileName: picked.name,
       onConfirm: onConfirm,
       onRestoreStart: onRestoreStart,
@@ -142,6 +152,7 @@ class SerializationService {
     WeightRepository weightRepo,
     BiteRepository biteRepo,
     List<int> zipBytes, {
+    SettingsRepository? settingsRepo,
     required String fileName,
     ConfirmRestore? onConfirm,
     VoidCallback? onRestoreStart,
@@ -150,7 +161,12 @@ class SerializationService {
 
     onRestoreStart?.call();
 
-    await restoreFromBackup(weightRepo, biteRepo, zipBytes);
+    await restoreFromBackup(
+      weightRepo,
+      biteRepo,
+      zipBytes,
+      settingsRepo: settingsRepo,
+    );
     return true;
   }
 
@@ -164,28 +180,36 @@ class SerializationService {
   /// config until the next app start.
   Future<void> clearAllData(
     WeightRepository weightRepo,
-    BiteRepository biteRepo,
-  ) async {
+    BiteRepository biteRepo, {
+    SettingsRepository? settingsRepo,
+  }) async {
     await weightRepo.clear();
     await biteRepo.clearBites();
     await biteRepo.clearPacingConfigs();
     await biteRepo.setPacingConfig(defaultPacingConfig);
+    // Back to unanswered rather than to a default body.
+    await settingsRepo?.setHeightCm(null);
   }
 
-  /// Replaces both stores' contents with a backup zip — the destructive core of
-  /// [importData], kept separate from the file-picker and file-I/O plumbing so
-  /// the clear-then-restore path stays unit-testable.
+  /// Replaces every store's contents with a backup zip — the destructive core
+  /// of [importData], kept separate from the file-picker and file-I/O plumbing
+  /// so the clear-then-restore path stays unit-testable.
   ///
-  /// The single decode is where the two stores are coordinated: weights and
-  /// bites are restored from the same archive. Weights are always
-  /// replaced; bites are replaced only when the archive actually carries a bite
-  /// entry, so restoring an older weight-only backup leaves existing bites
-  /// alone rather than wiping them.
+  /// The single decode is where the stores are coordinated: weights, bites and
+  /// the profile are restored from the same archive. Weights are always
+  /// replaced; bites, the pacing config and the profile are replaced only when
+  /// the archive actually carries their entry, so restoring an older
+  /// weight-only backup leaves them alone rather than wiping them.
+  ///
+  /// [settingsRepo] is optional only for tests that don't exercise the profile
+  /// entry; the app always passes one, and without it a backup's height is
+  /// decoded and dropped.
   Future<void> restoreFromBackup(
     WeightRepository weightRepo,
     BiteRepository biteRepo,
-    List<int> zipBytes,
-  ) async {
+    List<int> zipBytes, {
+    SettingsRepository? settingsRepo,
+  }) async {
     final archive = ZipDecoder().decodeBytes(zipBytes);
 
     final weights = const WeightBackupCodec().fromArchive(archive);
@@ -220,6 +244,14 @@ class SerializationService {
           await biteRepo.setPacingConfig(cfg);
         }
       }
+    }
+
+    final profile = const ProfileBackupCodec().fromArchive(archive);
+    if (profile != null && settingsRepo != null) {
+      // A present entry is a full snapshot, so a backup taken before a height
+      // was entered restores the unanswered state rather than keeping this
+      // device's.
+      await settingsRepo.setHeightCm(profile.heightCm);
     }
   }
 }
