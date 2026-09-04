@@ -80,7 +80,9 @@ jobs:
 
         # GitHub reports UNKNOWN while it recomputes mergeability after a push.
         for _ in 1 2 3 4 5; do
-          [ "$mergeable" != "UNKNOWN" ] && break
+          if [ "$mergeable" != "UNKNOWN" ]; then
+            break
+          fi
           sleep 10
           mergeable=$(gh pr view "$number" --repo "$REPO" --json mergeable --jq '.mergeable')
         done
@@ -101,7 +103,7 @@ jobs:
         fi
 
         blocking=""
-        while IFS="$(printf '\t')" read -r name status conclusion; do
+        while IFS=$'\t' read -r name status conclusion; do
           if [ "$status" != "completed" ]; then
             blocking="$blocking- \`$name\`: $status"$'\n'
           else
