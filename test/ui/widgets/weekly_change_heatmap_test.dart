@@ -48,13 +48,8 @@ void main() {
       .map((box) => (box.decoration as BoxDecoration).color)
       .toList();
 
-  Finder tooltips() => find.descendant(
-    of: find.byType(WeeklyChangeHeatmap),
-    matching: find.byType(Tooltip),
-  );
-
-  String tooltipAt(WidgetTester tester, int index) =>
-      tester.widgetList<Tooltip>(tooltips()).elementAt(index).message!;
+  String readoutFor(WeeklyWeightChange? week) =>
+      weeklyChangeSummary(week).join('\n');
 
   testWidgets('draws 52 cells in 4 rows of 13', (tester) async {
     await pump(tester, emptyYear());
@@ -140,7 +135,7 @@ void main() {
     );
   });
 
-  group('cell summaries', () {
+  group('cell readout', () {
     // A week that gained: Tuesday's weigh-in through Saturday's.
     final gainingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 8),
@@ -160,12 +155,59 @@ void main() {
     List<WeeklyWeightChange> yearOpeningWith(List<WeeklyWeightChange> first) =>
         [...first, ...emptyYear().skip(first.length)];
 
-    testWidgets('every cell carries its week as a tooltip', (tester) async {
+    testWidgets('holding a cell names its week and the weigh-ins behind it', (
+      tester,
+    ) async {
+      await pump(tester, yearOpeningWith([gainingWeek]));
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(cells().first),
+      );
+      await tester.pump();
+
+      expect(find.text(readoutFor(gainingWeek)), findsOneWidget);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(find.text(readoutFor(gainingWeek)), findsNothing);
+    });
+
+    testWidgets('dragging carries the readout to the next cell', (
+      tester,
+    ) async {
       await pump(tester, yearOpeningWith([gainingWeek, losingWeek]));
 
-      expect(tooltips(), findsNWidgets(52));
-      expect(tooltipAt(tester, 0), weeklyChangeSummary(gainingWeek).join('\n'));
-      expect(tooltipAt(tester, 1), weeklyChangeSummary(losingWeek).join('\n'));
+      final gesture = await tester.startGesture(
+        tester.getCenter(cells().first),
+      );
+      await tester.pump();
+      await gesture.moveTo(tester.getCenter(cells().at(1)));
+      await tester.pump();
+
+      expect(find.text(readoutFor(losingWeek)), findsOneWidget);
+      expect(find.text(readoutFor(gainingWeek)), findsNothing);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('dragging off the grid ends the readout', (tester) async {
+      await pump(tester, yearOpeningWith([gainingWeek]));
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(cells().first),
+      );
+      await tester.pump();
+      expect(find.text(readoutFor(gainingWeek)), findsOneWidget);
+
+      await gesture.moveTo(const Offset(400, 560));
+      await tester.pump();
+
+      expect(find.text(readoutFor(gainingWeek)), findsNothing);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
     });
 
     testWidgets('a week under the gate says so rather than staying blank', (
@@ -173,12 +215,18 @@ void main() {
     ) async {
       await pump(tester, emptyYear());
 
-      final summary = tooltipAt(tester, 0);
-      expect(summary, weeklyChangeSummary(emptyYear().first).join('\n'));
-      expect(
-        summary,
-        contains('${WeeklyWeightChange.minSpanDays} days apart'),
+      final gesture = await tester.startGesture(
+        tester.getCenter(cells().first),
       );
+      await tester.pump();
+
+      expect(
+        find.textContaining('${WeeklyWeightChange.minSpanDays} days apart'),
+        findsOneWidget,
+      );
+
+      await gesture.up();
+      await tester.pumpAndSettle();
     });
 
     testWidgets('a cell past the end of the list reads as no data', (
@@ -186,27 +234,16 @@ void main() {
     ) async {
       await pump(tester, [gainingWeek]);
 
-      expect(tooltipAt(tester, 1), weeklyChangeSummary(null).join('\n'));
-    });
+      final gesture = await tester.startGesture(tester.getCenter(cells().at(1)));
+      await tester.pump();
 
-    testWidgets('the tooltip lasts as long as the cell is held', (
-      tester,
-    ) async {
-      await pump(tester, yearOpeningWith([gainingWeek]));
-      final summary = tooltipAt(tester, 0);
-
-      final gesture = await tester.startGesture(tester.getCenter(cells().at(0)));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.text(summary), findsOneWidget);
+      expect(find.text(readoutFor(null)), findsOneWidget);
 
       await gesture.up();
       await tester.pumpAndSettle();
-
-      expect(find.text(summary), findsNothing);
     });
 
-    testWidgets('the tooltip opens clear of the finger holding the cell', (
+    testWidgets('the readout opens clear of the finger holding the cell', (
       tester,
     ) async {
       // A cell in the last row, so there is room above it to open into.
@@ -214,34 +251,17 @@ void main() {
       weeks[51] = week(0, delta: 0.6);
       await pump(tester, weeks);
 
-      final summary = tooltipAt(tester, 51);
       final cell = tester.getRect(cells().at(51));
-
       final gesture = await tester.startGesture(cell.center);
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
 
-      expect(tester.getRect(find.text(summary)).bottom, lessThan(cell.top));
+      expect(
+        tester.getRect(find.text(readoutFor(weeks[51]))).bottom,
+        lessThan(cell.top),
+      );
 
       await gesture.up();
       await tester.pumpAndSettle();
-    });
-
-    testWidgets('a press that turns into a scroll drops the tooltip', (
-      tester,
-    ) async {
-      await pump(tester, yearOpeningWith([gainingWeek]));
-      final summary = tooltipAt(tester, 0);
-
-      final gesture = await tester.startGesture(tester.getCenter(cells().at(0)));
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text(summary), findsOneWidget);
-
-      await gesture.moveBy(const Offset(0, -60));
-      await tester.pumpAndSettle();
-
-      expect(find.text(summary), findsNothing);
-
-      await gesture.up();
     });
 
     testWidgets('each cell is readable without holding it', (tester) async {
