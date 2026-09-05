@@ -49,6 +49,8 @@ class _Cell extends StatefulWidget {
 }
 
 class _CellState extends State<_Cell> {
+  /// Reaches the [Tooltip]'s own state to show it on demand, which is the only
+  /// way in: the widget exposes no "shown" flag to rebuild with.
   final GlobalKey<TooltipState> _tooltip = GlobalKey<TooltipState>();
   Offset? _pressOrigin;
 
