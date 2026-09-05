@@ -39,7 +39,7 @@ When the team decides it is time to cut a release:
 
 ### Merging the Release PR automatically
 
-Step 1 also happens on its own. `sunday-release-merge.yml` runs at 01:00 UTC every Sunday (04:00 in Israel during IDT) and squash-merges the open release PR, so a week's worth of merged features ships without anyone doing anything. The same workflow has a **Run workflow** button for shipping immediately, which works from the GitHub mobile app.
+Step 1 also happens on its own. `sunday-release-merge.yml` runs at 01:00 UTC every Sunday and squash-merges the open release PR, so a week's worth of merged features ships without anyone doing anything. The same workflow has a **Run workflow** button for shipping immediately, which works from the GitHub mobile app.
 
 It fails closed and merges nothing if the release PR is red, still running, has no checks at all, or cannot be merged — and if more than one PR carries the `autorelease: pending` label, since there is then no way to tell which one is the release. Every run writes what it did, or why it did nothing, to its job summary.
 

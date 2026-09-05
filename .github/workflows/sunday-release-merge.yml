@@ -7,9 +7,9 @@ name: Sunday Release Merge
 
 on:
   schedule:
-    # 01:00 UTC Sunday - 04:00 in Israel during IDT, 03:00 during IST. Actions
-    # evaluates cron in UTC with no DST handling, and delays scheduled runs
-    # anyway, so the winter hour of drift is accepted.
+    # Early Sunday. Actions evaluates cron in UTC with no DST handling, so the
+    # local hour this lands on drifts by one across the year; scheduled runs are
+    # queued and delayed anyway, so the drift is accepted.
     - cron: '0 1 * * 0'
   workflow_dispatch:
 
