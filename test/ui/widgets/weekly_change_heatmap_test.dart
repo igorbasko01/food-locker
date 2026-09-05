@@ -15,12 +15,14 @@ void main() {
     if (delta == null) return WeeklyWeightChange(weekStart: start);
     return WeeklyWeightChange(
       weekStart: start,
-      delta: delta,
-      unit: unit ?? WeightUnit.kilograms,
-      firstDate: start,
-      firstValue: 80.0,
-      lastDate: DateTime(start.year, start.month, start.day + 5),
-      lastValue: 80.0 + delta,
+      entries: [
+        Weight(date: start, value: 80.0, unit: unit ?? WeightUnit.kilograms),
+        Weight(
+          date: DateTime(start.year, start.month, start.day + 5),
+          value: 80.0 + delta,
+          unit: unit ?? WeightUnit.kilograms,
+        ),
+      ],
     );
   }
 
@@ -142,21 +144,17 @@ void main() {
     // A week that gained: Tuesday's weigh-in through Saturday's.
     final gainingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 8),
-      delta: 0.6,
-      unit: WeightUnit.kilograms,
-      firstDate: DateTime(2026, 3, 10),
-      firstValue: 82.4,
-      lastDate: DateTime(2026, 3, 14),
-      lastValue: 83.0,
+      entries: [
+        Weight(date: DateTime(2026, 3, 10), value: 82.4),
+        Weight(date: DateTime(2026, 3, 14), value: 83.0),
+      ],
     );
     final losingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 15),
-      delta: -1.2,
-      unit: WeightUnit.kilograms,
-      firstDate: DateTime(2026, 3, 15),
-      firstValue: 83.0,
-      lastDate: DateTime(2026, 3, 21),
-      lastValue: 81.8,
+      entries: [
+        Weight(date: DateTime(2026, 3, 15), value: 83.0),
+        Weight(date: DateTime(2026, 3, 21), value: 81.8),
+      ],
     );
 
     List<WeeklyWeightChange> yearOpeningWith(List<WeeklyWeightChange> first) =>
@@ -177,7 +175,10 @@ void main() {
 
       final summary = tooltipAt(tester, 0);
       expect(summary, weeklyChangeSummary(emptyYear().first).join('\n'));
-      expect(summary, contains('No weigh-ins'));
+      expect(
+        summary,
+        contains('${WeeklyWeightChange.minSpanDays} days apart'),
+      );
     });
 
     testWidgets('a cell past the end of the list reads as no data', (

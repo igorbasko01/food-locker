@@ -202,26 +202,26 @@ void main() {
 
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
-      expect(current.firstDate, DateTime(2026, 8, 9));
-      expect(current.firstValue, 80.0);
-      expect(current.lastDate, DateTime(2026, 8, 14));
-      expect(current.lastValue, 78.4);
+      expect(current.first!.date, DateTime(2026, 8, 9));
+      expect(current.first!.value, 80.0);
+      expect(current.last!.date, DateTime(2026, 8, 14));
+      expect(current.last!.value, 78.4);
       expect(
         current.delta,
-        closeTo(current.lastValue! - current.firstValue!, 1e-9),
+        closeTo(current.last!.value - current.first!.value, 1e-9),
       );
     });
 
-    test('a week under the gate carries no weigh-ins either', () async {
+    test('a week under the gate reports no delta or unit', () async {
       await logRun(DateTime(2026, 8, 9), [80.0, 79.0]);
 
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
-      expect(current.firstDate, isNull);
-      expect(current.firstValue, isNull);
-      expect(current.lastDate, isNull);
-      expect(current.lastValue, isNull);
+      expect(current.delta, isNull);
       expect(current.unit, isNull);
+      // The weigh-ins are still there — they just don't span the week.
+      expect(current.first!.date, DateTime(2026, 8, 9));
+      expect(current.last!.date, DateTime(2026, 8, 10));
     });
 
     test('takes its unit from the week\'s last weigh-in', () async {
@@ -236,17 +236,25 @@ void main() {
   });
 
   group('intensity levels', () {
+    /// A week opening on Sunday the 9th, weighed that day and again on the
+    /// Friday — far enough apart to clear the span gate.
     WeeklyWeightChange change(double? delta, [WeightUnit? unit]) {
       final weekStart = DateTime(2026, 8, 9);
       if (delta == null) return WeeklyWeightChange(weekStart: weekStart);
       return WeeklyWeightChange(
         weekStart: weekStart,
-        delta: delta,
-        unit: unit ?? WeightUnit.kilograms,
-        firstDate: weekStart,
-        firstValue: 80.0,
-        lastDate: DateTime(2026, 8, 14),
-        lastValue: 80.0 + delta,
+        entries: [
+          Weight(
+            date: weekStart,
+            value: 80.0,
+            unit: unit ?? WeightUnit.kilograms,
+          ),
+          Weight(
+            date: DateTime(2026, 8, 14),
+            value: 80.0 + delta,
+            unit: unit ?? WeightUnit.kilograms,
+          ),
+        ],
       );
     }
 

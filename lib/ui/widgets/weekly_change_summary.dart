@@ -16,19 +16,24 @@ List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
   final period =
       '${shortDateWithWeekday(week.weekStart, locale)} – '
       '${shortDateWithWeekday(_weekEnd(week.weekStart), locale)}';
-  // True of a week with nothing logged as much as one whose weigh-ins sat
-  // too close together.
+  // Naming the rule covers both ways a week fails it: nothing logged at all,
+  // and weigh-ins that sat too close together.
   if (!week.hasData) {
-    return [period, 'No weigh-ins far enough apart to compare'];
+    return [
+      period,
+      'No two weigh-ins ${WeeklyWeightChange.minSpanDays} days apart',
+    ];
   }
 
+  final first = week.first!;
+  final last = week.last!;
   final unit = week.unit!;
   return [
     period,
-    '${shortDateWithWeekday(week.firstDate!, locale)}: '
-        '${_measurement(week.firstValue!, unit)} → '
-        '${shortDateWithWeekday(week.lastDate!, locale)}: '
-        '${_measurement(week.lastValue!, unit)}',
+    '${shortDateWithWeekday(first.date, locale)}: '
+        '${_measurement(first.value, unit)} → '
+        '${shortDateWithWeekday(last.date, locale)}: '
+        '${_measurement(last.value, unit)}',
     _signedChange(week.delta!, unit),
   ];
 }

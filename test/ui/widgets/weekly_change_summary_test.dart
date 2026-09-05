@@ -15,12 +15,10 @@ void main() {
     WeightUnit unit = WeightUnit.kilograms,
   }) => WeeklyWeightChange(
     weekStart: weekStart,
-    delta: delta,
-    unit: unit,
-    firstDate: DateTime(2026, 3, 9),
-    firstValue: 82.4,
-    lastDate: DateTime(2026, 3, 13),
-    lastValue: 82.4 + delta,
+    entries: [
+      Weight(date: DateTime(2026, 3, 9), value: 82.4, unit: unit),
+      Weight(date: DateTime(2026, 3, 13), value: 82.4 + delta, unit: unit),
+    ],
   );
 
   test('a gaining week names its period, its weigh-ins and its change', () {
@@ -63,7 +61,7 @@ void main() {
     // weigh-ins sat too close together.
     expect(summary, [
       'Sun, 3/8 – Sat, 3/14',
-      'No weigh-ins far enough apart to compare',
+      'No two weigh-ins ${WeeklyWeightChange.minSpanDays} days apart',
     ]);
   });
 
