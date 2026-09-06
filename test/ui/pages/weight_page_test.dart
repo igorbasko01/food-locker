@@ -157,7 +157,9 @@ void main() {
     await pumpPage(tester, manager);
 
     expect(find.text(fullDateWithWeekday(recentDay)), findsOneWidget);
-    expect(find.text('71.0 kg'), findsOneWidget);
+    // Scoped to the row: the current-weight figure above the chart carries the
+    // latest weigh-in's value too, whatever the history range holds.
+    expect(find.widgetWithText(ListTile, '71.0 kg'), findsOneWidget);
     expect(find.text(fullDateWithWeekday(oldDay)), findsNothing);
     expect(find.text('73.0 kg'), findsNothing);
   });
@@ -184,7 +186,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(fullDateWithWeekday(lastMonth)), findsOneWidget);
-    expect(find.text('73.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '73.0 kg'), findsOneWidget);
     expect(manager.historyRange, const DateRange.lastDays(30));
   });
 
