@@ -13,6 +13,11 @@ class WeeklyWeightChange {
     required DateTime weekStart,
     List<Weight> entries = const [],
   }) {
+    assert(
+      entries.every((entry) => _fallsInWeek(entry, weekStart)),
+      'every weigh-in must fall in the week weekStart opens',
+    );
+
     if (entries.isEmpty) return WeeklyWeightChange._(weekStart: weekStart);
 
     var first = entries.first;
@@ -40,6 +45,9 @@ class WeeklyWeightChange {
   static const int minSpanDays = 3;
 
   /// The Sunday opening the week, at local midnight.
+  ///
+  /// The week's own identity, not something [entries] could supply: a week
+  /// nothing was logged in still has a cell to fill and a period to name.
   final DateTime weekStart;
 
   /// The week's earliest and latest weigh-in, null only for a week that holds
@@ -100,6 +108,17 @@ class WeeklyWeightChange {
   /// `Weight` compares by identity, so weigh-ins are matched on what they say.
   static bool _sameWeighIn(Weight? a, Weight? b) =>
       a?.date == b?.date && a?.value == b?.value && a?.unit == b?.unit;
+
+  /// Whether [entry] falls in the seven days [weekStart] opens.
+  static bool _fallsInWeek(Weight entry, DateTime weekStart) {
+    final day = DateTime(entry.date.year, entry.date.month, entry.date.day);
+    final weekAfter = DateTime(
+      weekStart.year,
+      weekStart.month,
+      weekStart.day + 7,
+    );
+    return !day.isBefore(weekStart) && day.isBefore(weekAfter);
+  }
 
   @override
   String toString() =>

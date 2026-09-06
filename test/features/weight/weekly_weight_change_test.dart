@@ -132,6 +132,16 @@ void main() {
       expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isFalse);
     });
 
+    test('rejects a weigh-in from outside the week', () {
+      expect(
+        () => WeeklyWeightChange(
+          weekStart: DateTime(2026, 8, 9),
+          entries: [Weight(date: DateTime(2026, 8, 16), value: 80.0)],
+        ),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
     test('a lone weigh-in reports nothing rather than a flat week', () async {
       await log(DateTime(2026, 8, 12), 80.0);
 
