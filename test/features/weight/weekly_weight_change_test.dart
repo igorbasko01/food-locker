@@ -100,16 +100,56 @@ void main() {
       expect(current.isGain, isTrue);
     });
 
-    test('needs at least four weigh-ins in the week', () async {
-      await logRun(DateTime(2026, 8, 9), [80.0, 79.0, 78.0]);
+    test('needs the week\'s weigh-ins three days apart', () async {
+      // Sunday and Monday: a two-day blip, not a week.
+      await logRun(DateTime(2026, 8, 9), [80.0, 79.0]);
 
       expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isFalse);
     });
 
-    test('four weigh-ins is enough', () async {
-      await logRun(DateTime(2026, 8, 9), [80.0, 79.0, 78.0, 77.0]);
+    test('a three-day span is enough', () async {
+      await log(DateTime(2026, 8, 9), 80.0);
+      await log(DateTime(2026, 8, 12), 79.0);
 
       expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isTrue);
+    });
+
+    test('a Sunday and a Saturday alone span the whole week', () async {
+      await log(DateTime(2026, 8, 9), 80.0);
+      await log(DateTime(2026, 8, 15), 79.0);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.hasData, isTrue);
+      expect(current.delta, closeTo(-1.0, 1e-9));
+    });
+
+    test('three consecutive days fall short of the span', () async {
+      // The store keeps one entry per day, so it takes four consecutive
+      // entries to span three days.
+      await logRun(DateTime(2026, 8, 10), [80.0, 79.0, 78.0]);
+
+      expect(analytics.weeklyChanges(asOf: asOf).last.hasData, isFalse);
+    });
+
+    test('rejects a weigh-in from outside the week', () {
+      expect(
+        () => WeeklyWeightChange(
+          weekStart: DateTime(2026, 8, 9),
+          entries: [Weight(date: DateTime(2026, 8, 16), value: 80.0)],
+        ),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('a lone weigh-in reports nothing rather than a flat week', () async {
+      await log(DateTime(2026, 8, 12), 80.0);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.hasData, isFalse);
+      expect(current.delta, isNull);
+      expect(current.level, isNull);
     });
 
     test('never carries across a week boundary', () async {
@@ -129,7 +169,7 @@ void main() {
 
     test('splits a Saturday-to-Sunday run at the boundary', () async {
       // Thursday the 6th through Tuesday the 11th splits three days either
-      // side of the boundary, so neither week reaches four.
+      // side of the boundary, so neither week spans three days.
       await logRun(DateTime(2026, 8, 6), [90.0, 89.0, 88.0, 87.0, 86.0, 85.0]);
 
       final weeks = analytics.weeklyChanges(asOf: asOf);
@@ -165,6 +205,35 @@ void main() {
       expect(filled.single.delta, closeTo(1.5, 1e-9));
     });
 
+    test('carries the two weigh-ins it compared', () async {
+      await log(DateTime(2026, 8, 9), 80.0);
+      await log(DateTime(2026, 8, 11), 79.5);
+      await log(DateTime(2026, 8, 14), 78.4);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.first!.date, DateTime(2026, 8, 9));
+      expect(current.first!.value, 80.0);
+      expect(current.last!.date, DateTime(2026, 8, 14));
+      expect(current.last!.value, 78.4);
+      expect(
+        current.delta,
+        closeTo(current.last!.value - current.first!.value, 1e-9),
+      );
+    });
+
+    test('a week under the gate reports no delta or unit', () async {
+      await logRun(DateTime(2026, 8, 9), [80.0, 79.0]);
+
+      final current = analytics.weeklyChanges(asOf: asOf).last;
+
+      expect(current.delta, isNull);
+      expect(current.unit, isNull);
+      // The weigh-ins are still there — they just don't span the week.
+      expect(current.first!.date, DateTime(2026, 8, 9));
+      expect(current.last!.date, DateTime(2026, 8, 10));
+    });
+
     test('takes its unit from the week\'s last weigh-in', () async {
       await logRun(
         DateTime(2026, 8, 9),
@@ -177,12 +246,27 @@ void main() {
   });
 
   group('intensity levels', () {
-    WeeklyWeightChange change(double? delta, [WeightUnit? unit]) =>
-        WeeklyWeightChange(
-          weekStart: DateTime(2026, 8, 9),
-          delta: delta,
-          unit: delta == null ? null : unit ?? WeightUnit.kilograms,
-        );
+    /// A week opening on Sunday the 9th, weighed that day and again on the
+    /// Friday — far enough apart to clear the span gate.
+    WeeklyWeightChange change(double? delta, [WeightUnit? unit]) {
+      final weekStart = DateTime(2026, 8, 9);
+      if (delta == null) return WeeklyWeightChange(weekStart: weekStart);
+      return WeeklyWeightChange(
+        weekStart: weekStart,
+        entries: [
+          Weight(
+            date: weekStart,
+            value: 80.0,
+            unit: unit ?? WeightUnit.kilograms,
+          ),
+          Weight(
+            date: DateTime(2026, 8, 14),
+            value: 80.0 + delta,
+            unit: unit ?? WeightUnit.kilograms,
+          ),
+        ],
+      );
+    }
 
     test('a week with no delta has no level', () {
       expect(change(null).level, isNull);
