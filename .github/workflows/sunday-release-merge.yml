@@ -1,0 +1,136 @@
+name: Sunday Release Merge
+
+# Merges the open release-please PR on Sunday mornings once its checks are
+# green, so the release and its APK are cut without anyone at a keyboard.
+# Everything downstream is already automatic: the merge pushes to `main`,
+# release-please.yml tags the release, build_release.yml attaches the APK.
+
+on:
+  schedule:
+    # Early Sunday. Actions evaluates cron in UTC with no DST handling, so the
+    # local hour this lands on drifts by one across the year; scheduled runs are
+    # queued and delayed anyway, so the drift is accepted.
+    - cron: '0 1 * * 0'
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    # Every call below authenticates with RELEASE_PLEASE_TOKEN, so GITHUB_TOKEN
+    # needs no scopes of its own.
+    permissions: {}
+
+    steps:
+    - name: Merge the release PR when it is green
+      env:
+        # A merge performed with GITHUB_TOKEN pushes to `main` without
+        # triggering release-please.yml, which would leave no release and no
+        # APK - the same PAT that opens the release PR has to close it.
+        GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+
+        note() { printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"; }
+
+        if [ -z "${GH_TOKEN:-}" ]; then
+          note "### Release merge failed"
+          note ""
+          note "\`RELEASE_PLEASE_TOKEN\` is not set, and merging with \`GITHUB_TOKEN\` would push to \`main\` without cutting a release. Nothing was merged."
+          exit 1
+        fi
+
+        prs=$(gh pr list --repo "$REPO" --state open --base main \
+          --label 'autorelease: pending' --limit 20 \
+          --json number,title,url,isDraft,mergeable,headRefOid)
+        count=$(jq 'length' <<<"$prs")
+
+        if [ "$count" -eq 0 ]; then
+          note "### Nothing to release"
+          note ""
+          note "No open PR labelled \`autorelease: pending\` targets \`main\`."
+          exit 0
+        fi
+
+        if [ "$count" -gt 1 ]; then
+          note "### Skipped: $count release PRs"
+          note ""
+          note "More than one open PR carries \`autorelease: pending\`, so there is no way to tell which one is the release. Merge one by hand:"
+          note ""
+          jq -r '.[] | "- \(.url) - \(.title)"' <<<"$prs" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+
+        number=$(jq -r '.[0].number' <<<"$prs")
+        title=$(jq -r '.[0].title' <<<"$prs")
+        url=$(jq -r '.[0].url' <<<"$prs")
+        draft=$(jq -r '.[0].isDraft' <<<"$prs")
+        sha=$(jq -r '.[0].headRefOid' <<<"$prs")
+        mergeable=$(jq -r '.[0].mergeable' <<<"$prs")
+
+        note "### Release PR #$number"
+        note ""
+        note "[$title]($url)"
+        note ""
+
+        if [ "$draft" = "true" ]; then
+          note "Not merged: the PR is a draft."
+          exit 0
+        fi
+
+        # GitHub reports UNKNOWN while it recomputes mergeability after a push.
+        for _ in 1 2 3 4 5; do
+          if [ "$mergeable" != "UNKNOWN" ]; then
+            break
+          fi
+          sleep 10
+          mergeable=$(gh pr view "$number" --repo "$REPO" --json mergeable --jq '.mergeable')
+        done
+
+        if [ "$mergeable" != "MERGEABLE" ]; then
+          note "Not merged: GitHub reports the PR as \`$mergeable\`."
+          exit 0
+        fi
+
+        checks=$(gh api --paginate "repos/$REPO/commits/$sha/check-runs?per_page=100" \
+          --jq '.check_runs[] | "\(.name)\t\(.status)\t\(.conclusion // "")"')
+
+        # No checks at all is not a pass: it means CI stopped running on the
+        # release PR, which would make an "everything green" gate vacuous.
+        if [ -z "$checks" ]; then
+          note "Not merged: the head commit \`${sha:0:7}\` has no check runs at all."
+          exit 0
+        fi
+
+        blocking=""
+        while IFS=$'\t' read -r name status conclusion; do
+          if [ "$status" != "completed" ]; then
+            blocking="$blocking- \`$name\`: $status"$'\n'
+          else
+            case "$conclusion" in
+              success|neutral|skipped) ;;
+              *) blocking="$blocking- \`$name\`: $conclusion"$'\n' ;;
+            esac
+          fi
+        done <<<"$checks"
+
+        if [ -n "$blocking" ]; then
+          note "Not merged: these checks are not green."
+          note ""
+          printf '%s' "$blocking" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+
+        # The squash subject has to stay `chore(main): release X.Y.Z` so
+        # release-please recognises its own release commit on `main`, and
+        # --match-head-commit refuses the merge if release-please force-pushed
+        # after the checks above were read - otherwise the green checks that
+        # let the merge through could belong to a commit that is no longer the
+        # one being merged.
+        if ! gh pr merge "$number" --repo "$REPO" --squash \
+          --match-head-commit "$sha" --subject "$title" --body ""; then
+          note "Not merged: the merge call failed - see the step log. The head commit may have moved since its checks were read."
+          exit 1
+        fi
+
+        note "Merged \`${sha:0:7}\`. release-please will tag the release, and build_release.yml will attach the APK to it."
