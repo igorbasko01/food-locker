@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.19.0](https://github.com/igorbasko01/food-locker/compare/v1.18.0...v1.19.0) (2026-09-06)
+
+
+### Features
+
+* add a 52-week weight-change heatmap to Home ([#114](https://github.com/igorbasko01/food-locker/issues/114)) ([55ba43f](https://github.com/igorbasko01/food-locker/commit/55ba43f35d68a49e738ae972457cf2a639d0dc0d))
+* remove the Home streak banners and overeating analytics ([#112](https://github.com/igorbasko01/food-locker/issues/112)) ([5549abd](https://github.com/igorbasko01/food-locker/commit/5549abd3c05d830fb2de0d774ce2a594338c4e70))
+* show the weekday alongside every displayed date ([#116](https://github.com/igorbasko01/food-locker/issues/116)) ([#128](https://github.com/igorbasko01/food-locker/issues/128)) ([4a745f1](https://github.com/igorbasko01/food-locker/commit/4a745f1184804163484bda13f1154c2d42148234))
+
 ## [1.18.0](https://github.com/igorbasko01/food-locker/compare/v1.17.0...v1.18.0) (2026-08-28)
 
 
