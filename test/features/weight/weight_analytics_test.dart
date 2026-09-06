@@ -180,5 +180,26 @@ void main() {
       expect(analytics.lowestEntry?.value, 72.0);
       expect(analytics.changeFromLowest, 0.0);
     });
+
+    test('leave out a weigh-in dated ahead of today', () async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await log(today, 74.0);
+      await log(DateTime(today.year, today.month, today.day + 3), 60.0);
+
+      expect(analytics.latestEntry?.value, 74.0);
+      expect(analytics.lowestEntry?.value, 74.0);
+      expect(analytics.lowestAllTime, 74.0);
+      expect(analytics.changeFromLowest, 0.0);
+    });
+
+    test('take a weigh-in dated today', () async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await log(DateTime(today.year, today.month, today.day - 3), 80.0);
+      await log(today, 74.0);
+
+      expect(analytics.latestEntry?.value, 74.0);
+    });
   });
 }

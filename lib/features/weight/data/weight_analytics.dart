@@ -18,34 +18,48 @@ class WeightAnalytics {
   /// included.
   static const int trendWindowDays = 30;
 
-  double? get lowestAllTime => _weightRepository.getLowestWeight();
+  double? get lowestAllTime => lowestEntry?.value;
 
   /// The most recent weigh-in, or null when the store holds none.
   Weight? get latestEntry {
-    final weights = _weightRepository.getAllWeights();
-    if (weights.isEmpty) return null;
-    return weights.reduce((a, b) => b.date.isAfter(a.date) ? b : a);
+    final entries = _loggedEntries;
+    if (entries.isEmpty) return null;
+    return entries.reduce(_newer);
   }
 
   /// The weigh-in holding [lowestAllTime]; the later one when the low was hit
   /// more than once, so the date reads as the last time it was reached.
   Weight? get lowestEntry {
-    final weights = _weightRepository.getAllWeights();
-    if (weights.isEmpty) return null;
-    return weights.reduce((a, b) {
-      if (b.value < a.value) return b;
-      if (b.value == a.value && b.date.isAfter(a.date)) return b;
-      return a;
-    });
+    final entries = _loggedEntries;
+    if (entries.isEmpty) return null;
+    return entries.reduce(_lower);
   }
 
   /// How far the latest weigh-in sits above the all-time low. Never negative —
-  /// the low is computed over every entry, the latest one included.
+  /// the low is computed over the same entries, the latest one included.
   double? get changeFromLowest {
-    final latest = latestEntry;
-    final lowest = lowestEntry;
-    if (latest == null || lowest == null) return null;
-    return latest.value - lowest.value;
+    final entries = _loggedEntries;
+    if (entries.isEmpty) return null;
+    return entries.reduce(_newer).value - entries.reduce(_lower).value;
+  }
+
+  /// Weigh-ins on or before today. A weigh-in dated ahead of today is not the
+  /// weight anyone is at, so it is left out here as it is from the windows
+  /// [weeklyChange], [trendPerWeek], and [weeklyChanges] measure over.
+  List<Weight> get _loggedEntries {
+    final today = _dayOf(DateTime.now());
+    return _weightRepository
+        .getAllWeights()
+        .where((entry) => !_dayOf(entry.date).isAfter(today))
+        .toList(growable: false);
+  }
+
+  static Weight _newer(Weight a, Weight b) => b.date.isAfter(a.date) ? b : a;
+
+  static Weight _lower(Weight a, Weight b) {
+    if (b.value < a.value) return b;
+    if (b.value == a.value && b.date.isAfter(a.date)) return b;
+    return a;
   }
 
   /// The most recent complete week's mean weight minus the week before it,
