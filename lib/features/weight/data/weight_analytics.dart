@@ -42,23 +42,12 @@ class WeightAnalytics {
     }
 
     return [
-      for (final start in weekStarts) _change(start, entriesByWeek[start]),
+      for (final start in weekStarts)
+        WeeklyWeightChange(
+          weekStart: start,
+          entries: entriesByWeek[start] ?? const [],
+        ),
     ];
-  }
-
-  static WeeklyWeightChange _change(DateTime weekStart, List<Weight>? entries) {
-    if (entries == null || entries.length < WeeklyWeightChange.minEntries) {
-      return WeeklyWeightChange(weekStart: weekStart);
-    }
-
-    entries.sort((a, b) => a.date.compareTo(b.date));
-    final first = entries.first;
-    final last = entries.last;
-    return WeeklyWeightChange(
-      weekStart: weekStart,
-      delta: last.value - first.value,
-      unit: last.unit,
-    );
   }
 
   /// The Sunday opening [date]'s week, at local midnight. Dart counts Mon=1…
