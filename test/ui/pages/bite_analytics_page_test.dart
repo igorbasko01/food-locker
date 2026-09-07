@@ -276,11 +276,14 @@ void main() {
 
     expect(find.text('80.4 kg'), findsOneWidget);
 
-    // Bar 0 is yesterday: the line follows the selection, in that day's unit.
+    // Bar 0 is yesterday: the line follows the selection. Its stored value is
+    // read as kilograms and shown in the preferred unit, whatever the legacy
+    // Weight.unit on the row says.
     tapBar(tester, 0);
     await tester.pumpAndSettle();
 
-    expect(find.text('81.2 lbs'), findsOneWidget);
+    expect(find.text('81.2 kg'), findsOneWidget);
+    expect(find.text('81.2 lbs'), findsNothing);
     expect(find.text('80.4 kg'), findsNothing);
   });
 
