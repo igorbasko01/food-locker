@@ -3,6 +3,7 @@ import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
@@ -125,6 +126,7 @@ class _DailyBitesCard extends StatelessWidget {
               child: DailyBitesChart(
                 counts: counts,
                 weights: weights,
+                weightUnit: context.watch<SettingsManager>().weightUnit,
                 selectedDay: selectedDay,
                 onDaySelected: onDaySelected,
               ),
@@ -332,9 +334,8 @@ class _WeightLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final value = weight;
-    final text = value == null
-        ? 'No weigh-in'
-        : '${value.value.toStringAsFixed(1)} ${value.unit.symbol}';
+    final unit = context.watch<SettingsManager>().weightUnit;
+    final text = value == null ? 'No weigh-in' : unit.format(value.value);
     return Semantics(
       label: value == null ? 'No weigh-in' : 'Weight $text',
       excludeSemantics: true,

@@ -6,18 +6,18 @@ void main() {
   const codec = WeightBackupCodec();
 
   group('WeightBackupCodec CSV Logic', () {
-    test('generateWeightCsv creates valid CSV', () {
-      final date = DateTime(2023, 10, 27);
-      final weight = Weight(date: date, value: 75.5, unit: WeightUnit.kilograms);
+    test('generateWeightCsv names the column for its unit', () {
+      final weight = Weight(date: DateTime(2023, 10, 27), value: 75.5);
 
       final csv = codec.generateWeightCsv([weight]);
 
-      expect(csv, contains('date,value,unit'));
-      expect(csv, contains('2023-10-27T00:00:00.000,75.5,kilograms'));
+      expect(csv, contains('date,weight_kg'));
+      expect(csv, isNot(contains('unit')));
+      expect(csv, contains('2023-10-27T00:00:00.000,75.5'));
     });
 
     test('parseWeightCsv parses CSV and returns list of weights', () {
-      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,kilograms';
+      const csv = 'date,weight_kg\r\n2023-10-27T00:00:00.000,75.5';
       final weights = codec.parseWeightCsv(csv);
 
       expect(weights.length, 1);
@@ -34,52 +34,52 @@ void main() {
     });
 
     test('parseWeightCsv skips a row missing its value', () {
-      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,,kilograms';
+      const csv = 'date,weight_kg\r\n2023-10-27T00:00:00.000,';
       expect(codec.parseWeightCsv(csv), isEmpty);
     });
 
     test('parseWeightCsv skips a row missing its date', () {
-      const csv = 'date,value,unit\r\n,75.5,kilograms';
+      const csv = 'date,weight_kg\r\n,75.5';
       expect(codec.parseWeightCsv(csv), isEmpty);
     });
 
     test('parseWeightCsv skips a row with a non-numeric value', () {
-      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,abc,kilograms';
+      const csv = 'date,weight_kg\r\n2023-10-27T00:00:00.000,abc';
       expect(codec.parseWeightCsv(csv), isEmpty);
     });
 
     test('parseWeightCsv keeps valid rows and drops invalid ones', () {
-      const csv = 'date,value,unit\r\n'
-          '2023-10-27T00:00:00.000,75.5,kilograms\r\n'
-          '2023-10-28T00:00:00.000,,kilograms\r\n'
-          '2023-10-29T00:00:00.000,74.0,kilograms';
+      const csv = 'date,weight_kg\r\n'
+          '2023-10-27T00:00:00.000,75.5\r\n'
+          '2023-10-28T00:00:00.000,\r\n'
+          '2023-10-29T00:00:00.000,74.0';
       final weights = codec.parseWeightCsv(csv);
 
       expect(weights.map((w) => w.value), [75.5, 74.0]);
     });
 
-    test('parseWeightCsv falls back to kilograms for an unknown unit', () {
+    test('parseWeightCsv reads the legacy value column', () {
+      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,kilograms';
+      final weights = codec.parseWeightCsv(csv);
+
+      expect(weights.single.value, 75.5);
+      expect(weights.single.unit, WeightUnit.kilograms);
+    });
+
+    test('a legacy pounds row restores as that same number in kilograms', () {
+      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,166.0,pounds';
+      final weights = codec.parseWeightCsv(csv);
+
+      expect(weights.single.value, 166.0);
+      expect(weights.single.unit, WeightUnit.kilograms);
+    });
+
+    test('parseWeightCsv ignores a unit column it cannot name', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,stones';
       final weights = codec.parseWeightCsv(csv);
 
       expect(weights.single.unit, WeightUnit.kilograms);
       expect(weights.single.value, 75.5);
-    });
-
-    test('parseWeightCsv defaults to kilograms when the unit column is absent',
-        () {
-      // Backward compatibility: older exports may omit the unit column.
-      const csv = 'date,value\r\n2023-10-27T00:00:00.000,75.5';
-      final weights = codec.parseWeightCsv(csv);
-
-      expect(weights.single.unit, WeightUnit.kilograms);
-    });
-
-    test('parseWeightCsv preserves the pounds unit', () {
-      const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,166.0,pounds';
-      final weights = codec.parseWeightCsv(csv);
-
-      expect(weights.single.unit, WeightUnit.pounds);
     });
   });
 

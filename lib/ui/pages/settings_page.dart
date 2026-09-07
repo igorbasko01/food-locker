@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:provider/provider.dart';
@@ -24,17 +26,12 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _buildHeader(theme, 'Units'),
+          _buildCard(theme, child: _buildUnitPicker(theme)),
+          const SizedBox(height: 24),
           _buildHeader(theme, 'Data Management'),
-          Card(
-            elevation: 0,
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
+          _buildCard(
+            theme,
             child: Column(
               children: [
                 ListTile(
@@ -240,6 +237,63 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     return confirmed ?? false;
+  }
+
+  /// The unit every weight is shown and typed in. Storage stays kilograms, so
+  /// switching converts what is on screen and never touches the store.
+  Widget _buildUnitPicker(ThemeData theme) {
+    final settings = context.watch<SettingsManager>();
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Weight unit',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Shows and accepts weights in this unit.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<WeightUnit>(
+            segments: const [
+              ButtonSegment(
+                value: WeightUnit.kilograms,
+                label: Text('Kilograms (kg)'),
+              ),
+              ButtonSegment(
+                value: WeightUnit.pounds,
+                label: Text('Pounds (lbs)'),
+              ),
+            ],
+            selected: {settings.weightUnit},
+            onSelectionChanged: (selection) =>
+                settings.setWeightUnit(selection.first),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(ThemeData theme, {required Widget child}) {
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: child,
+    );
   }
 
   Widget _buildHeader(ThemeData theme, String title) {

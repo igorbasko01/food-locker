@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
@@ -17,10 +18,12 @@ class WeightPage extends StatelessWidget {
       builder: (context, weightManager, child) {
         final history = weightManager.history;
         final range = weightManager.historyRange;
+        final unit = context.watch<SettingsManager>().weightUnit;
 
         return Scaffold(
           floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddWeightDialog(context, weightManager),
+            onPressed: () =>
+                _showAddWeightDialog(context, weightManager, unit),
             child: const Icon(Icons.add),
           ),
           body: CustomScrollView(
@@ -32,7 +35,7 @@ class WeightPage extends StatelessWidget {
                     aspectRatio: 1.5,
                     child: Card(
                       elevation: 4,
-                      child: WeightChart(weights: history),
+                      child: WeightChart(weights: history, unit: unit),
                     ),
                   ),
                 ),
@@ -42,11 +45,11 @@ class WeightPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
                     children: [
-                      _buildStatCard(context, 'All Time', weightManager.lowestAllTime),
+                      _buildStatCard(context, 'All Time', weightManager.lowestAllTime, unit),
                       const SizedBox(width: 8),
-                      _buildStatCard(context, '30 Days', weightManager.lowestLast30Days),
+                      _buildStatCard(context, '30 Days', weightManager.lowestLast30Days, unit),
                       const SizedBox(width: 8),
-                      _buildStatCard(context, '7 Days', weightManager.lowestLast7Days),
+                      _buildStatCard(context, '7 Days', weightManager.lowestLast7Days, unit),
                     ],
                   ),
                 ),
@@ -112,7 +115,7 @@ class WeightPage extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${item.value.toStringAsFixed(1)} kg',
+                                unit.format(item.value),
                                 style: const TextStyle(fontSize: 16.0),
                               ),
                               const SizedBox(width: 8),
@@ -123,7 +126,12 @@ class WeightPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          onTap: () => _showAddWeightDialog(context, weightManager, weight: item),
+                          onTap: () => _showAddWeightDialog(
+                            context,
+                            weightManager,
+                            unit,
+                            weight: item,
+                          ),
                         ),
                       );
                     },
@@ -140,12 +148,18 @@ class WeightPage extends StatelessWidget {
     );
   }
 
-  void _showAddWeightDialog(BuildContext context, WeightManager manager, {Weight? weight}) async {
+  void _showAddWeightDialog(
+    BuildContext context,
+    WeightManager manager,
+    WeightUnit unit, {
+    Weight? weight,
+  }) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddWeightDialog(
         initialDate: weight?.date ?? DateTime.now(),
         initialWeight: weight?.value,
+        unit: unit,
       ),
     );
 
@@ -157,22 +171,28 @@ class WeightPage extends StatelessWidget {
 
       final date = result['date'] as DateTime;
       final value = result['value'] as double;
-      final unit = result['unit'] as WeightUnit;
-      
+
       if (weight != null) {
-        manager.updateWeight(weight.date, date, value, unit: unit);
+        manager.updateWeight(weight.date, date, value);
       } else {
-        manager.addWeight(date, value, unit: unit);
+        manager.addWeight(date, value);
       }
     }
   }
 
-  Widget _buildStatCard(BuildContext context, String title, double? value) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    double? value,
+    WeightUnit unit,
+  ) {
     return Expanded(
       child: StatTile(
         label: title,
-        value: value != null ? value.toStringAsFixed(1) : '--',
-        subLabel: value != null ? 'kg' : null,
+        value: value != null
+            ? unit.fromKilograms(value).toStringAsFixed(1)
+            : '--',
+        subLabel: value != null ? unit.symbol : null,
       ),
     );
   }

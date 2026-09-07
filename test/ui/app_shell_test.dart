@@ -4,7 +4,9 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -26,6 +28,9 @@ void main() {
           Provider<SerializationService>(create: (_) => SerializationService()),
           ChangeNotifierProvider<WeightManager>.value(value: weightManager),
           ChangeNotifierProvider<BiteManager>.value(value: biteManager),
+          ChangeNotifierProvider<SettingsManager>(
+            create: (_) => SettingsManager(InMemorySettingsRepository()),
+          ),
         ],
         child: const MaterialApp(home: AppShell()),
       ),

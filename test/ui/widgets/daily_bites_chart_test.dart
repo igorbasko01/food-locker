@@ -13,6 +13,7 @@ void main() {
     WidgetTester tester,
     List<DailyBiteCount> counts, {
     List<Weight> weights = const [],
+    WeightUnit weightUnit = WeightUnit.kilograms,
     DateTime? selectedDay,
     ValueChanged<DateTime>? onDaySelected,
   }) async {
@@ -25,6 +26,7 @@ void main() {
             child: DailyBitesChart(
               counts: counts,
               weights: weights,
+              weightUnit: weightUnit,
               selectedDay: selectedDay,
               onDaySelected: onDaySelected,
             ),
@@ -114,6 +116,29 @@ void main() {
     final lines = data.extraLinesData.horizontalLines;
     expect(lines, hasLength(1));
     expect(lines.single.y, BiteAnalytics.minBitesForAverage.toDouble());
+  });
+
+  testWidgets('a pounds preference converts the axis, legend and semantics', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+
+    final data = await pumpChart(
+      tester,
+      [DailyBiteCount(day: DateTime(2026, 1, 1), count: 40)],
+      weights: [Weight(date: DateTime(2026, 1, 1), value: 72.5748)],
+      weightUnit: WeightUnit.pounds,
+    );
+
+    expect(find.text('Weight (lbs)'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'Weight overlaid, 160\.0 to 160\.0 lbs\.')),
+      findsOneWidget,
+    );
+    // The bars are unaffected: only the weight overlay reads in pounds.
+    expect(data.barGroups.single.barRods.single.toY, 40);
+
+    handle.dispose();
   });
 
   testWidgets('exposes a semantics summary for the painted bars', (

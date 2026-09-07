@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -11,7 +14,11 @@ import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
+  Future<void> pumpPage(
+    WidgetTester tester,
+    WeightManager manager, {
+    WeightUnit unit = WeightUnit.kilograms,
+  }) async {
     // The chart's 1.5 aspect ratio pushes the heading and the history list
     // below the fold on the default 800x600 surface, so they never get built.
     tester.view.physicalSize = const Size(800, 2000);
@@ -22,8 +29,15 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
-        home: ChangeNotifierProvider<WeightManager>.value(
-          value: manager,
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<WeightManager>.value(value: manager),
+            ChangeNotifierProvider<SettingsManager>(
+              create: (_) => SettingsManager(
+                InMemorySettingsRepository(weightUnit: unit),
+              ),
+            ),
+          ],
           child: const WeightPage(),
         ),
       ),
@@ -53,6 +67,22 @@ void main() {
 
     // Each populated tile carries the kg unit in its sub-line.
     expect(find.widgetWithText(StatTile, 'kg'), findsNWidgets(3));
+  });
+
+  testWidgets('a pounds preference converts the tiles and the history row', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(today, 72.5748);
+
+    await pumpPage(tester, manager, unit: WeightUnit.pounds);
+
+    expect(find.widgetWithText(StatTile, '160.0'), findsNWidgets(3));
+    expect(find.widgetWithText(StatTile, 'lbs'), findsNWidgets(3));
+    expect(find.text('160.0 lbs'), findsOneWidget);
+    expect(find.text('72.6 kg'), findsNothing);
   });
 
   testWidgets('history list only lists the last 7 days of entries', (

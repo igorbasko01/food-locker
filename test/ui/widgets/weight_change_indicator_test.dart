@@ -37,9 +37,15 @@ void main() {
     expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
   });
 
-  testWidgets('shows pounds suffix when WeightUnit.pounds is passed', (tester) async {
+  testWidgets('converts the kilogram diff when the unit is pounds', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(2.4, WeightUnit.pounds));
-    expect(find.text('+2.4 lbs'), findsOneWidget);
+    expect(find.text('+5.3 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
+  });
+
+  testWidgets('a loss keeps its sign through the conversion', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest(-0.9071847, WeightUnit.pounds));
+    expect(find.text('-2.0 lbs'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });
 }

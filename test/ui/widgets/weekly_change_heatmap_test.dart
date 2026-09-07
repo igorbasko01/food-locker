@@ -29,12 +29,15 @@ void main() {
   List<WeeklyWeightChange> emptyYear() =>
       [for (var i = 51; i >= 0; i--) week(i)];
 
-  Future<void> pump(WidgetTester tester, List<WeeklyWeightChange> weeks) =>
-      tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: WeeklyChangeHeatmap(weeks: weeks)),
-        ),
-      );
+  Future<void> pump(
+    WidgetTester tester,
+    List<WeeklyWeightChange> weeks, {
+    WeightUnit unit = WeightUnit.kilograms,
+  }) => tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(body: WeeklyChangeHeatmap(weeks: weeks, unit: unit)),
+    ),
+  );
 
   // Nothing inside the heatmap but a cell decorates a box, so these are the
   // cells, in row-major order.

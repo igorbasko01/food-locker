@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
+/// A day-on-day change, as a signed pill.
+///
+/// [diff] is kilograms, like everything the store holds; [unit] is only how it
+/// reads.
 class WeightChangeIndicator extends StatelessWidget {
   final double? diff;
   final WeightUnit unit;
@@ -14,7 +18,7 @@ class WeightChangeIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentDiff = diff;
+    final currentDiff = diff == null ? null : unit.fromKilograms(diff!);
 
     final Color backgroundColor;
     final Color textColor;

@@ -9,8 +9,14 @@ import 'package:food_locker/features/weight/data/weight.dart';
 /// week that failed the span gate says so, so grey never reads as "nothing
 /// happened".
 ///
+/// Weights read in [unit]; the values themselves are kilograms.
+///
 /// [week] is null for a cell past the end of the grid.
-List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
+List<String> weeklyChangeSummary(
+  WeeklyWeightChange? week, {
+  WeightUnit unit = WeightUnit.kilograms,
+  String? locale,
+}) {
   if (week == null) return const ['No data'];
 
   final period =
@@ -27,13 +33,12 @@ List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
 
   final first = week.first!;
   final last = week.last!;
-  final unit = week.unit!;
   return [
     period,
     '${shortDateWithWeekday(first.date, locale)}: '
-        '${_measurement(first.value, unit)} → '
+        '${unit.format(first.value)} → '
         '${shortDateWithWeekday(last.date, locale)}: '
-        '${_measurement(last.value, unit)}',
+        '${unit.format(last.value)}',
     _signedChange(week.delta!, unit),
   ];
 }
@@ -42,11 +47,8 @@ List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
 DateTime _weekEnd(DateTime weekStart) =>
     DateTime(weekStart.year, weekStart.month, weekStart.day + 6);
 
-String _measurement(double value, WeightUnit unit) =>
-    '${value.toStringAsFixed(1)} ${unit.symbol}';
-
 /// The delta with its sign, matching how a history row states a change.
 String _signedChange(double delta, WeightUnit unit) {
-  final change = _measurement(delta, unit);
+  final change = unit.format(delta);
   return delta > 0 ? '+$change' : change;
 }

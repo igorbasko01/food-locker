@@ -1,5 +1,4 @@
 import 'package:archive/archive.dart';
-import 'package:flutter/foundation.dart';
 import 'package:food_locker/core/csv_serializer.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
@@ -8,6 +7,15 @@ class WeightBackupCodec {
   /// coordinator (`SerializationService`) can pack it alongside the bite entry
   /// in a single archive.
   static const String weightFileName = 'weight.csv';
+
+  /// The value column, named for its unit so the file says what its numbers
+  /// mean.
+  static const String valueColumn = 'weight_kg';
+
+  /// The value column older archives used, alongside a `unit` column. Its
+  /// values are taken as kilograms whatever that unit said — the app itself
+  /// only ever wrote kilograms.
+  static const String legacyValueColumn = 'value';
 
   const WeightBackupCodec();
 
@@ -43,8 +51,7 @@ class WeightBackupCodec {
     final items = weights
         .map((w) => {
               'date': w.date.toIso8601String(),
-              'value': w.value,
-              'unit': w.unit.name,
+              valueColumn: w.value,
             })
         .toList();
     return CsvSerializer.toCSV(items);
@@ -55,8 +62,8 @@ class WeightBackupCodec {
     final items = CsvSerializer.fromCSV(csv);
     for (final item in items) {
       final dateStr = item['date'] as String?;
-      final valueStr = item['value']?.toString();
-      final unitStr = item['unit'] as String?;
+      final valueStr =
+          (item[valueColumn] ?? item[legacyValueColumn])?.toString();
 
       if (dateStr == null || valueStr == null) continue;
 
@@ -64,15 +71,7 @@ class WeightBackupCodec {
       final value = double.tryParse(valueStr);
 
       if (date != null && value != null) {
-        WeightUnit unit = WeightUnit.kilograms;
-        if (unitStr != null) {
-          try {
-            unit = WeightUnit.values.byName(unitStr);
-          } catch (e) {
-            debugPrint('Error parsing weight unit: $unitStr, $e');
-          }
-        }
-        weights.add(Weight(date: date, value: value, unit: unit));
+        weights.add(Weight(date: date, value: value));
       }
     }
     return weights;

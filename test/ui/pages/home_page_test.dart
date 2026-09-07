@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -16,7 +19,11 @@ void main() {
   DateTime daysAgo(int days) =>
       DateTime(today.year, today.month, today.day - days);
 
-  Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
+  Future<void> pumpPage(
+    WidgetTester tester,
+    WeightManager manager, {
+    WeightUnit unit = WeightUnit.kilograms,
+  }) async {
     // The header pushes the history list below the fold on the default
     // 800x600 surface, so its tiles never get built.
     tester.view.physicalSize = const Size(800, 3000);
@@ -27,14 +34,34 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
-        home: ChangeNotifierProvider<WeightManager>.value(
-          value: manager,
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<WeightManager>.value(value: manager),
+            ChangeNotifierProvider<SettingsManager>(
+              create: (_) => SettingsManager(
+                InMemorySettingsRepository(weightUnit: unit),
+              ),
+            ),
+          ],
           child: const HomePage(),
         ),
       ),
     );
     await tester.pump();
   }
+
+  testWidgets('history rows read in the preferred unit', (tester) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    await manager.addWeight(daysAgo(1), 71.6677);
+    await manager.addWeight(today, 72.5748);
+
+    await pumpPage(tester, manager, unit: WeightUnit.pounds);
+
+    expect(find.text('160.0 lbs'), findsOneWidget);
+    expect(find.text('158.0 lbs'), findsOneWidget);
+    // The day-on-day change is converted from kilograms too.
+    expect(find.text('+2.0 lbs'), findsOneWidget);
+  });
 
   testWidgets('the heading names the selected range', (tester) async {
     final manager = WeightManager(InMemoryWeightRepository());

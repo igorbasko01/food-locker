@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_range.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
@@ -16,6 +17,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final weightManager = context.watch<WeightManager>();
+    final unit = context.watch<SettingsManager>().weightUnit;
     final history = weightManager.history;
     final range = weightManager.historyRange;
     final weeklyChanges = weightManager.weeklyChanges;
@@ -50,7 +52,7 @@ class HomePage extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: WeeklyChangeHeatmap(weeks: weeklyChanges),
+                child: WeeklyChangeHeatmap(weeks: weeklyChanges, unit: unit),
               ),
             ),
           SliverToBoxAdapter(
@@ -66,7 +68,8 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: () => _showAddWeightDialog(context, weightManager),
+                    onPressed: () =>
+                        _showAddWeightDialog(context, weightManager, unit),
                     icon: const Icon(Icons.add_rounded),
                     label: const Text('Log Weight'),
                   ),
@@ -78,6 +81,7 @@ class HomePage extends StatelessWidget {
             history,
             range: range,
             storeIsEmpty: !weightManager.hasAnyWeights,
+            unit: unit,
           ),
           const SliverToBoxAdapter(
             child: AppVersionLabel(),
@@ -87,19 +91,21 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void _showAddWeightDialog(BuildContext context, WeightManager manager) async {
+  void _showAddWeightDialog(
+    BuildContext context,
+    WeightManager manager,
+    WeightUnit unit,
+  ) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddWeightDialog(
         initialDate: DateTime.now(),
+        unit: unit,
       ),
     );
 
     if (result != null) {
-      final date = result['date'] as DateTime;
-      final value = result['value'] as double;
-      final unit = result['unit'] as WeightUnit;
-      manager.addWeight(date, value, unit: unit);
+      manager.addWeight(result['date'] as DateTime, result['value'] as double);
     }
   }
 
@@ -107,6 +113,7 @@ class HomePage extends StatelessWidget {
     List<Weight> history, {
     required DateRange range,
     required bool storeIsEmpty,
+    required WeightUnit unit,
   }) {
     if (history.isEmpty) {
       return SliverToBoxAdapter(
@@ -139,6 +146,7 @@ class HomePage extends StatelessWidget {
           return WeightHistoryTile(
             item: item,
             diff: diff,
+            unit: unit,
           );
         },
         childCount: history.length,

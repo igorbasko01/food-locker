@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
@@ -81,6 +83,9 @@ void main() {
       MultiProvider(
         providers: [
           Provider<BiteRepository>.value(value: repo),
+          ChangeNotifierProvider<SettingsManager>(
+            create: (_) => SettingsManager(InMemorySettingsRepository()),
+          ),
           Provider<WeightRepository>.value(value: weightRepo),
         ],
         child: MaterialApp(theme: appTheme, home: const BiteAnalyticsPage()),

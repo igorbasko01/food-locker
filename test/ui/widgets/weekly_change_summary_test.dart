@@ -22,7 +22,7 @@ void main() {
   );
 
   test('a gaining week names its period, its weigh-ins and its change', () {
-    expect(weeklyChangeSummary(week(delta: 0.6), 'en_US'), [
+    expect(weeklyChangeSummary(week(delta: 0.6), locale: 'en_US'), [
       'Sun, 3/8 – Sat, 3/14',
       'Mon, 3/9: 82.4 kg → Fri, 3/13: 83.0 kg',
       '+0.6 kg',
@@ -30,7 +30,7 @@ void main() {
   });
 
   test('a losing week signs its change with a minus', () {
-    expect(weeklyChangeSummary(week(delta: -1.2), 'en_US'), [
+    expect(weeklyChangeSummary(week(delta: -1.2), locale: 'en_US'), [
       'Sun, 3/8 – Sat, 3/14',
       'Mon, 3/9: 82.4 kg → Fri, 3/13: 81.2 kg',
       '-1.2 kg',
@@ -38,23 +38,38 @@ void main() {
   });
 
   test('a flat week states zero rather than a sign', () {
-    expect(weeklyChangeSummary(week(delta: 0.0), 'en_US').last, '0.0 kg');
+    expect(
+      weeklyChangeSummary(week(delta: 0.0), locale: 'en_US').last,
+      '0.0 kg',
+    );
   });
 
-  test('the weigh-ins carry the week\'s own unit', () {
+  test('the weigh-ins read in the preferred unit, not the entries\' own', () {
     final summary = weeklyChangeSummary(
       week(delta: 1.4, unit: WeightUnit.pounds),
-      'en_US',
+      unit: WeightUnit.kilograms,
+      locale: 'en_US',
     );
 
-    expect(summary[1], 'Mon, 3/9: 82.4 lbs → Fri, 3/13: 83.8 lbs');
-    expect(summary.last, '+1.4 lbs');
+    expect(summary[1], 'Mon, 3/9: 82.4 kg → Fri, 3/13: 83.8 kg');
+    expect(summary.last, '+1.4 kg');
+  });
+
+  test('a pounds preference converts the stored kilograms', () {
+    final summary = weeklyChangeSummary(
+      week(delta: 0.9071847),
+      unit: WeightUnit.pounds,
+      locale: 'en_US',
+    );
+
+    expect(summary[1], 'Mon, 3/9: 181.7 lbs → Fri, 3/13: 183.7 lbs');
+    expect(summary.last, '+2.0 lbs');
   });
 
   test('a week without a delta says so instead of reading as flat', () {
     final summary = weeklyChangeSummary(
       WeeklyWeightChange(weekStart: weekStart),
-      'en_US',
+      locale: 'en_US',
     );
 
     // The same line serves a week nothing was logged in and one whose
@@ -66,14 +81,14 @@ void main() {
   });
 
   test('a cell past the end of the grid has no week to name', () {
-    expect(weeklyChangeSummary(null, 'en_US'), ['No data']);
+    expect(weeklyChangeSummary(null, locale: 'en_US'), ['No data']);
   });
 
   test('renders its dates in the locale field order', () {
     // Day-before-month under en_GB, so the period cannot be the en_US string.
     expect(
-      weeklyChangeSummary(week(delta: 0.6), 'en_GB').first,
-      isNot(weeklyChangeSummary(week(delta: 0.6), 'en_US').first),
+      weeklyChangeSummary(week(delta: 0.6), locale: 'en_GB').first,
+      isNot(weeklyChangeSummary(week(delta: 0.6), locale: 'en_US').first),
     );
   });
 }

@@ -6,7 +6,9 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
@@ -25,14 +27,26 @@ void main() {
     BiteManager? biteManager,
     WeightRepository? weightRepo,
     BiteRepository? biteRepo,
+    SettingsManager? settingsManager,
   }) {
     final weights = weightRepo ?? InMemoryWeightRepository();
     final bites = biteRepo ?? _FakeBiteRepository();
+    // The unit picker pushes the Danger Zone towards the fold on the default
+    // 800x600 surface; a taller one keeps every action tappable.
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     return tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
           providers: [
             Provider<SerializationService>.value(value: service),
+            ChangeNotifierProvider<SettingsManager>.value(
+              value:
+                  settingsManager ??
+                  SettingsManager(InMemorySettingsRepository()),
+            ),
             Provider<WeightRepository>.value(value: weights),
             Provider<BiteRepository>.value(value: bites),
             ChangeNotifierProvider<WeightManager>.value(
@@ -47,6 +61,38 @@ void main() {
       ),
     );
   }
+
+  group('the weight-unit preference', () {
+    testWidgets('starts on the stored unit', (tester) async {
+      await pumpPage(
+        tester,
+        _FakeSerializationService(),
+        settingsManager: SettingsManager(
+          InMemorySettingsRepository(weightUnit: WeightUnit.pounds),
+        ),
+      );
+
+      final picker = tester.widget<SegmentedButton<WeightUnit>>(
+        find.byType(SegmentedButton<WeightUnit>),
+      );
+      expect(picker.selected, {WeightUnit.pounds});
+    });
+
+    testWidgets('picking pounds writes the preference through', (tester) async {
+      final repository = InMemorySettingsRepository();
+
+      await pumpPage(
+        tester,
+        _FakeSerializationService(),
+        settingsManager: SettingsManager(repository),
+      );
+
+      await tester.tap(find.text('Pounds (lbs)'));
+      await tester.pumpAndSettle();
+
+      expect(repository.weightUnit, WeightUnit.pounds);
+    });
+  });
 
   /// Long enough for a snackbar to finish animating in or out.
   Future<void> pumpToast(WidgetTester tester) async {
