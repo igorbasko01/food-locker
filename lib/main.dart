@@ -6,7 +6,6 @@ import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/settings/data/preferences_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
-import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -42,7 +41,6 @@ void main() async {
       providers: [
         Provider<WeightRepository>.value(value: weightRepository),
         Provider<BiteRepository>.value(value: biteRepository),
-        Provider<SettingsRepository>.value(value: settingsRepository),
         Provider<SerializationService>(create: (_) => SerializationService()),
         ChangeNotifierProvider<WeightManager>.value(value: weightManager),
         ChangeNotifierProvider<BiteManager>.value(value: biteManager),

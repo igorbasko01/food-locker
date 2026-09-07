@@ -37,9 +37,11 @@ class PreferencesSettingsRepository implements SettingsRepository {
   @override
   WeightUnit get weightUnit => _weightUnit;
 
+  /// The store is written first: a write that fails leaves the preference
+  /// unchanged rather than holding a value that is gone by the next launch.
   @override
   Future<void> setWeightUnit(WeightUnit unit) async {
-    _weightUnit = unit;
     await _preferences.setString(weightUnitKey, unit.name);
+    _weightUnit = unit;
   }
 }
