@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
 /// One day's row in the weight history. [diff] is kilograms, like [item]'s own
-/// value; [unit] is only how the two read.
+/// value; [system] is only how the two read.
 class WeightHistoryTile extends StatelessWidget {
   final Weight item;
   final double? diff;
-  final WeightUnit unit;
+  final MeasurementSystem system;
 
   const WeightHistoryTile({
     super.key,
     required this.item,
     required this.diff,
-    this.unit = WeightUnit.kilograms,
+    this.system = MeasurementSystem.metric,
   });
 
   @override
@@ -47,7 +48,7 @@ class WeightHistoryTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              unit.format(item.value),
+              system.formatWeight(item.value),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -55,7 +56,7 @@ class WeightHistoryTile extends StatelessWidget {
             const SizedBox(width: 12),
             WeightChangeIndicator(
               diff: diff,
-              unit: unit,
+              system: system,
             ),
           ],
         ),

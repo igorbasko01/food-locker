@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -22,7 +22,7 @@ void main() {
   Future<void> pumpPage(
     WidgetTester tester,
     WeightManager manager, {
-    WeightUnit unit = WeightUnit.kilograms,
+    MeasurementSystem system = MeasurementSystem.metric,
   }) async {
     // The header pushes the history list below the fold on the default
     // 800x600 surface, so its tiles never get built.
@@ -39,7 +39,7 @@ void main() {
             ChangeNotifierProvider<WeightManager>.value(value: manager),
             ChangeNotifierProvider<SettingsManager>(
               create: (_) => SettingsManager(
-                InMemorySettingsRepository(weightUnit: unit),
+                InMemorySettingsRepository(measurementSystem: system),
               ),
             ),
           ],
@@ -50,12 +50,12 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('history rows read in the preferred unit', (tester) async {
+  testWidgets('history rows read in the preferred system', (tester) async {
     final manager = WeightManager(InMemoryWeightRepository());
     await manager.addWeight(daysAgo(1), 71.6677);
     await manager.addWeight(today, 72.5748);
 
-    await pumpPage(tester, manager, unit: WeightUnit.pounds);
+    await pumpPage(tester, manager, system: MeasurementSystem.imperial);
 
     expect(find.text('160.0 lbs'), findsOneWidget);
     expect(find.text('158.0 lbs'), findsOneWidget);

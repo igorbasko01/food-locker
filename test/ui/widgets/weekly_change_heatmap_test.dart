@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
@@ -32,10 +33,10 @@ void main() {
   Future<void> pump(
     WidgetTester tester,
     List<WeeklyWeightChange> weeks, {
-    WeightUnit unit = WeightUnit.kilograms,
+    MeasurementSystem system = MeasurementSystem.metric,
   }) => tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(body: WeeklyChangeHeatmap(weeks: weeks, unit: unit)),
+      home: Scaffold(body: WeeklyChangeHeatmap(weeks: weeks, system: system)),
     ),
   );
 

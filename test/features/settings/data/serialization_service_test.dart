@@ -6,7 +6,9 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
+import 'package:food_locker/features/settings/data/profile_backup_codec.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
@@ -185,7 +187,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup);
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
 
       final restored = repo.getAllWeights();
       expect(restored.map((w) => w.value), containsAll([75.5, 75.0]));
@@ -204,7 +206,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup);
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
 
       // clear must come first, then one save per restored weight.
       expect(repo.operations, ['clear', 'save', 'save']);
@@ -218,6 +220,7 @@ void main() {
         repo,
         _RecordingBiteRepository(),
         codec.encode([]),
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(repo.getAllWeights(), isEmpty);
@@ -235,6 +238,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       // clear must come first, then one log per restored bite.
@@ -255,6 +259,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.loggedMs, [1000]);
@@ -272,6 +277,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       // The bite log is a real (empty) snapshot: cleared, nothing logged.
@@ -289,6 +295,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.operations, isEmpty);
@@ -311,6 +318,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       // clear must come first, then one set per restored version.
@@ -338,6 +346,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.savedConfigs, hasLength(1));
@@ -361,6 +370,7 @@ void main() {
         InMemoryWeightRepository(),
         biteRepo,
         backup,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(biteRepo.configOperations, isEmpty);
@@ -393,6 +403,7 @@ void main() {
         fileName: 'backup.zip',
         onConfirm: (_) async => false,
         onRestoreStart: () => restoreStarted = true,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(restored, isFalse);
@@ -416,6 +427,7 @@ void main() {
         fileName: 'backup.zip',
         onConfirm: (_) async => true,
         onRestoreStart: () => restoreStarted = true,
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(restored, isTrue);
@@ -443,6 +455,7 @@ void main() {
           expect(weightRepo.operations, isEmpty);
           return true;
         },
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(asked, ['food_locker_20260101120000.zip']);
@@ -456,6 +469,7 @@ void main() {
         _RecordingBiteRepository(),
         fullBackup(),
         fileName: 'backup.zip',
+        settingsRepo: InMemorySettingsRepository(),
       );
 
       expect(restored, isTrue);
@@ -478,7 +492,7 @@ void main() {
       biteRepo.operations.clear();
       biteRepo.configOperations.clear();
 
-      await service.clearAllData(weightRepo, biteRepo);
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: InMemorySettingsRepository());
 
       expect(weightRepo.operations, ['clear']);
       expect(weightRepo.getAllWeights(), isEmpty);
@@ -502,7 +516,7 @@ void main() {
         const PacingConfig(id: 0, effectiveMs: 1, b1S: 40, b2S: 90),
       );
 
-      await service.clearAllData(weightRepo, biteRepo);
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: InMemorySettingsRepository());
 
       expect(weightRepo.getAllWeights(), isEmpty);
       expect(
@@ -515,6 +529,81 @@ void main() {
       expect(config!.b1S, defaultPacingConfig.b1S);
       expect(config.b2S, defaultPacingConfig.b2S);
       expect(await biteRepo.allPacingConfigs(), hasLength(1));
+    });
+  });
+
+  group('SerializationService profile entry', () {
+    final service = SerializationService();
+
+    List<int> backupWithHeight(double? heightCm) => service.encodeBackup(
+          [Weight(date: DateTime(2026, 1, 1), value: 75.5)],
+          const [],
+          const [],
+          heightCm: heightCm,
+        );
+
+    test('the exported archive carries the height', () {
+      final archive = ZipDecoder().decodeBytes(backupWithHeight(178.5));
+
+      final profile = const ProfileBackupCodec().fromArchive(archive);
+      expect(profile, isNotNull);
+      expect(profile!.heightCm, 178.5);
+    });
+
+    test('a restore replaces the stored height', () async {
+      final settingsRepo = InMemorySettingsRepository(heightCm: 165);
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        _RecordingBiteRepository(),
+        backupWithHeight(178.5),
+        settingsRepo: settingsRepo,
+      );
+
+      expect(settingsRepo.heightCm, 178.5);
+    });
+
+    test('a backup taken before a height was entered restores as unset',
+        () async {
+      final settingsRepo = InMemorySettingsRepository(heightCm: 165);
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        _RecordingBiteRepository(),
+        backupWithHeight(null),
+        settingsRepo: settingsRepo,
+      );
+
+      expect(settingsRepo.heightCm, isNull);
+    });
+
+    test('an archive without a profile entry leaves the height alone',
+        () async {
+      final settingsRepo = InMemorySettingsRepository(heightCm: 165);
+      // An older backup: weights only, no profile entry to speak of.
+      final backup = const WeightBackupCodec()
+          .encode([Weight(date: DateTime(2026, 1, 1), value: 75.5)]);
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        _RecordingBiteRepository(),
+        backup,
+        settingsRepo: settingsRepo,
+      );
+
+      expect(settingsRepo.heightCm, 165);
+    });
+
+    test('a clear takes the height with it', () async {
+      final settingsRepo = InMemorySettingsRepository(heightCm: 178.5);
+
+      await service.clearAllData(
+        InMemoryWeightRepository(),
+        _RecordingBiteRepository(),
+        settingsRepo: settingsRepo,
+      );
+
+      expect(settingsRepo.heightCm, isNull);
     });
   });
 }

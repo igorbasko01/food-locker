@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/core/units.dart';
 
-/// Logs or edits one day's weigh-in, in [unit].
+/// Logs or edits one day's weigh-in, in [system].
 ///
-/// [initialWeight] and the `value` this pops are both kilograms — the unit is
+/// [initialWeight] and the `value` this pops are both kilograms — the system is
 /// a display-and-input concern, converted at this boundary and nowhere else.
 class AddWeightDialog extends StatefulWidget {
   final DateTime initialDate;
   final double? initialWeight;
-  final WeightUnit unit;
+  final MeasurementSystem system;
 
   const AddWeightDialog({
     super.key,
     required this.initialDate,
     this.initialWeight,
-    this.unit = WeightUnit.kilograms,
+    this.system = MeasurementSystem.metric,
   });
 
   @override
@@ -37,7 +37,9 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     _selectedDate = widget.initialDate;
     final initialWeight = widget.initialWeight;
     if (initialWeight != null) {
-      _prefilled = widget.unit.fromKilograms(initialWeight).toStringAsFixed(1);
+      _prefilled = widget.system
+          .weightFromKilograms(initialWeight)
+          .toStringAsFixed(1);
       _weightController.text = _prefilled;
     }
   }
@@ -64,7 +66,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     if (weight != null && weight > 0) {
       Navigator.of(context).pop({
         'date': _selectedDate,
-        'value': widget.unit.toKilograms(weight),
+        'value': widget.system.weightToKilograms(weight),
       });
     }
   }
@@ -103,8 +105,8 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
             controller: _weightController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Weight (${widget.unit.symbol})',
-              hintText: widget.unit == WeightUnit.pounds
+              labelText: 'Weight (${widget.system.weightSymbol})',
+              hintText: widget.system == MeasurementSystem.imperial
                   ? 'e.g. 165.5'
                   : 'e.g. 75.5',
               border: const OutlineInputBorder(),

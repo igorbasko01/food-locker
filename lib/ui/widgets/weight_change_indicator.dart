@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/core/units.dart';
 
 /// A day-on-day change, as a signed pill.
 ///
-/// [diff] is kilograms, like everything the store holds; [unit] is only how it
-/// reads.
+/// [diff] is kilograms, like everything the store holds; [system] is only how
+/// it reads.
 class WeightChangeIndicator extends StatelessWidget {
   final double? diff;
-  final WeightUnit unit;
+  final MeasurementSystem system;
 
   const WeightChangeIndicator({
     super.key,
     required this.diff,
-    required this.unit,
+    required this.system,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentDiff = diff == null ? null : unit.fromKilograms(diff!);
+    final currentDiff = diff == null
+        ? null
+        : system.weightFromKilograms(diff!);
 
     final Color backgroundColor;
     final Color textColor;
@@ -36,19 +38,19 @@ class WeightChangeIndicator extends StatelessWidget {
       backgroundColor = theme.colorScheme.errorContainer.withValues(alpha: 0.5);
       textColor = theme.colorScheme.error;
       icon = Icons.arrow_upward_rounded;
-      text = '+${currentDiff.toStringAsFixed(1)} ${unit.symbol}';
+      text = '+${currentDiff.toStringAsFixed(1)} ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     } else if (currentDiff < 0) {
       backgroundColor = Colors.green.withValues(alpha: 0.15);
       textColor = Colors.green;
       icon = Icons.arrow_downward_rounded;
-      text = '${currentDiff.toStringAsFixed(1)} ${unit.symbol}';
+      text = '${currentDiff.toStringAsFixed(1)} ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     } else {
       backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
       textColor = theme.colorScheme.outline;
       icon = Icons.remove_rounded;
-      text = '0.0 ${unit.symbol}';
+      text = '0.0 ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     }
 

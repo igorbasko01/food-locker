@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 /// A bar chart of total bites per calendar day over the analytics window.
@@ -23,7 +24,7 @@ class DailyBitesChart extends StatelessWidget {
     super.key,
     required this.counts,
     this.weights = const [],
-    this.weightUnit = WeightUnit.kilograms,
+    this.weightSystem = MeasurementSystem.metric,
     this.selectedDay,
     this.onDaySelected,
   });
@@ -36,9 +37,9 @@ class DailyBitesChart extends StatelessWidget {
   /// leaves the chart bites-only with no right-hand axis.
   final List<Weight> weights;
 
-  /// The unit the weight axis and tooltips read in. The overlay is plotted in
-  /// kilograms whatever this says.
-  final WeightUnit weightUnit;
+  /// The system the weight axis and tooltips read in. The overlay is plotted
+  /// in kilograms whatever this says.
+  final MeasurementSystem weightSystem;
 
   /// The calendar day whose bar is highlighted, linking the chart to the
   /// breakdown card below it. Null leaves every bar in its default treatment.
@@ -169,8 +170,8 @@ class DailyBitesChart extends StatelessWidget {
       final weighedMax = weightByDay.values.reduce((a, b) => a > b ? a : b);
       summary.write(
         ' Weight overlaid, '
-        '${weightUnit.fromKilograms(weighedMin).toStringAsFixed(1)} to '
-        '${weightUnit.format(weighedMax)}.',
+        '${weightSystem.weightFromKilograms(weighedMin).toStringAsFixed(1)} '
+        'to ${weightSystem.formatWeight(weighedMax)}.',
       );
     }
     if (selected != null) {
@@ -197,8 +198,8 @@ class DailyBitesChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          weightUnit
-                              .fromKilograms(yToWeight(value))
+                          weightSystem
+                              .weightFromKilograms(yToWeight(value))
                               .toStringAsFixed(1),
                           style: TextStyle(fontSize: 10, color: weightColor),
                         ),
@@ -291,7 +292,9 @@ class DailyBitesChart extends StatelessWidget {
               );
               final weight = weightByDay[day];
               final weightLine =
-                  weight == null ? '' : '\n${weightUnit.format(weight)}';
+                  weight == null
+                  ? ''
+                  : '\n${weightSystem.formatWeight(weight)}';
               return BarTooltipItem(
                 '${fullDateWithWeekday(day)}\n${rod.toY.toInt()} bites$weightLine',
                 const TextStyle(
@@ -341,7 +344,7 @@ class DailyBitesChart extends StatelessWidget {
                   _Legend(
                     biteColor: fullColor,
                     weightColor: weightColor,
-                    unit: weightUnit,
+                    system: weightSystem,
                   ),
                   const SizedBox(height: 8),
                   Expanded(child: chart),
@@ -417,12 +420,12 @@ class _Legend extends StatelessWidget {
   const _Legend({
     required this.biteColor,
     required this.weightColor,
-    required this.unit,
+    required this.system,
   });
 
   final Color biteColor;
   final Color weightColor;
-  final WeightUnit unit;
+  final MeasurementSystem system;
 
   @override
   Widget build(BuildContext context) {
@@ -431,7 +434,7 @@ class _Legend extends StatelessWidget {
       children: [
         _swatch(_barSwatch(biteColor), 'Bites'),
         const SizedBox(width: 16),
-        _swatch(_lineSwatch(weightColor), 'Weight (${unit.symbol})'),
+        _swatch(_lineSwatch(weightColor), 'Weight (${system.weightSymbol})'),
       ],
     );
   }

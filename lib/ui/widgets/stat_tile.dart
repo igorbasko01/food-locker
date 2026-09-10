@@ -12,6 +12,8 @@ class StatTile extends StatelessWidget {
     required this.label,
     required this.value,
     this.subLabel,
+    this.valueColor,
+    this.icon,
   });
 
   /// The caption above the value, e.g. `30-day average`.
@@ -23,9 +25,17 @@ class StatTile extends StatelessWidget {
   /// An optional line beneath the value, e.g. the date of a max day.
   final String? subLabel;
 
+  /// Overrides the value's default `colorScheme.primary`, for tiles whose
+  /// figure carries a direction of its own.
+  final Color? valueColor;
+
+  /// An optional glyph beside the value, drawn in the same colour.
+  final IconData? icon;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final figureColor = valueColor ?? theme.colorScheme.primary;
     // One spoken node per tile — the caption, value, and any sub-line read as a
     // single phrase rather than three fragments (the reserved empty sub-line
     // included).
@@ -53,11 +63,25 @@ class StatTile extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              Text(
-                value,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+              // Scaled down rather than wrapped, so a long signed reading like
+              // `-0.45 kg/wk` stays on one line and tiles keep their heights.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 20, color: figureColor),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      value,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: figureColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 4),

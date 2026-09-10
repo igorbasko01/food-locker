@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
 void main() {
-  Widget createWidgetUnderTest(double? diff, [WeightUnit unit = WeightUnit.kilograms]) {
+  Widget createWidgetUnderTest(
+    double? diff, [
+    MeasurementSystem system = MeasurementSystem.metric,
+  ]) {
     return MaterialApp(
       home: Scaffold(
-        body: WeightChangeIndicator(diff: diff, unit: unit),
+        body: WeightChangeIndicator(diff: diff, system: system),
       ),
     );
   }
@@ -37,14 +40,18 @@ void main() {
     expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
   });
 
-  testWidgets('converts the kilogram diff when the unit is pounds', (tester) async {
-    await tester.pumpWidget(createWidgetUnderTest(2.4, WeightUnit.pounds));
+  testWidgets('converts the kilogram diff under imperial', (tester) async {
+    await tester.pumpWidget(
+      createWidgetUnderTest(2.4, MeasurementSystem.imperial),
+    );
     expect(find.text('+5.3 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
   });
 
   testWidgets('a loss keeps its sign through the conversion', (tester) async {
-    await tester.pumpWidget(createWidgetUnderTest(-0.9071847, WeightUnit.pounds));
+    await tester.pumpWidget(
+      createWidgetUnderTest(-0.9071847, MeasurementSystem.imperial),
+    );
     expect(find.text('-2.0 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });

@@ -94,8 +94,21 @@ class WeightManager extends ChangeNotifier {
       _weightRepository.getWeightForDay(date);
 
   double? get lowestAllTime => _analytics.lowestAllTime;
-  double? get lowestLast30Days => _analytics.lowestLast30Days;
-  double? get lowestLast7Days => _analytics.lowestLast7Days;
+
+  /// The most recent weigh-in, the Weight tab's headline figure.
+  Weight? get latestEntry => _analytics.latestEntry;
+
+  /// The weigh-in holding [lowestAllTime], for dating the low.
+  Weight? get lowestEntry => _analytics.lowestEntry;
+
+  /// How far the latest weigh-in sits above the all-time low; never negative.
+  double? get changeFromLowest => _analytics.changeFromLowest;
+
+  /// Last complete week's mean weight minus the week before it.
+  double? get weeklyChange => _analytics.weeklyChange();
+
+  /// The 30-day least-squares trend, as weight per week.
+  double? get trendPerWeek => _analytics.trendPerWeek();
 
   /// The last year of weekly weight change, oldest first, for the Home heatmap.
   List<WeeklyWeightChange> get weeklyChanges => _analytics.weeklyChanges();

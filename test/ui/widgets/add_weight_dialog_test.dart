@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
 
@@ -9,7 +9,7 @@ void main() {
   Future<void> pumpDialog(
     WidgetTester tester,
     DateTime initialDate, {
-    WeightUnit unit = WeightUnit.kilograms,
+    MeasurementSystem system = MeasurementSystem.metric,
     double? initialWeight,
   }) async {
     await tester.pumpWidget(
@@ -19,7 +19,7 @@ void main() {
           body: AddWeightDialog(
             initialDate: initialDate,
             initialWeight: initialWeight,
-            unit: unit,
+            system: system,
           ),
         ),
       ),
@@ -29,7 +29,7 @@ void main() {
   /// The map the dialog pops, captured by pushing it from a route.
   Future<Map<String, dynamic>?> submit(
     WidgetTester tester, {
-    required WeightUnit unit,
+    required MeasurementSystem system,
     double? initialWeight,
     String? typed,
   }) async {
@@ -46,7 +46,7 @@ void main() {
                   builder: (_) => AddWeightDialog(
                     initialDate: DateTime(2026, 3, 8),
                     initialWeight: initialWeight,
-                    unit: unit,
+                    system: system,
                   ),
                 );
               },
@@ -79,25 +79,27 @@ void main() {
     expect(find.text(fullDateWithWeekday(date)), findsOneWidget);
   });
 
-  testWidgets('the field is labelled with the unit being typed', (tester) async {
+  testWidgets('the field is labelled with the system being typed', (
+    tester,
+  ) async {
     await pumpDialog(tester, DateTime(2026, 3, 8));
     expect(find.text('Weight (kg)'), findsOneWidget);
 
     await pumpDialog(
       tester,
       DateTime(2026, 3, 8),
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
     );
     expect(find.text('Weight (lbs)'), findsOneWidget);
   });
 
-  testWidgets('an existing entry prefills in the preferred unit', (
+  testWidgets('an existing entry prefills in the preferred system', (
     tester,
   ) async {
     await pumpDialog(
       tester,
       DateTime(2026, 3, 8),
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
       initialWeight: 72.5748,
     );
 
@@ -107,7 +109,7 @@ void main() {
   testWidgets('a whole-pound entry saves as kilograms', (tester) async {
     final result = await submit(
       tester,
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
       typed: '160',
     );
 
@@ -117,7 +119,7 @@ void main() {
   testWidgets('a one-decimal pound entry saves as kilograms', (tester) async {
     final result = await submit(
       tester,
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
       typed: '159.8',
     );
 
@@ -127,33 +129,33 @@ void main() {
   testWidgets('kilograms are stored as typed', (tester) async {
     final result = await submit(
       tester,
-      unit: WeightUnit.kilograms,
+      system: MeasurementSystem.metric,
       typed: '75.5',
     );
 
     expect(result!['value'] as double, 75.5);
   });
 
-  testWidgets('saving an untouched pounds edit leaves the stored kg exact', (
+  testWidgets('saving an untouched imperial edit leaves the stored kg exact', (
     tester,
   ) async {
     const stored = 72.57432;
 
     final result = await submit(
       tester,
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
       initialWeight: stored,
     );
 
     expect(result!['value'] as double, stored);
   });
 
-  testWidgets('a deliberate pounds edit converts the new figure', (
+  testWidgets('a deliberate imperial edit converts the new figure', (
     tester,
   ) async {
     final result = await submit(
       tester,
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
       initialWeight: 72.57432,
       typed: '158.0',
     );

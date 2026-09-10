@@ -1,18 +1,19 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 /// The weight trend line. Plotted in kilograms, the unit everything is stored
-/// in; [unit] only decides how the axis and tooltip read.
+/// in; [system] only decides how the axis and tooltip read.
 class WeightChart extends StatelessWidget {
   final List<Weight> weights;
-  final WeightUnit unit;
+  final MeasurementSystem system;
 
   const WeightChart({
     super.key,
     required this.weights,
-    this.unit = WeightUnit.kilograms,
+    this.system = MeasurementSystem.metric,
   });
 
   @override
@@ -67,7 +68,7 @@ class WeightChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Text(
-                      unit.fromKilograms(value).toStringAsFixed(1),
+                      system.weightFromKilograms(value).toStringAsFixed(1),
                       style: const TextStyle(fontSize: 10),
                     ),
                   );
@@ -100,7 +101,7 @@ class WeightChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final date = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
                   return LineTooltipItem(
-                    '${fullDateWithWeekday(date)}\n${unit.format(spot.y)}',
+                    '${fullDateWithWeekday(date)}\n${system.formatWeight(spot.y)}',
                     const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   );
                 }).toList();

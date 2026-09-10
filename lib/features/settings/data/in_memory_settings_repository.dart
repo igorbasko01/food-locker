@@ -1,17 +1,29 @@
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
 
 class InMemorySettingsRepository implements SettingsRepository {
-  WeightUnit _weightUnit;
+  double? _heightCm;
+  MeasurementSystem _measurementSystem;
 
-  InMemorySettingsRepository({WeightUnit weightUnit = WeightUnit.kilograms})
-    : _weightUnit = weightUnit;
+  InMemorySettingsRepository({
+    double? heightCm,
+    MeasurementSystem measurementSystem = MeasurementSystem.metric,
+  })  : _heightCm = heightCm,
+        _measurementSystem = measurementSystem;
 
   @override
-  WeightUnit get weightUnit => _weightUnit;
+  double? get heightCm => _heightCm;
 
   @override
-  Future<void> setWeightUnit(WeightUnit unit) async {
-    _weightUnit = unit;
+  Future<void> setHeightCm(double? centimetres) async {
+    _heightCm = centimetres;
+  }
+
+  @override
+  MeasurementSystem get measurementSystem => _measurementSystem;
+
+  @override
+  Future<void> setMeasurementSystem(MeasurementSystem system) async {
+    _measurementSystem = system;
   }
 }

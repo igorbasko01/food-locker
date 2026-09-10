@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/daily_bites_chart.dart';
@@ -13,7 +14,7 @@ void main() {
     WidgetTester tester,
     List<DailyBiteCount> counts, {
     List<Weight> weights = const [],
-    WeightUnit weightUnit = WeightUnit.kilograms,
+    MeasurementSystem weightSystem = MeasurementSystem.metric,
     DateTime? selectedDay,
     ValueChanged<DateTime>? onDaySelected,
   }) async {
@@ -26,7 +27,7 @@ void main() {
             child: DailyBitesChart(
               counts: counts,
               weights: weights,
-              weightUnit: weightUnit,
+              weightSystem: weightSystem,
               selectedDay: selectedDay,
               onDaySelected: onDaySelected,
             ),
@@ -118,7 +119,7 @@ void main() {
     expect(lines.single.y, BiteAnalytics.minBitesForAverage.toDouble());
   });
 
-  testWidgets('a pounds preference converts the axis, legend and semantics', (
+  testWidgets('an imperial preference converts axis, legend and semantics', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
@@ -127,7 +128,7 @@ void main() {
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 40)],
       weights: [Weight(date: DateTime(2026, 1, 1), value: 72.5748)],
-      weightUnit: WeightUnit.pounds,
+      weightSystem: MeasurementSystem.imperial,
     );
 
     expect(find.text('Weight (lbs)'), findsOneWidget);

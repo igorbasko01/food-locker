@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
@@ -44,10 +45,10 @@ void main() {
     );
   });
 
-  test('the weigh-ins read in the preferred unit, not the entries\' own', () {
+  test('the weigh-ins read in the preferred system, not the entries\' own', () {
     final summary = weeklyChangeSummary(
       week(delta: 1.4, unit: WeightUnit.pounds),
-      unit: WeightUnit.kilograms,
+      system: MeasurementSystem.metric,
       locale: 'en_US',
     );
 
@@ -55,10 +56,10 @@ void main() {
     expect(summary.last, '+1.4 kg');
   });
 
-  test('a pounds preference converts the stored kilograms', () {
+  test('an imperial preference converts the stored kilograms', () {
     final summary = weeklyChangeSummary(
       week(delta: 0.9071847),
-      unit: WeightUnit.pounds,
+      system: MeasurementSystem.imperial,
       locale: 'en_US',
     );
 

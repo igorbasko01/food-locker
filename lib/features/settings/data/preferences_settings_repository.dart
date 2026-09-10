@@ -1,47 +1,42 @@
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// The production [SettingsRepository], on `shared_preferences`.
-///
-/// [open] loads the stored values once so every later read is synchronous; the
-/// asynchronous store is only ever written to after that.
+/// The production [SettingsRepository], on `shared_preferences`. The instance
+/// is loaded once at startup, which is what lets the getters stay synchronous.
 class PreferencesSettingsRepository implements SettingsRepository {
-  static const String weightUnitKey = 'weight_unit';
+  static const String heightKey = 'height_cm';
+  static const String measurementSystemKey = 'measurement_system';
 
   final SharedPreferences _preferences;
-  WeightUnit _weightUnit;
 
-  PreferencesSettingsRepository._(this._preferences, this._weightUnit);
+  PreferencesSettingsRepository(this._preferences);
 
-  static Future<PreferencesSettingsRepository> open() async {
-    final preferences = await SharedPreferences.getInstance();
-    return PreferencesSettingsRepository._(
-      preferences,
-      _readWeightUnit(preferences),
+  @override
+  double? get heightCm => _preferences.getDouble(heightKey);
+
+  @override
+  Future<void> setHeightCm(double? centimetres) async {
+    if (centimetres == null) {
+      await _preferences.remove(heightKey);
+      return;
+    }
+    await _preferences.setDouble(heightKey, centimetres);
+  }
+
+  /// Anything unrecognised — nothing stored yet, or a name from a build that
+  /// knew more systems — reads as metric rather than throwing.
+  @override
+  MeasurementSystem get measurementSystem {
+    final stored = _preferences.getString(measurementSystemKey);
+    return MeasurementSystem.values.firstWhere(
+      (system) => system.name == stored,
+      orElse: () => MeasurementSystem.metric,
     );
   }
 
-  /// Kilograms for a preference never set, and for one that names a unit this
-  /// build no longer has — a stored string is not a guarantee.
-  static WeightUnit _readWeightUnit(SharedPreferences preferences) {
-    final stored = preferences.getString(weightUnitKey);
-    if (stored == null) return WeightUnit.kilograms;
-    try {
-      return WeightUnit.values.byName(stored);
-    } on ArgumentError {
-      return WeightUnit.kilograms;
-    }
-  }
-
   @override
-  WeightUnit get weightUnit => _weightUnit;
-
-  /// The store is written first: a write that fails leaves the preference
-  /// unchanged rather than holding a value that is gone by the next launch.
-  @override
-  Future<void> setWeightUnit(WeightUnit unit) async {
-    await _preferences.setString(weightUnitKey, unit.name);
-    _weightUnit = unit;
+  Future<void> setMeasurementSystem(MeasurementSystem system) async {
+    await _preferences.setString(measurementSystemKey, system.name);
   }
 }

@@ -126,7 +126,9 @@ class _DailyBitesCard extends StatelessWidget {
               child: DailyBitesChart(
                 counts: counts,
                 weights: weights,
-                weightUnit: context.watch<SettingsManager>().weightUnit,
+                weightSystem: context
+                    .watch<SettingsManager>()
+                    .measurementSystem,
                 selectedDay: selectedDay,
                 onDaySelected: onDaySelected,
               ),
@@ -334,8 +336,10 @@ class _WeightLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final value = weight;
-    final unit = context.watch<SettingsManager>().weightUnit;
-    final text = value == null ? 'No weigh-in' : unit.format(value.value);
+    final system = context.watch<SettingsManager>().measurementSystem;
+    final text = value == null
+        ? 'No weigh-in'
+        : system.formatWeight(value.value);
     return Semantics(
       label: value == null ? 'No weigh-in' : 'Weight $text',
       excludeSemantics: true,
