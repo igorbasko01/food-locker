@@ -38,7 +38,7 @@ Key layering for the weight feature:
 
 Dates are treated as day-granular throughout: repository keys and equality normalize to `(year, month, day)`, so "one entry per day" is the invariant. When adding mutation paths, follow the existing pattern (write through the repository, then refresh `_weights` from it).
 
-Settings preferences are a third store, on `shared_preferences` rather than Hive or Drift: `SettingsRepository` (interface, with `PreferencesSettingsRepository` and `InMemorySettingsRepository`) holds the single current values that are not a dated series — the height in centimetres and the `MeasurementSystem` heights are displayed in — and `SettingsManager` exposes them to the UI. Centimetres are the internal unit; imperial is converted at the input/display boundary through `lib/core/units.dart`. An unset height is `null`, never a default.
+Settings preferences are a third store, on `shared_preferences` rather than Hive or Drift: `SettingsRepository` (interface, with `PreferencesSettingsRepository` and `InMemorySettingsRepository`) holds the single current values that are not a dated series — the height in centimetres, and the `MeasurementSystem` weights and heights are displayed in — and `SettingsManager` exposes them to the UI (see Preferences below). An unset height is `null`, never a default.
 
 The bite feature mirrors this shape (interface + manager) on Drift instead of Hive:
 
