@@ -38,6 +38,8 @@ Key layering for the weight feature:
 
 Dates are treated as day-granular throughout: repository keys and equality normalize to `(year, month, day)`, so "one entry per day" is the invariant. When adding mutation paths, follow the existing pattern (write through the repository, then refresh `_weights` from it).
 
+Settings preferences are a third store, on `shared_preferences` rather than Hive or Drift: `SettingsRepository` (interface, with `PreferencesSettingsRepository` and `InMemorySettingsRepository`) holds the single current values that are not a dated series — the height in centimetres and the `MeasurementSystem` heights are displayed in — and `SettingsManager` exposes them to the UI. Centimetres are the internal unit; imperial is converted at the input/display boundary through `lib/core/units.dart`. An unset height is `null`, never a default.
+
 The bite feature mirrors this shape (interface + manager) on Drift instead of Hive:
 
 - **`BiteDatabase`** (`bite_database.dart`) — two tables: `bites` (append-only `at_ms` epoch-millis log; only the raw timestamp is stored) and `pacing_config` (versioned `b1_s`/`b2_s` thresholds, a slowly-changing dimension seeded with a default on first run).
@@ -46,7 +48,7 @@ The bite feature mirrors this shape (interface + manager) on Drift instead of Hi
 
 ### Backup / restore
 
-`SerializationService` (Settings tab) exports/imports one zip spanning **both** stores. Each dataset owns a per-store codec — `WeightBackupCodec` (`weight.csv`), `BiteBackupCodec` (`bites.csv`, raw `at_ms`), and `PacingConfigBackupCodec` (`pacing_config.csv`, the threshold versions) — and `SerializationService` coordinates them into a single archive. `restoreFromBackup` is the destructive clear-then-restore core, kept separate from file-picker/IO so it stays unit-testable (`clearAllData` is the same clear with nothing restored after it, behind the Settings "Clear All Data" action); it always replaces weights, and replaces bites / pacing config only when the archive actually carries that entry (an older backup missing an entry leaves that store untouched), deduping on import (repeated instants for bites, repeated `effective_ms` for config). Core CSV helpers live in `lib/core/` (`csv_serializer.dart`, `where.dart`).
+`SerializationService` (Settings tab) exports/imports one zip spanning **every** store. Each dataset owns a per-store codec — `WeightBackupCodec` (`weight.csv`), `BiteBackupCodec` (`bites.csv`, raw `at_ms`), `PacingConfigBackupCodec` (`pacing_config.csv`, the threshold versions), and `ProfileBackupCodec` (`profile.csv`, the stored height) — and `SerializationService` coordinates them into a single archive. `restoreFromBackup` is the destructive clear-then-restore core, kept separate from file-picker/IO so it stays unit-testable (`clearAllData` is the same clear with nothing restored after it, behind the Settings "Clear All Data" action); it always replaces weights, and replaces bites / pacing config / profile only when the archive actually carries that entry (an older backup missing an entry leaves that store untouched), deduping on import (repeated instants for bites, repeated `effective_ms` for config). Core CSV helpers live in `lib/core/` (`csv_serializer.dart`, `where.dart`).
 
 ## Testing
 

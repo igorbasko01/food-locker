@@ -10,9 +10,10 @@ class WeightAnalytics {
   /// Weeks the Home heatmap draws.
   static const int heatmapWeeks = 52;
 
-  /// Days a window's first and last weigh-in must lie apart before it reports
-  /// a figure — one rule for both week windows and the 30-day regression.
-  static const int minSpanDays = 3;
+  /// The span a window's weigh-ins must cover before it reports a figure,
+  /// shared with the Home heatmap so the two surfaces never disagree about
+  /// which weeks hold enough to speak for.
+  static const int minSpanDays = WeeklyWeightChange.minSpanDays;
 
   /// Days [trendPerWeek] looks back over, the day it is asked about
   /// included.
@@ -153,23 +154,12 @@ class WeightAnalytics {
     }
 
     return [
-      for (final start in weekStarts) _change(start, entriesByWeek[start]),
+      for (final start in weekStarts)
+        WeeklyWeightChange(
+          weekStart: start,
+          entries: entriesByWeek[start] ?? const [],
+        ),
     ];
-  }
-
-  static WeeklyWeightChange _change(DateTime weekStart, List<Weight>? entries) {
-    if (entries == null || entries.length < WeeklyWeightChange.minEntries) {
-      return WeeklyWeightChange(weekStart: weekStart);
-    }
-
-    entries.sort((a, b) => a.date.compareTo(b.date));
-    final first = entries.first;
-    final last = entries.last;
-    return WeeklyWeightChange(
-      weekStart: weekStart,
-      delta: last.value - first.value,
-      unit: last.unit,
-    );
   }
 
   /// The mean of [entries], or null when they span under [minSpanDays].
