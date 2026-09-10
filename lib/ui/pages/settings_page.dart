@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
+import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
+import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -19,23 +23,59 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settings = context.watch<SettingsManager>();
 
     return Scaffold(
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildHeader(theme, 'Data Management'),
-          Card(
-            elevation: 0,
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                width: 1,
-              ),
+          _buildHeader(theme, 'Profile'),
+          _buildCard(
+            theme,
+            Column(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.height, color: theme.colorScheme.primary),
+                  title: const Text('Height', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    settings.heightCm == null
+                        ? 'Not set'
+                        : formatHeight(settings.heightCm!, settings.measurementSystem),
+                  ),
+                  onTap: _editHeight,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(Icons.straighten, color: theme.colorScheme.primary),
+                  title: const Text('Units', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('How heights are shown and entered.'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SegmentedButton<MeasurementSystem>(
+                    segments: const [
+                      ButtonSegment(
+                        value: MeasurementSystem.metric,
+                        label: Text('Metric'),
+                      ),
+                      ButtonSegment(
+                        value: MeasurementSystem.imperial,
+                        label: Text('Imperial'),
+                      ),
+                    ],
+                    selected: {settings.measurementSystem},
+                    onSelectionChanged: (selection) =>
+                        settings.setMeasurementSystem(selection.first),
+                  ),
+                ),
+              ],
             ),
-            child: Column(
+          ),
+          const SizedBox(height: 24),
+          _buildHeader(theme, 'Data Management'),
+          _buildCard(
+            theme,
+            Column(
               children: [
                 ListTile(
                   enabled: !_busy,
@@ -71,7 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
               enabled: !_busy,
               leading: Icon(Icons.delete_forever, color: theme.colorScheme.error),
               title: const Text('Clear All Data', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Permanently delete all weight and bite data.'),
+              subtitle: const Text('Permanently delete all weight, bite and profile data.'),
               onTap: _clearAllData,
             ),
           ),
@@ -111,6 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final service = context.read<SerializationService>();
     final weightManager = context.read<WeightManager>();
     final biteManager = context.read<BiteManager>();
+    final settingsManager = context.read<SettingsManager>();
     var progressShown = false;
 
     try {
@@ -132,6 +173,7 @@ class _SettingsPageState extends State<SettingsPage> {
         // refreshing when it becomes visible.
         await weightManager.refresh();
         await biteManager.refresh();
+        await settingsManager.refresh();
         messenger.showSnackBar(
           const SnackBar(content: Text('Data imported successfully')),
         );
@@ -157,8 +199,8 @@ class _SettingsPageState extends State<SettingsPage> {
           title: const Text('Replace all data?'),
           content: Text(
             'Importing "$fileName" permanently replaces your weight history, '
-            'and the bite log and pacing settings when the backup contains '
-            'them. This cannot be undone.',
+            'and the bite log, pacing settings and height when the backup '
+            'contains them. This cannot be undone.',
           ),
           actions: [
             TextButton(
@@ -183,8 +225,10 @@ class _SettingsPageState extends State<SettingsPage> {
     final service = context.read<SerializationService>();
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
+    final settingsRepo = context.read<SettingsRepository>();
     final weightManager = context.read<WeightManager>();
     final biteManager = context.read<BiteManager>();
+    final settingsManager = context.read<SettingsManager>();
 
     if (!await _confirmClear() || !mounted) return;
 
@@ -192,7 +236,7 @@ class _SettingsPageState extends State<SettingsPage> {
     messenger.showSnackBar(_progressSnackBar('Clearing data...'));
 
     try {
-      await service.clearAllData(weightRepo, biteRepo);
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: settingsRepo);
       messenger.removeCurrentSnackBar();
       messenger.showSnackBar(const SnackBar(content: Text('All data cleared')));
     } catch (e) {
@@ -204,6 +248,7 @@ class _SettingsPageState extends State<SettingsPage> {
       // deleted something, so they are re-read either way.
       await weightManager.refresh();
       await biteManager.refresh();
+      await settingsManager.refresh();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -220,9 +265,9 @@ class _SettingsPageState extends State<SettingsPage> {
         return AlertDialog(
           title: const Text('Clear all data?'),
           content: const Text(
-            'This permanently deletes your weight history, the bite log and '
-            'your pacing settings. It cannot be undone — export a backup first '
-            'if you might want any of it back.',
+            'This permanently deletes your weight history, the bite log, your '
+            'pacing settings and your height. It cannot be undone — export a '
+            'backup first if you might want any of it back.',
           ),
           actions: [
             TextButton(
@@ -240,6 +285,37 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     return confirmed ?? false;
+  }
+
+  /// Opens the height editor in the active system and stores whatever it
+  /// returns. Dismissing it changes nothing.
+  Future<void> _editHeight() async {
+    final settings = context.read<SettingsManager>();
+
+    final heightCm = await showDialog<double>(
+      context: context,
+      builder: (context) => HeightDialog(
+        initialHeightCm: settings.heightCm,
+        system: settings.measurementSystem,
+      ),
+    );
+
+    if (heightCm != null) await settings.setHeightCm(heightCm);
+  }
+
+  Widget _buildCard(ThemeData theme, Widget child) {
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: child,
+    );
   }
 
   Widget _buildHeader(ThemeData theme, String title) {
