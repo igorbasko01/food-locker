@@ -101,40 +101,28 @@ class WeightPage extends StatelessWidget {
                       final item = history[index];
                       final dateStr = fullDateWithWeekday(item.date);
 
-                      return Dismissible(
+                      return ListTile(
                         key: ValueKey(item.date),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                        title: Text(
+                          dateStr,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        onDismissed: (_) {
-                          weightManager.deleteWeight(item.date);
-                        },
-                        child: ListTile(
-                          title: Text(
-                            dateStr,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${item.value.toStringAsFixed(1)} kg',
-                                style: const TextStyle(fontSize: 16.0),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.edit_outlined,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ],
-                          ),
-                          onTap: () => _showAddWeightDialog(context, weightManager, weight: item),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${item.value.toStringAsFixed(1)} kg',
+                              style: const TextStyle(fontSize: 16.0),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                          ],
                         ),
+                        onTap: () => _showAddWeightDialog(context, weightManager, weight: item),
                       );
                     },
                     childCount: history.length,

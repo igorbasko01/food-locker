@@ -202,4 +202,43 @@ void main() {
     expect(find.text('--'), findsNWidgets(4));
     expect(find.text('No weigh-ins yet'), findsOneWidget);
   });
+
+  testWidgets('swiping a history row leaves the entry alone', (tester) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(today, 72.5);
+
+    await pumpPage(tester, manager);
+
+    await tester.drag(
+      find.widgetWithText(ListTile, '72.5 kg'),
+      const Offset(-500, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dismissible), findsNothing);
+    expect(find.text(fullDateWithWeekday(today)), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '72.5 kg'), findsOneWidget);
+    expect(manager.history, hasLength(1));
+  });
+
+  testWidgets('the row dialog is still a way to delete an entry', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(today, 72.5);
+
+    await pumpPage(tester, manager);
+
+    await tester.tap(find.text(fullDateWithWeekday(today)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(fullDateWithWeekday(today)), findsNothing);
+    expect(manager.history, isEmpty);
+  });
 }
