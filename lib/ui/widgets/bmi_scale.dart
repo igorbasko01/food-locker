@@ -17,6 +17,7 @@ class BmiScale extends StatelessWidget {
   static const double domainTo = 40.0;
 
   static const double _barHeight = 26.0;
+  static const double _markerSize = 28.0;
 
   static const Key barKey = Key('bmi-scale-bar');
 
@@ -53,12 +54,21 @@ class BmiScale extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Align(
-            alignment: Alignment(markerFraction(bmi) * 2 - 1, 0),
-            child: Icon(
-              Icons.arrow_drop_down,
-              size: 28,
-              color: theme.colorScheme.onSurface,
+          LayoutBuilder(
+            builder: (context, constraints) => SizedBox(
+              height: _markerSize,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: _markerLeft(constraints.maxWidth),
+                    child: Icon(
+                      Icons.arrow_drop_down,
+                      size: _markerSize,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           ClipRRect(
@@ -78,6 +88,16 @@ class BmiScale extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Where the marker's left edge goes on a bar [width] wide, so its tip lands
+  /// on the value. Aligning the glyph's box instead would sweep its centre over
+  /// `[14, width - 14]` and drift the tip up to half a marker off its band.
+  double _markerLeft(double width) {
+    final centred = markerFraction(bmi) * width - _markerSize / 2;
+    final furthest = width - _markerSize;
+    if (centred < 0) return 0.0;
+    return centred > furthest ? furthest : centred;
   }
 
   Widget _segment(BmiBand band) {

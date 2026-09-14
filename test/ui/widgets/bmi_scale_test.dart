@@ -91,8 +91,27 @@ void main() {
     await pumpScale(tester, 27.5);
     expect(marker(), closeTo(bar().center.dx, 1.0));
 
+    // A fifth of the way along the domain is a fifth of the way along the bar.
+    await pumpScale(tester, 20.0);
+    expect(marker(), closeTo(bar().left + 0.2 * bar().width, 1.0));
+
     await pumpScale(tester, 64.0);
     expect(marker(), closeTo(bar().right, 16.0));
     expect(marker(), greaterThan(bar().center.dx));
+  });
+
+  testWidgets('marker lands inside the band the caption names', (tester) async {
+    await pumpScale(tester, 18.4);
+
+    final marker = tester.getCenter(find.byIcon(Icons.arrow_drop_down)).dx;
+    final underweight = tester.getRect(
+      find
+          .ancestor(of: find.text('Under'), matching: find.byType(Container))
+          .first,
+    );
+
+    expect(find.text('18.4 · Underweight'), findsOneWidget);
+    expect(marker, greaterThanOrEqualTo(underweight.left));
+    expect(marker, lessThan(underweight.right));
   });
 }
