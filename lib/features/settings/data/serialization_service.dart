@@ -147,9 +147,11 @@ class SerializationService {
   /// The contents of a picked file, or `null` when the picker supplied no way
   /// to reach them.
   ///
-  /// The platforms fill in different halves: a browser reads the file into
-  /// [PlatformFile.bytes] and leaves [PlatformFile.path] null, a native picker
-  /// the reverse. Reading bytes first keeps a web build off `path` entirely.
+  /// The web picker defaults `withData` to true and the native one to false, so
+  /// a browser always fills in [PlatformFile.bytes] and a native pick leaves
+  /// them null. Bytes have to be read first rather than second: on web
+  /// [PlatformFile.path] is a `blob:` URL, not null, so preferring it would
+  /// hand [BackupFileSink.readBytes] something it cannot open.
   @visibleForTesting
   Future<List<int>?> pickedBytes(PlatformFile picked) async {
     final bytes = picked.bytes;

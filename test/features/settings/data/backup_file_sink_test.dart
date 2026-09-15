@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -7,6 +8,8 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/backup_file_sink.dart';
+import 'package:food_locker/features/settings/data/backup_file_sink_io.dart'
+    show IoBackupFileSink;
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
@@ -242,6 +245,17 @@ void main() {
         await service.pickedBytes(PlatformFile(name: 'backup.zip', size: 0)),
         isNull,
       );
+    });
+  });
+
+  group('IoBackupFileSink', () {
+    test('reads back the bytes of the file at a picked path', () async {
+      final dir = await Directory.systemTemp.createTemp('backup_file_sink');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}/backup.zip');
+      await file.writeAsBytes([7, 8, 9]);
+
+      expect(await const IoBackupFileSink().readBytes(file.path), [7, 8, 9]);
     });
   });
 

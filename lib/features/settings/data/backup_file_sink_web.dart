@@ -35,7 +35,13 @@ class WebBackupFileSink implements BackupFileSink {
     web.document.body?.appendChild(anchor);
     anchor.click();
     anchor.remove();
-    web.URL.revokeObjectURL(url);
+    // Firefox and Safari fetch the blob after the current task ends, so
+    // revoking it here would cancel the download in the very browsers the
+    // appended anchor above is for.
+    Future.delayed(
+      const Duration(minutes: 1),
+      () => web.URL.revokeObjectURL(url),
+    );
   }
 
   @override
