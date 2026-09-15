@@ -48,7 +48,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ListTile(
                   leading: Icon(Icons.straighten, color: theme.colorScheme.primary),
                   title: const Text('Units', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('How heights are shown and entered.'),
+                  subtitle: const Text(
+                    'How weights and heights are shown and entered.',
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
