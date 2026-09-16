@@ -6,18 +6,19 @@ void main() {
   const codec = WeightBackupCodec();
 
   group('WeightBackupCodec CSV Logic', () {
-    test('generateWeightCsv names the column for its unit', () {
+    test('generateWeightCsv drops the unit column', () {
       final weight = Weight(date: DateTime(2023, 10, 27), value: 75.5);
 
       final csv = codec.generateWeightCsv([weight]);
 
-      expect(csv, contains('date,weight_kg'));
+      // The column name is unchanged, so an older build still reads the file.
+      expect(csv, contains('date,value'));
       expect(csv, isNot(contains('unit')));
       expect(csv, contains('2023-10-27T00:00:00.000,75.5'));
     });
 
     test('parseWeightCsv parses CSV and returns list of weights', () {
-      const csv = 'date,weight_kg\r\n2023-10-27T00:00:00.000,75.5';
+      const csv = 'date,value\r\n2023-10-27T00:00:00.000,75.5';
       final weights = codec.parseWeightCsv(csv);
 
       expect(weights.length, 1);
@@ -34,22 +35,22 @@ void main() {
     });
 
     test('parseWeightCsv skips a row missing its value', () {
-      const csv = 'date,weight_kg\r\n2023-10-27T00:00:00.000,';
+      const csv = 'date,value\r\n2023-10-27T00:00:00.000,';
       expect(codec.parseWeightCsv(csv), isEmpty);
     });
 
     test('parseWeightCsv skips a row missing its date', () {
-      const csv = 'date,weight_kg\r\n,75.5';
+      const csv = 'date,value\r\n,75.5';
       expect(codec.parseWeightCsv(csv), isEmpty);
     });
 
     test('parseWeightCsv skips a row with a non-numeric value', () {
-      const csv = 'date,weight_kg\r\n2023-10-27T00:00:00.000,abc';
+      const csv = 'date,value\r\n2023-10-27T00:00:00.000,abc';
       expect(codec.parseWeightCsv(csv), isEmpty);
     });
 
     test('parseWeightCsv keeps valid rows and drops invalid ones', () {
-      const csv = 'date,weight_kg\r\n'
+      const csv = 'date,value\r\n'
           '2023-10-27T00:00:00.000,75.5\r\n'
           '2023-10-28T00:00:00.000,\r\n'
           '2023-10-29T00:00:00.000,74.0';
@@ -58,7 +59,7 @@ void main() {
       expect(weights.map((w) => w.value), [75.5, 74.0]);
     });
 
-    test('parseWeightCsv reads the legacy value column', () {
+    test('an archive still carrying a unit column imports unchanged', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,kilograms';
       final weights = codec.parseWeightCsv(csv);
 
@@ -66,7 +67,7 @@ void main() {
       expect(weights.single.unit, WeightUnit.kilograms);
     });
 
-    test('a legacy pounds row restores as that same number in kilograms', () {
+    test('a pounds row restores as that same number in kilograms', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,166.0,pounds';
       final weights = codec.parseWeightCsv(csv);
 

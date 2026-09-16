@@ -8,15 +8,6 @@ class WeightBackupCodec {
   /// in a single archive.
   static const String weightFileName = 'weight.csv';
 
-  /// The value column, named for its unit so the file says what its numbers
-  /// mean.
-  static const String valueColumn = 'weight_kg';
-
-  /// The value column older archives used, alongside a `unit` column. Its
-  /// values are taken as kilograms whatever that unit said — the app itself
-  /// only ever wrote kilograms.
-  static const String legacyValueColumn = 'value';
-
   const WeightBackupCodec();
 
   List<int> encode(List<Weight> weights) {
@@ -51,7 +42,7 @@ class WeightBackupCodec {
     final items = weights
         .map((w) => {
               'date': w.date.toIso8601String(),
-              valueColumn: w.value,
+              'value': w.value,
             })
         .toList();
     return CsvSerializer.toCSV(items);
@@ -62,8 +53,7 @@ class WeightBackupCodec {
     final items = CsvSerializer.fromCSV(csv);
     for (final item in items) {
       final dateStr = item['date'] as String?;
-      final valueStr =
-          (item[valueColumn] ?? item[legacyValueColumn])?.toString();
+      final valueStr = item['value']?.toString();
 
       if (dateStr == null || valueStr == null) continue;
 
