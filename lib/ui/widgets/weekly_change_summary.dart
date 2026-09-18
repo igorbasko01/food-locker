@@ -1,6 +1,6 @@
 import 'package:food_locker/core/date_format.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
 
 /// What a heatmap cell says about its week, one line at a time.
 ///
@@ -9,8 +9,14 @@ import 'package:food_locker/features/weight/data/weight.dart';
 /// week that failed the span gate says so, so grey never reads as "nothing
 /// happened".
 ///
+/// Weights read in [system]; the values themselves are kilograms.
+///
 /// [week] is null for a cell past the end of the grid.
-List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
+List<String> weeklyChangeSummary(
+  WeeklyWeightChange? week, {
+  MeasurementSystem system = MeasurementSystem.metric,
+  String? locale,
+}) {
   if (week == null) return const ['No data'];
 
   final period =
@@ -27,14 +33,13 @@ List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
 
   final first = week.first!;
   final last = week.last!;
-  final unit = week.unit!;
   return [
     period,
     '${shortDateWithWeekday(first.date, locale)}: '
-        '${_measurement(first.value, unit)} → '
+        '${system.formatWeight(first.value)} → '
         '${shortDateWithWeekday(last.date, locale)}: '
-        '${_measurement(last.value, unit)}',
-    _signedChange(week.delta!, unit),
+        '${system.formatWeight(last.value)}',
+    _signedChange(week.delta!, system),
   ];
 }
 
@@ -42,11 +47,8 @@ List<String> weeklyChangeSummary(WeeklyWeightChange? week, [String? locale]) {
 DateTime _weekEnd(DateTime weekStart) =>
     DateTime(weekStart.year, weekStart.month, weekStart.day + 6);
 
-String _measurement(double value, WeightUnit unit) =>
-    '${value.toStringAsFixed(1)} ${unit.symbol}';
-
 /// The delta with its sign, matching how a history row states a change.
-String _signedChange(double delta, WeightUnit unit) {
-  final change = _measurement(delta, unit);
+String _signedChange(double delta, MeasurementSystem system) {
+  final change = system.formatWeight(delta);
   return delta > 0 ? '+$change' : change;
 }
