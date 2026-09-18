@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.19.0](https://github.com/igorbasko01/food-locker/compare/v1.18.0...v1.19.0) (2026-09-10)
+
+
+### Features
+
+* add a 52-week weight-change heatmap to Home ([#114](https://github.com/igorbasko01/food-locker/issues/114)) ([55ba43f](https://github.com/igorbasko01/food-locker/commit/55ba43f35d68a49e738ae972457cf2a639d0dc0d))
+* capture the user's height in Settings, in metric or imperial ([#133](https://github.com/igorbasko01/food-locker/issues/133)) ([6b9fefc](https://github.com/igorbasko01/food-locker/commit/6b9fefc7acb47aab223356ea7da2bd4d18ff4b6d))
+* explain the Home heatmap cells and gate weeks on span ([#131](https://github.com/igorbasko01/food-locker/issues/131)) ([5fcd67b](https://github.com/igorbasko01/food-locker/commit/5fcd67b467c37b2bddfe6ab95250de9f101774e2))
+* remove the Home streak banners and overeating analytics ([#112](https://github.com/igorbasko01/food-locker/issues/112)) ([5549abd](https://github.com/igorbasko01/food-locker/commit/5549abd3c05d830fb2de0d774ce2a594338c4e70))
+* show the weekday alongside every displayed date ([#116](https://github.com/igorbasko01/food-locker/issues/116)) ([#128](https://github.com/igorbasko01/food-locker/issues/128)) ([4a745f1](https://github.com/igorbasko01/food-locker/commit/4a745f1184804163484bda13f1154c2d42148234))
+* weight tab stat tiles show change, not three flavours of lowest weight ([#134](https://github.com/igorbasko01/food-locker/issues/134)) ([31150af](https://github.com/igorbasko01/food-locker/commit/31150af09ed6319a32e2f7fe0734f3b77921311b))
+
 ## [1.18.0](https://github.com/igorbasko01/food-locker/compare/v1.17.0...v1.18.0) (2026-08-28)
 
 
