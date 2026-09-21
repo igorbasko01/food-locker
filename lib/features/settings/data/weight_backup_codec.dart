@@ -1,5 +1,4 @@
 import 'package:archive/archive.dart';
-import 'package:flutter/foundation.dart';
 import 'package:food_locker/core/csv_serializer.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
@@ -44,7 +43,6 @@ class WeightBackupCodec {
         .map((w) => {
               'date': w.date.toIso8601String(),
               'value': w.value,
-              'unit': w.unit.name,
             })
         .toList();
     return CsvSerializer.toCSV(items);
@@ -56,7 +54,6 @@ class WeightBackupCodec {
     for (final item in items) {
       final dateStr = item['date'] as String?;
       final valueStr = item['value']?.toString();
-      final unitStr = item['unit'] as String?;
 
       if (dateStr == null || valueStr == null) continue;
 
@@ -64,15 +61,7 @@ class WeightBackupCodec {
       final value = double.tryParse(valueStr);
 
       if (date != null && value != null) {
-        WeightUnit unit = WeightUnit.kilograms;
-        if (unitStr != null) {
-          try {
-            unit = WeightUnit.values.byName(unitStr);
-          } catch (e) {
-            debugPrint('Error parsing weight unit: $unitStr, $e');
-          }
-        }
-        weights.add(Weight(date: date, value: value, unit: unit));
+        weights.add(Weight(date: date, value: value));
       }
     }
     return weights;

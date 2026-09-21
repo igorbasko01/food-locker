@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/ui/widgets/weekly_change_color.dart';
 import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
@@ -10,7 +11,11 @@ import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
 /// weigh-ins its colour came from; dragging carries that readout from cell to
 /// cell, and lifting ends it.
 class WeeklyChangeHeatmap extends StatefulWidget {
-  const WeeklyChangeHeatmap({super.key, required this.weeks});
+  const WeeklyChangeHeatmap({
+    super.key,
+    required this.weeks,
+    this.system = MeasurementSystem.metric,
+  });
 
   static const int rows = 4;
   static const int columns = 13;
@@ -18,6 +23,10 @@ class WeeklyChangeHeatmap extends StatefulWidget {
   /// The weeks to draw, oldest first. Cells past the end of the list are drawn
   /// as no-data.
   final List<WeeklyWeightChange> weeks;
+
+  /// The system the readouts state weights in; the weeks themselves hold
+  /// kilograms.
+  final MeasurementSystem system;
 
   @override
   State<WeeklyChangeHeatmap> createState() => _WeeklyChangeHeatmapState();
@@ -62,7 +71,12 @@ class _WeeklyChangeHeatmapState extends State<WeeklyChangeHeatmap> {
                       column < WeeklyChangeHeatmap.columns;
                       column++
                     )
-                      Expanded(child: _Cell(week: _weekAt(_index(row, column)))),
+                      Expanded(
+                        child: _Cell(
+                          week: _weekAt(_index(row, column)),
+                          system: widget.system,
+                        ),
+                      ),
                   ],
                 ),
             ],
@@ -117,7 +131,9 @@ class _WeeklyChangeHeatmapState extends State<WeeklyChangeHeatmap> {
       child: IgnorePointer(
         child: CustomSingleChildLayout(
           delegate: _AboveCell(target: _target, verticalOffset: _readoutOffset),
-          child: _Readout(lines: weeklyChangeSummary(_weekAt(held))),
+          child: _Readout(
+            lines: weeklyChangeSummary(_weekAt(held), system: widget.system),
+          ),
         ),
       ),
     );
@@ -197,10 +213,12 @@ class _Readout extends StatelessWidget {
 }
 
 class _Cell extends StatelessWidget {
-  const _Cell({required this.week});
+  const _Cell({required this.week, required this.system});
 
   /// The week this cell draws, or null past the end of the grid.
   final WeeklyWeightChange? week;
+
+  final MeasurementSystem system;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +227,7 @@ class _Cell extends StatelessWidget {
       child: AspectRatio(
         aspectRatio: 1,
         child: Semantics(
-          label: weeklyChangeSummary(week).join('. '),
+          label: weeklyChangeSummary(week, system: system).join('. '),
           excludeSemantics: true,
           child: DecoratedBox(
             decoration: BoxDecoration(
