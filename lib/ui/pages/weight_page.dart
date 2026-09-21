@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
+import 'package:food_locker/features/weight/data/bmi.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
+import 'package:food_locker/ui/widgets/bmi_scale.dart';
+import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:food_locker/ui/widgets/weight_chart.dart';
@@ -75,6 +78,12 @@ class WeightPage extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 0),
+                  child: _Bmi(entry: weightManager.latestEntry),
                 ),
               ),
               SliverToBoxAdapter(
@@ -293,6 +302,71 @@ class _CurrentWeight extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The latest weigh-in read against the stored height, on the banded BMI scale.
+///
+/// Neither input is ever guessed: a missing height asks for one, and a store
+/// with no weigh-in yet says so.
+class _Bmi extends StatelessWidget {
+  const _Bmi({required this.entry});
+
+  final Weight? entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsManager>();
+    final current = entry;
+
+    if (current == null) {
+      return _note(context, 'Log a weigh-in to see your BMI.');
+    }
+
+    final heightCm = settings.heightCm;
+    if (heightCm == null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _note(context, 'Set your height to see your BMI.'),
+          TextButton(
+            onPressed: () => _editHeight(context),
+            child: const Text('Set height'),
+          ),
+        ],
+      );
+    }
+
+    return BmiScale(
+      bmi: bodyMassIndex(kilograms: current.value, heightCm: heightCm),
+    );
+  }
+
+  /// The same editor the Settings tab opens, in the same system, so the height
+  /// is answered once and read the same way wherever it is entered.
+  Future<void> _editHeight(BuildContext context) async {
+    final settings = context.read<SettingsManager>();
+
+    final heightCm = await showDialog<double>(
+      context: context,
+      builder: (context) => HeightDialog(
+        initialHeightCm: settings.heightCm,
+        system: settings.measurementSystem,
+      ),
+    );
+
+    if (heightCm != null) await settings.setHeightCm(heightCm);
+  }
+
+  Widget _note(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
       ),
     );
   }
