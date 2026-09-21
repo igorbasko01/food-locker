@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
+import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
+import 'package:food_locker/features/weight/data/bmi.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
+import 'package:food_locker/ui/widgets/bmi_scale.dart';
+import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:food_locker/ui/widgets/weight_chart.dart';
@@ -17,10 +22,12 @@ class WeightPage extends StatelessWidget {
       builder: (context, weightManager, child) {
         final history = weightManager.history;
         final range = weightManager.historyRange;
+        final system = context.watch<SettingsManager>().measurementSystem;
 
         return Scaffold(
           floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddWeightDialog(context, weightManager),
+            onPressed: () =>
+                _showAddWeightDialog(context, weightManager, system),
             child: const Icon(Icons.add),
           ),
           body: CustomScrollView(
@@ -28,7 +35,10 @@ class WeightPage extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
-                  child: _CurrentWeight(entry: weightManager.latestEntry),
+                  child: _CurrentWeight(
+                    entry: weightManager.latestEntry,
+                    system: system,
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -38,7 +48,7 @@ class WeightPage extends StatelessWidget {
                     aspectRatio: 1.5,
                     child: Card(
                       elevation: 4,
-                      child: WeightChart(weights: history),
+                      child: WeightChart(weights: history, system: system),
                     ),
                   ),
                 ),
@@ -48,17 +58,32 @@ class WeightPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
                     children: [
-                      _buildWeeklyChangeTile(context, weightManager.weeklyChange),
+                      _buildWeeklyChangeTile(
+                        context,
+                        weightManager.weeklyChange,
+                        system,
+                      ),
                       const SizedBox(width: 8),
-                      _buildTrendTile(context, weightManager.trendPerWeek),
+                      _buildTrendTile(
+                        context,
+                        weightManager.trendPerWeek,
+                        system,
+                      ),
                       const SizedBox(width: 8),
                       _buildVsLowTile(
                         context,
                         weightManager.changeFromLowest,
                         weightManager.lowestEntry,
+                        system,
                       ),
                     ],
                   ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 0),
+                  child: _Bmi(entry: weightManager.latestEntry),
                 ),
               ),
               SliverToBoxAdapter(
@@ -101,39 +126,32 @@ class WeightPage extends StatelessWidget {
                       final item = history[index];
                       final dateStr = fullDateWithWeekday(item.date);
 
-                      return Dismissible(
+                      return ListTile(
                         key: ValueKey(item.date),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                        title: Text(
+                          dateStr,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        onDismissed: (_) {
-                          weightManager.deleteWeight(item.date);
-                        },
-                        child: ListTile(
-                          title: Text(
-                            dateStr,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${item.value.toStringAsFixed(1)} kg',
-                                style: const TextStyle(fontSize: 16.0),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.edit_outlined,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ],
-                          ),
-                          onTap: () => _showAddWeightDialog(context, weightManager, weight: item),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              system.formatWeight(item.value),
+                              style: const TextStyle(fontSize: 16.0),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showAddWeightDialog(
+                          context,
+                          weightManager,
+                          system,
+                          weight: item,
                         ),
                       );
                     },
@@ -150,12 +168,18 @@ class WeightPage extends StatelessWidget {
     );
   }
 
-  void _showAddWeightDialog(BuildContext context, WeightManager manager, {Weight? weight}) async {
+  void _showAddWeightDialog(
+    BuildContext context,
+    WeightManager manager,
+    MeasurementSystem system, {
+    Weight? weight,
+  }) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddWeightDialog(
         initialDate: weight?.date ?? DateTime.now(),
         initialWeight: weight?.value,
+        system: system,
       ),
     );
 
@@ -167,24 +191,27 @@ class WeightPage extends StatelessWidget {
 
       final date = result['date'] as DateTime;
       final value = result['value'] as double;
-      final unit = result['unit'] as WeightUnit;
-      
+
       if (weight != null) {
-        manager.updateWeight(weight.date, date, value, unit: unit);
+        manager.updateWeight(weight.date, date, value);
       } else {
-        manager.addWeight(date, value, unit: unit);
+        manager.addWeight(date, value);
       }
     }
   }
 
-  Widget _buildWeeklyChangeTile(BuildContext context, double? change) {
+  Widget _buildWeeklyChangeTile(
+    BuildContext context,
+    double? change,
+    MeasurementSystem system,
+  ) {
     if (change == null) return _missingStatTile('Weekly change');
 
-    final rounded = _roundTo(change, 1);
+    final rounded = _roundTo(system.weightFromKilograms(change), 1);
     return Expanded(
       child: StatTile(
         label: 'Weekly change',
-        value: '${_signed(rounded, 1)} kg',
+        value: '${_signed(rounded, 1)} ${system.weightSymbol}',
         subLabel: 'vs. previous week',
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
@@ -192,16 +219,21 @@ class WeightPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTrendTile(BuildContext context, double? perWeek) {
+  Widget _buildTrendTile(
+    BuildContext context,
+    double? perWeek,
+    MeasurementSystem system,
+  ) {
     if (perWeek == null) return _missingStatTile('30-day trend');
 
-    final rounded = _roundTo(perWeek, 2);
-    final perMonth = _roundTo(perWeek * 30 / 7, 1);
+    final shown = system.weightFromKilograms(perWeek);
+    final rounded = _roundTo(shown, 2);
+    final perMonth = _roundTo(shown * 30 / 7, 1);
     return Expanded(
       child: StatTile(
         label: '30-day trend',
-        value: '${_signed(rounded, 2)} kg/wk',
-        subLabel: '≈ ${_signed(perMonth, 1)} kg/month',
+        value: '${_signed(rounded, 2)} ${system.weightSymbol}/wk',
+        subLabel: '≈ ${_signed(perMonth, 1)} ${system.weightSymbol}/month',
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
       ),
@@ -212,18 +244,19 @@ class WeightPage extends StatelessWidget {
     BuildContext context,
     double? change,
     Weight? lowest,
+    MeasurementSystem system,
   ) {
     if (change == null || lowest == null) {
       return _missingStatTile('Vs. low');
     }
 
-    final rounded = _roundTo(change, 1);
+    final rounded = _roundTo(system.weightFromKilograms(change), 1);
+    final low = system.weightFromKilograms(lowest.value).toStringAsFixed(1);
     return Expanded(
       child: StatTile(
         label: 'Vs. low',
-        value: '${_signed(rounded, 1)} kg',
-        subLabel:
-            'low ${lowest.value.toStringAsFixed(1)} on ${shortDate(lowest.date)}',
+        value: '${_signed(rounded, 1)} ${system.weightSymbol}',
+        subLabel: 'low $low on ${shortDate(lowest.date)}',
         // Never negative, so signed green/red would leave this tile
         // permanently red. Standing on the low earns the trophy instead.
         valueColor: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -235,9 +268,10 @@ class WeightPage extends StatelessWidget {
 
 /// The latest weigh-in, dated so an old reading is never mistaken for today's.
 class _CurrentWeight extends StatelessWidget {
-  const _CurrentWeight({required this.entry});
+  const _CurrentWeight({required this.entry, required this.system});
 
   final Weight? entry;
+  final MeasurementSystem system;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +279,7 @@ class _CurrentWeight extends StatelessWidget {
     final current = entry;
     final value = current == null
         ? '--'
-        : '${current.value.toStringAsFixed(1)} kg';
+        : system.formatWeight(current.value);
     final caption = current == null
         ? 'No weigh-ins yet'
         : 'as of ${fullDateWithWeekday(current.date)}';
@@ -268,6 +302,71 @@ class _CurrentWeight extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The latest weigh-in read against the stored height, on the banded BMI scale.
+///
+/// Neither input is ever guessed: a missing height asks for one, and a store
+/// with no weigh-in yet says so.
+class _Bmi extends StatelessWidget {
+  const _Bmi({required this.entry});
+
+  final Weight? entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsManager>();
+    final current = entry;
+
+    if (current == null) {
+      return _note(context, 'Log a weigh-in to see your BMI.');
+    }
+
+    final heightCm = settings.heightCm;
+    if (heightCm == null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _note(context, 'Set your height to see your BMI.'),
+          TextButton(
+            onPressed: () => _editHeight(context),
+            child: const Text('Set height'),
+          ),
+        ],
+      );
+    }
+
+    return BmiScale(
+      bmi: bodyMassIndex(kilograms: current.value, heightCm: heightCm),
+    );
+  }
+
+  /// The same editor the Settings tab opens, in the same system, so the height
+  /// is answered once and read the same way wherever it is entered.
+  Future<void> _editHeight(BuildContext context) async {
+    final settings = context.read<SettingsManager>();
+
+    final heightCm = await showDialog<double>(
+      context: context,
+      builder: (context) => HeightDialog(
+        initialHeightCm: settings.heightCm,
+        system: settings.measurementSystem,
+      ),
+    );
+
+    if (heightCm != null) await settings.setHeightCm(heightCm);
+  }
+
+  Widget _note(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
       ),
     );
   }

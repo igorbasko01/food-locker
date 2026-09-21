@@ -2,16 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
+import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
 import 'package:food_locker/ui/theme.dart';
+import 'package:food_locker/ui/widgets/bmi_scale.dart';
+import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  Future<void> pumpPage(WidgetTester tester, WeightManager manager) async {
+  Future<void> pumpPage(
+    WidgetTester tester,
+    WeightManager manager, {
+    SettingsManager? settingsManager,
+    MeasurementSystem system = MeasurementSystem.metric,
+  }) async {
     // The chart's 1.5 aspect ratio pushes the heading and the history list
     // below the fold on the default 800x600 surface, so they never get built.
     tester.view.physicalSize = const Size(800, 2000);
@@ -22,8 +32,20 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
-        home: ChangeNotifierProvider<WeightManager>.value(
-          value: manager,
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<WeightManager>.value(value: manager),
+            ChangeNotifierProvider<SettingsManager>.value(
+              value:
+                  settingsManager ??
+                  SettingsManager(
+                    InMemorySettingsRepository(
+                      heightCm: 175.0,
+                      measurementSystem: system,
+                    ),
+                  ),
+            ),
+          ],
           child: const WeightPage(),
         ),
       ),
@@ -142,6 +164,26 @@ void main() {
     expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
   });
 
+  testWidgets('an imperial preference converts every figure on the tab', (
+    tester,
+  ) async {
+    final manager = await rampedManager(0.1);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    await pumpPage(tester, manager, system: MeasurementSystem.imperial);
+
+    // The hero figure and today's history row, both 70.0 kg.
+    expect(find.text('154.3 lbs'), findsNWidgets(2));
+    expect(find.text('70.0 kg'), findsNothing);
+
+    // Each tile converts before rounding, so its digits, sign and arrow agree.
+    expect(find.widgetWithText(StatTile, '-1.5 lbs'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '-1.54 lbs/wk'), findsOneWidget);
+    expect(find.text('≈ -6.6 lbs/month'), findsOneWidget);
+    expect(find.text('low 154.3 on ${shortDate(today)}'), findsOneWidget);
+  });
+
   testWidgets('history list only lists the last 7 days of entries', (
     tester,
   ) async {
@@ -201,5 +243,97 @@ void main() {
     expect(find.widgetWithText(StatTile, '--'), findsNWidgets(3));
     expect(find.text('--'), findsNWidgets(4));
     expect(find.text('No weigh-ins yet'), findsOneWidget);
+  });
+
+  testWidgets('swiping a history row leaves the entry alone', (tester) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(today, 72.5);
+
+    await pumpPage(tester, manager);
+
+    await tester.drag(
+      find.widgetWithText(ListTile, '72.5 kg'),
+      const Offset(-500, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dismissible), findsNothing);
+    expect(find.text(fullDateWithWeekday(today)), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '72.5 kg'), findsOneWidget);
+    expect(manager.history, hasLength(1));
+  });
+
+  testWidgets('the row dialog is still a way to delete an entry', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(today, 72.5);
+
+    await pumpPage(tester, manager);
+
+    await tester.tap(find.text(fullDateWithWeekday(today)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(fullDateWithWeekday(today)), findsNothing);
+    expect(manager.history, isEmpty);
+  });
+
+  group('BMI scale', () {
+    testWidgets('reads the latest weigh-in against the stored height', (
+      tester,
+    ) async {
+      final manager = WeightManager(InMemoryWeightRepository());
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await manager.addWeight(today, 81.0);
+
+      await pumpPage(
+        tester,
+        manager,
+        settingsManager:
+            SettingsManager(InMemorySettingsRepository(heightCm: 180.0)),
+      );
+
+      // 81 kg over 1.8 m squared is 25.0 — overweight, the band above healthy.
+      expect(find.byType(BmiScale), findsOneWidget);
+      expect(find.text('25.0 · Overweight'), findsOneWidget);
+    });
+
+    testWidgets('prompts for a height rather than guessing one', (tester) async {
+      final manager = WeightManager(InMemoryWeightRepository());
+      final now = DateTime.now();
+      await manager.addWeight(DateTime(now.year, now.month, now.day), 81.0);
+      final settings = SettingsManager(InMemorySettingsRepository());
+
+      await pumpPage(tester, manager, settingsManager: settings);
+
+      expect(find.byType(BmiScale), findsNothing);
+      expect(find.text('Set your height to see your BMI.'), findsOneWidget);
+
+      await tester.tap(find.text('Set height'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(HeightDialog.centimetresFieldKey), '180');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(settings.heightCm, 180.0);
+      expect(find.text('25.0 · Overweight'), findsOneWidget);
+    });
+
+    testWidgets('waits for a weigh-in before computing anything', (tester) async {
+      final manager = WeightManager(InMemoryWeightRepository());
+
+      await pumpPage(tester, manager);
+
+      expect(find.byType(BmiScale), findsNothing);
+      expect(find.text('Log a weigh-in to see your BMI.'), findsOneWidget);
+      expect(find.text('Set height'), findsNothing);
+    });
   });
 }

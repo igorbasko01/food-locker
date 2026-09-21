@@ -58,7 +58,9 @@ class WeeklyWeightChange {
   /// Last weigh-in of the week minus its first, or null under [minSpanDays].
   double? get delta => hasData ? last!.value - first!.value : null;
 
-  /// The unit [delta] is expressed in; null exactly when [delta] is.
+  /// The unit the weigh-ins were logged under, kept as provenance; null
+  /// exactly when [delta] is. Nothing computes from it: [delta] is kilograms,
+  /// and the screen states it in the unit Settings prefers.
   WeightUnit? get unit => hasData ? last!.unit : null;
 
   bool get hasData => _spanInDays >= minSpanDays;
@@ -67,14 +69,13 @@ class WeeklyWeightChange {
   bool get isGain => (delta ?? 0) > 0;
 
   /// Magnitude bucket, 1 (faintest) to 4 (strongest), or null without a
-  /// [delta]. The pound bounds are the kilogram ones doubled.
+  /// [delta]. Bounds are kilograms, the unit everything is stored in.
   int? get level {
     final magnitude = delta?.abs();
     if (magnitude == null) return null;
-    final scale = unit == WeightUnit.pounds ? 2.0 : 1.0;
-    if (magnitude < 0.25 * scale) return 1;
-    if (magnitude < 0.5 * scale) return 2;
-    if (magnitude < 1.0 * scale) return 3;
+    if (magnitude < 0.25) return 1;
+    if (magnitude < 0.5) return 2;
+    if (magnitude < 1.0) return 3;
     return 4;
   }
 

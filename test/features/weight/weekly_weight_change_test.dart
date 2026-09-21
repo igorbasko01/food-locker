@@ -283,14 +283,12 @@ void main() {
       expect(change(4.2).level, 4);
     });
 
-    test('pound buckets are the kilogram ones doubled', () {
+    test('a weigh-in logged as pounds still buckets on kilograms', () {
+      // Weight.unit is legacy provenance; every stored value is kilograms.
       const lb = WeightUnit.pounds;
-      expect(change(0.49, lb).level, 1);
-      expect(change(0.5, lb).level, 2);
-      expect(change(0.99, lb).level, 2);
-      expect(change(1.0, lb).level, 3);
-      expect(change(1.99, lb).level, 3);
-      expect(change(2.0, lb).level, 4);
+      expect(change(0.24, lb).level, 1);
+      expect(change(0.5, lb).level, 3);
+      expect(change(1.0, lb).level, 4);
     });
 
     test('a loss buckets on its magnitude, not its sign', () {

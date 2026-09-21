@@ -57,3 +57,29 @@ String formatHeight(double centimetres, MeasurementSystem system) {
   final split = roundedFeetInches(centimetres, 0);
   return "${split.feet}' ${formatLengthValue(split.inches)}\"";
 }
+
+/// Exact by definition, and the only place the pound is spelled out.
+const double kilogramsPerPound = 0.45359237;
+
+double poundsToKilograms(double pounds) => pounds * kilogramsPerPound;
+
+double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
+
+extension WeightDisplay on MeasurementSystem {
+  String get weightSymbol => this == MeasurementSystem.imperial ? 'lbs' : 'kg';
+
+  /// A stored weight as this system reads it. Everything is stored and computed
+  /// in kilograms, so this is the only step between the store and the screen.
+  double weightFromKilograms(double kilograms) =>
+      this == MeasurementSystem.imperial
+      ? kilogramsToPounds(kilograms)
+      : kilograms;
+
+  /// A figure typed in this system, back in kilograms for storage.
+  double weightToKilograms(double value) =>
+      this == MeasurementSystem.imperial ? poundsToKilograms(value) : value;
+
+  /// [kilograms] as it appears on screen: `72.6 kg`, `160.0 lbs`.
+  String formatWeight(double kilograms) =>
+      '${weightFromKilograms(kilograms).toStringAsFixed(1)} $weightSymbol';
+}
