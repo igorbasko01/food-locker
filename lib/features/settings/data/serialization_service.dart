@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/backup_file_sink.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
 import 'package:food_locker/features/settings/data/profile_backup_codec.dart';
@@ -11,9 +11,7 @@ import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 /// Asks the user to confirm replacing their data with the backup [fileName].
 /// Returning `false` leaves every store untouched.
@@ -32,15 +30,21 @@ class SerializationService {
     return 'food_locker_$formatted.zip';
   }
 
-  SerializationService();
+  /// [fileSink] is the only platform-dependent part of the backup path, kept
+  /// injectable so export and import stay testable without a share sheet or a
+  /// file on disk. It defaults to the current platform's.
+  SerializationService({BackupFileSink? fileSink})
+      : _fileSink = fileSink ?? createBackupFileSink();
+
+  final BackupFileSink _fileSink;
 
   /// Returns whether there was anything to export — `false` means both stores
   /// were empty and no file was produced, which callers must not report as a
   /// completed export.
   ///
-  /// [onShareReady] fires once the zip is written and the share sheet is about
-  /// to open, so callers can clear any progress indication before the sheet
-  /// covers it.
+  /// [onShareReady] fires once the zip is handed to the platform and before
+  /// any share sheet opens, so callers can clear progress indication before the
+  /// sheet covers it.
   Future<bool> exportData(BuildContext context, {VoidCallback? onShareReady}) async {
     final weightRepo = context.read<WeightRepository>();
     final biteRepo = context.read<BiteRepository>();
@@ -61,14 +65,11 @@ class SerializationService {
 
     final zipData = encodeBackup(weights, bites, configs, heightCm: heightCm);
 
-    final tempDir = await getTemporaryDirectory();
-    final zipFile = File('${tempDir.path}/${generateZipFileName()}');
-    await zipFile.writeAsBytes(zipData);
-
-    onShareReady?.call();
-
-    // ignore: deprecated_member_use
-    await Share.shareXFiles([XFile(zipFile.path)], text: 'Food Locker Backup');
+    await _fileSink.save(
+      generateZipFileName(),
+      zipData,
+      onReady: onShareReady,
+    );
     return true;
   }
 
@@ -126,12 +127,11 @@ class SerializationService {
       allowedExtensions: ['zip'],
     );
     final picked = result?.files.single;
-    final filePath = picked?.path;
-
-    if (picked == null || filePath == null) return false;
+    if (picked == null) return false;
 
     // Reading the file writes nothing; the gate below is what guards the stores.
-    final bytes = await File(filePath).readAsBytes();
+    final bytes = await pickedBytes(picked);
+    if (bytes == null) return false;
 
     return confirmAndRestore(
       weightRepo,
@@ -142,6 +142,24 @@ class SerializationService {
       onConfirm: onConfirm,
       onRestoreStart: onRestoreStart,
     );
+  }
+
+  /// The contents of a picked file, or `null` when the picker supplied no way
+  /// to reach them.
+  ///
+  /// The web picker defaults `withData` to true and the native one to false, so
+  /// a browser always fills in [PlatformFile.bytes] and a native pick leaves
+  /// them null. Bytes have to be read first rather than second: on web
+  /// [PlatformFile.path] is a `blob:` URL, not null, so preferring it would
+  /// hand [BackupFileSink.readBytes] something it cannot open.
+  @visibleForTesting
+  Future<List<int>?> pickedBytes(PlatformFile picked) async {
+    final bytes = picked.bytes;
+    if (bytes != null) return bytes;
+
+    final path = picked.path;
+    if (path == null) return null;
+    return _fileSink.readBytes(path);
   }
 
   /// Gates the destructive [restoreFromBackup] behind [onConfirm], apart from
