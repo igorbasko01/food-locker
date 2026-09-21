@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
+import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
@@ -81,6 +83,9 @@ void main() {
       MultiProvider(
         providers: [
           Provider<BiteRepository>.value(value: repo),
+          ChangeNotifierProvider<SettingsManager>(
+            create: (_) => SettingsManager(InMemorySettingsRepository()),
+          ),
           Provider<WeightRepository>.value(value: weightRepo),
         ],
         child: MaterialApp(theme: appTheme, home: const BiteAnalyticsPage()),
@@ -271,11 +276,14 @@ void main() {
 
     expect(find.text('80.4 kg'), findsOneWidget);
 
-    // Bar 0 is yesterday: the line follows the selection, in that day's unit.
+    // Bar 0 is yesterday: the line follows the selection. Its stored value is
+    // read as kilograms and shown in the preferred unit, whatever the legacy
+    // Weight.unit on the row says.
     tapBar(tester, 0);
     await tester.pumpAndSettle();
 
-    expect(find.text('81.2 lbs'), findsOneWidget);
+    expect(find.text('81.2 kg'), findsOneWidget);
+    expect(find.text('81.2 lbs'), findsNothing);
     expect(find.text('80.4 kg'), findsNothing);
   });
 

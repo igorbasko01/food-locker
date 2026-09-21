@@ -8,8 +8,6 @@ const double healthyBmiFrom = 18.5;
 const double overweightBmiFrom = 25.0;
 const double obeseBmiFrom = 30.0;
 
-/// A stored weight is read as kilograms whatever its `WeightUnit` says, and
-/// [heightCm] is the only length unit the store keeps.
 double bodyMassIndex({required double kilograms, required double heightCm}) {
   final metres = heightCm / 100;
   return kilograms / (metres * metres);

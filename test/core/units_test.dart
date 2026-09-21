@@ -83,4 +83,40 @@ void main() {
       expect(formatLengthValue(0), '0');
     });
   });
+
+  group('kilogram/pound conversion', () {
+    test('a pound is the defined 0.45359237 kg', () {
+      expect(poundsToKilograms(1), kilogramsPerPound);
+      expect(kilogramsToPounds(kilogramsPerPound), closeTo(1, 1e-12));
+    });
+
+    test('round trips without drifting', () {
+      expect(poundsToKilograms(kilogramsToPounds(72.57)), closeTo(72.57, 1e-12));
+    });
+
+    test('metric is the identity in both directions', () {
+      expect(MeasurementSystem.metric.weightFromKilograms(72.57), 72.57);
+      expect(MeasurementSystem.metric.weightToKilograms(72.57), 72.57);
+    });
+
+    test('imperial converts in both directions', () {
+      expect(
+        MeasurementSystem.imperial.weightFromKilograms(72.5748),
+        closeTo(160, 1e-3),
+      );
+      expect(
+        MeasurementSystem.imperial.weightToKilograms(160),
+        closeTo(72.5748, 1e-4),
+      );
+    });
+
+    test('formatWeight renders one decimal and the system symbol', () {
+      expect(MeasurementSystem.metric.formatWeight(72.5748), '72.6 kg');
+      expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.0 lbs');
+    });
+
+    test('formatWeight keeps the sign of a change', () {
+      expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.0 lbs');
+    });
+  });
 }
