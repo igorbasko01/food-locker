@@ -13,11 +13,19 @@ class BmiScale extends StatelessWidget {
   /// to zero, so both are cut off here — otherwise the bar has no right edge
   /// and the healthy band is a sliver. A BMI outside it pins the marker to the
   /// end while the caption still reads the true value.
+  ///
+  /// The top end is cut close: past the mid-thirties the reading is bad by any
+  /// measure, and every point given back there widens the healthy band, where a
+  /// reader actually wants to see where they sit. The bar stays linear, so
+  /// equal widths mean equal BMI points across all four bands.
   static const double domainFrom = 15.0;
-  static const double domainTo = 40.0;
+  static const double domainTo = 35.0;
 
   static const double _barHeight = 26.0;
   static const double _markerSize = 28.0;
+
+  /// The box each boundary figure is centred in, wide enough for `18.5`.
+  static const double _tickWidth = 36.0;
 
   static const Key barKey = Key('bmi-scale-bar');
 
@@ -60,7 +68,11 @@ class BmiScale extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned(
-                    left: _markerLeft(constraints.maxWidth),
+                    left: _centredAt(
+                      markerFraction(bmi),
+                      constraints.maxWidth,
+                      _markerSize,
+                    ),
                     child: Icon(
                       Icons.arrow_drop_down,
                       size: _markerSize,
@@ -76,6 +88,7 @@ class BmiScale extends StatelessWidget {
             borderRadius: BorderRadius.circular(6),
             child: Row(children: BmiBand.all.map(_segment).toList()),
           ),
+          _boundaries(theme),
           const SizedBox(height: 6),
           Text(
             'BMI is a rough screening figure for adults. It ignores body '
@@ -90,15 +103,54 @@ class BmiScale extends StatelessWidget {
     );
   }
 
-  /// Where the marker's left edge goes on a bar [width] wide, so its tip lands
-  /// on the value. Aligning the glyph's box instead would sweep its centre over
-  /// `[14, width - 14]` and drift the tip up to half a marker off its band.
-  double _markerLeft(double width) {
-    final centred = markerFraction(bmi) * width - _markerSize / 2;
-    final furthest = width - _markerSize;
-    if (centred < 0) return 0.0;
-    return centred > furthest ? furthest : centred;
+  /// The left edge of a box [itemWidth] wide centred on [fraction] of a bar
+  /// [width] wide, kept inside the bar at both ends. Aligning the box itself
+  /// would sweep its centre over `[itemWidth / 2, width - itemWidth / 2]` and
+  /// drift what it points at by up to half its width.
+  static double _centredAt(double fraction, double width, double itemWidth) {
+    final left = fraction * width - itemWidth / 2;
+    final furthest = width - itemWidth;
+    if (left < 0) return 0.0;
+    return left > furthest ? furthest : left;
   }
+
+  /// The cut-off under each seam in the bar, read off the bands themselves so
+  /// the figures cannot drift out of step with the segments above them.
+  Widget _boundaries(ThemeData theme) {
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        height: 18,
+        child: Stack(
+          children: [
+            for (final band in BmiBand.all.skip(1))
+              Positioned(
+                left: _centredAt(
+                  markerFraction(band.from),
+                  constraints.maxWidth,
+                  _tickWidth,
+                ),
+                child: SizedBox(
+                  width: _tickWidth,
+                  child: Text(
+                    _boundaryLabel(band.from),
+                    textAlign: TextAlign.center,
+                    style: style,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _boundaryLabel(double value) => value == value.roundToDouble()
+      ? value.toStringAsFixed(0)
+      : value.toStringAsFixed(1);
 
   Widget _segment(BmiBand band) {
     final style = BmiBandStyle.of(band.category);

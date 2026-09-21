@@ -15,7 +15,7 @@ void main() {
     test('runs 0 to 1 across the drawn domain', () {
       expect(BmiScale.markerFraction(BmiScale.domainFrom), 0.0);
       expect(BmiScale.markerFraction(BmiScale.domainTo), 1.0);
-      expect(BmiScale.markerFraction(27.5), closeTo(0.5, 0.000001));
+      expect(BmiScale.markerFraction(25.0), closeTo(0.5, 0.000001));
     });
 
     test('pins to the ends outside it', () {
@@ -75,11 +75,41 @@ void main() {
         )
         .width;
 
-    // Drawn spans: 3.5 / 6.5 / 5 / 10 BMI points of the 15-40 domain.
+    // Drawn spans: 3.5 / 6.5 / 5 / 5 BMI points of the 15-35 domain, so the
+    // healthy band is the widest of the four.
     expect(segmentWidth('Healthy') / segmentWidth('Under'),
         closeTo(6.5 / 3.5, 0.05));
-    expect(segmentWidth('Obese') / segmentWidth('Over'),
-        closeTo(10 / 5, 0.05));
+    expect(segmentWidth('Obese') / segmentWidth('Healthy'),
+        closeTo(5 / 6.5, 0.05));
+    expect(segmentWidth('Obese') / segmentWidth('Over'), closeTo(1.0, 0.05));
+  });
+
+  testWidgets('prints each cut-off under the seam it belongs to', (
+    tester,
+  ) async {
+    await pumpScale(tester, 22.0);
+
+    double segmentRight(String label) => tester
+        .getRect(
+          find.ancestor(
+            of: find.text(label),
+            matching: find.byType(Container),
+          ).first,
+        )
+        .right;
+
+    expect(
+      tester.getCenter(find.text('18.5')).dx,
+      closeTo(segmentRight('Under'), 1.0),
+    );
+    expect(
+      tester.getCenter(find.text('25')).dx,
+      closeTo(segmentRight('Healthy'), 1.0),
+    );
+    expect(
+      tester.getCenter(find.text('30')).dx,
+      closeTo(segmentRight('Over'), 1.0),
+    );
   });
 
   testWidgets('puts the marker at the value, and at the edge past the domain',
@@ -88,12 +118,12 @@ void main() {
     double marker() =>
         tester.getCenter(find.byIcon(Icons.arrow_drop_down)).dx;
 
-    await pumpScale(tester, 27.5);
+    await pumpScale(tester, 25.0);
     expect(marker(), closeTo(bar().center.dx, 1.0));
 
-    // A fifth of the way along the domain is a fifth of the way along the bar.
+    // A quarter of the way along the domain is a quarter along the bar.
     await pumpScale(tester, 20.0);
-    expect(marker(), closeTo(bar().left + 0.2 * bar().width, 1.0));
+    expect(marker(), closeTo(bar().left + 0.25 * bar().width, 1.0));
 
     await pumpScale(tester, 64.0);
     expect(marker(), closeTo(bar().right, 16.0));
