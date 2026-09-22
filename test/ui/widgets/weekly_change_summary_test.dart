@@ -13,27 +13,33 @@ void main() {
   final weekStart = DateTime(2026, 3, 8);
   final previousStart = DateTime(2026, 3, 1);
 
-  /// A week averaging 82.4 kg plus [delta], against a previous week averaging
-  /// 82.4 kg over [previousCount] weigh-ins.
-  WeeklyWeightChange week({required double delta, int previousCount = 2}) =>
-      WeeklyWeightChange(
-        weekStart: weekStart,
-        entries: [
-          Weight(date: DateTime(2026, 3, 9), value: 82.4 + delta),
-          Weight(date: DateTime(2026, 3, 13), value: 82.4 + delta),
-        ],
-        previousEntries: [
-          for (var day = 0; day < previousCount; day++)
-            Weight(
-              date: DateTime(
-                previousStart.year,
-                previousStart.month,
-                previousStart.day + day,
-              ),
-              value: 82.4,
-            ),
-        ],
-      );
+  /// A week of [count] weigh-ins averaging 82.4 kg plus [delta], against a
+  /// previous week of [previousCount] averaging 82.4 kg.
+  WeeklyWeightChange week({
+    required double delta,
+    int count = 2,
+    int previousCount = 2,
+  }) => WeeklyWeightChange(
+    weekStart: weekStart,
+    entries: [
+      for (var day = 0; day < count; day++)
+        Weight(
+          date: DateTime(weekStart.year, weekStart.month, weekStart.day + day),
+          value: 82.4 + delta,
+        ),
+    ],
+    previousEntries: [
+      for (var day = 0; day < previousCount; day++)
+        Weight(
+          date: DateTime(
+            previousStart.year,
+            previousStart.month,
+            previousStart.day + day,
+          ),
+          value: 82.4,
+        ),
+    ],
+  );
 
   test('a gaining week names its period, its means and its change', () {
     expect(weeklyChangeSummary(week(delta: 0.6), locale: 'en_US'), [
@@ -57,13 +63,13 @@ void main() {
     );
   });
 
-  test('a single weigh-in behind a mean reads in the singular', () {
+  test('a mean resting on one weigh-in reads in the singular', () {
     expect(
       weeklyChangeSummary(
-        week(delta: 0.6, previousCount: 1),
+        week(delta: 0.6, count: 1, previousCount: 1),
         locale: 'en_US',
       )[1],
-      'avg 83.0 kg (2 weigh-ins) vs 82.4 kg the week before (1)',
+      'avg 83.0 kg (1 weigh-in) vs 82.4 kg the week before (1)',
     );
   });
 
