@@ -1,15 +1,14 @@
 name: Release Merge
 
-# Merges the open release-please PR on Friday mornings once its checks are
-# green, so the release and its APK are cut without anyone at a keyboard.
-# Everything downstream is already automatic: the merge pushes to `main`,
-# release-please.yml tags the release, build_release.yml attaches the APK.
+# Cuts the release without anyone at a keyboard. Everything downstream is
+# already automatic: the merge pushes to `main`, release-please.yml tags the
+# release, build_release.yml attaches the APK.
 
 on:
   schedule:
-    # Early Friday. Actions evaluates cron in UTC with no DST handling, so the
-    # local hour this lands on drifts by one across the year; scheduled runs are
-    # queued and delayed anyway, so the drift is accepted.
+    # Actions evaluates cron in UTC with no DST handling, so the local hour this
+    # lands on drifts by one across the year; scheduled runs are queued and
+    # delayed anyway, so the drift is accepted.
     - cron: '0 1 * * 5'
   workflow_dispatch:
 
