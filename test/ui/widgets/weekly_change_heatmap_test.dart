@@ -9,19 +9,18 @@ import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
 
 void main() {
-  /// The week [index] grids back from the 9th of August, gaining or losing
-  /// [delta] between a Sunday and a Friday weigh-in.
-  WeeklyWeightChange week(int index, {double? delta, WeightUnit? unit}) {
+  /// The week [index] grids back from the 9th of August, moving [delta]
+  /// against the week before it.
+  WeeklyWeightChange week(int index, {double? delta}) {
     final start = DateTime(2026, 8, 9 - 7 * index);
     if (delta == null) return WeeklyWeightChange(weekStart: start);
     return WeeklyWeightChange(
       weekStart: start,
-      entries: [
-        Weight(date: start, value: 80.0, unit: unit ?? WeightUnit.kilograms),
+      entries: [Weight(date: start, value: 80.0 + delta)],
+      previousEntries: [
         Weight(
-          date: DateTime(start.year, start.month, start.day + 5),
-          value: 80.0 + delta,
-          unit: unit ?? WeightUnit.kilograms,
+          date: DateTime(start.year, start.month, start.day - 7),
+          value: 80.0,
         ),
       ],
     );
@@ -74,7 +73,7 @@ void main() {
     );
   });
 
-  testWidgets('a week under the entry threshold is drawn as no data', (
+  testWidgets('a week with nothing to compare is drawn as no data', (
     tester,
   ) async {
     await pump(tester, emptyYear());
@@ -139,27 +138,43 @@ void main() {
     );
   });
 
+  testWidgets('the same week reads stronger on a quieter grid', (
+    tester,
+  ) async {
+    final quiet = emptyYear();
+    final dramatic = emptyYear();
+    for (var i = 0; i < 10; i++) {
+      quiet[i] = week(51 - i, delta: -1.0);
+      dramatic[i] = week(51 - i, delta: -8.0);
+    }
+    quiet[10] = week(41, delta: -0.9);
+    dramatic[10] = week(41, delta: -0.9);
+
+    await pump(tester, quiet);
+    final onQuiet = cellColors(tester)[10]!;
+    await pump(tester, dramatic);
+    final onDramatic = cellColors(tester)[10]!;
+
+    expect(onQuiet.computeLuminance(), lessThan(onDramatic.computeLuminance()));
+  });
+
   group('cell readout', () {
-    // A week that gained: Tuesday's weigh-in through Saturday's.
+    // A week that gained on the one before it.
     final gainingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 8),
-      entries: [
-        Weight(date: DateTime(2026, 3, 10), value: 82.4),
-        Weight(date: DateTime(2026, 3, 14), value: 83.0),
-      ],
+      entries: [Weight(date: DateTime(2026, 3, 10), value: 83.0)],
+      previousEntries: [Weight(date: DateTime(2026, 3, 3), value: 82.4)],
     );
     final losingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 15),
-      entries: [
-        Weight(date: DateTime(2026, 3, 15), value: 83.0),
-        Weight(date: DateTime(2026, 3, 21), value: 81.8),
-      ],
+      entries: [Weight(date: DateTime(2026, 3, 16), value: 81.8)],
+      previousEntries: [Weight(date: DateTime(2026, 3, 9), value: 83.0)],
     );
 
     List<WeeklyWeightChange> yearOpeningWith(List<WeeklyWeightChange> first) =>
         [...first, ...emptyYear().skip(first.length)];
 
-    testWidgets('holding a cell names its week and the weigh-ins behind it', (
+    testWidgets('holding a cell names its week and the means behind it', (
       tester,
     ) async {
       await pump(tester, yearOpeningWith([gainingWeek]));
@@ -214,7 +229,7 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('a week under the gate says so rather than staying blank', (
+    testWidgets('a blank week says so rather than staying silent', (
       tester,
     ) async {
       await pump(tester, emptyYear());
@@ -224,10 +239,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        find.textContaining('${WeeklyWeightChange.minSpanDays} days apart'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('No weigh-ins logged'), findsOneWidget);
 
       await gesture.up();
       await tester.pumpAndSettle();

@@ -2,113 +2,96 @@ import 'package:food_locker/features/weight/data/weight.dart';
 
 /// One calendar week's weight change, as the Home heatmap reads it.
 ///
-/// Built from the week's own weigh-ins and derives everything from them:
-/// intra-week only, so nothing carries across a week boundary and every week
-/// stands on its own. A week whose weigh-ins span fewer than [minSpanDays]
-/// days reports no [delta] at all.
+/// A week is measured against the one immediately before it, mean to mean, so
+/// consecutive cells tile the timeline instead of each measuring its own
+/// interior and discarding what happened across the boundary. Means rather
+/// than endpoints, as in `WeightAnalytics.weeklyChange`: averaging damps
+/// day-to-day water weight, so a cell no longer turns on whichever two days
+/// happened to bracket the week.
+///
+/// The predecessor is always the preceding calendar week, never the last week
+/// that happened to hold weigh-ins, so a coloured cell always means exactly
+/// one week of change. A blank week therefore costs two grey cells.
 class WeeklyWeightChange {
-  /// The week [weekStart] opens, measured across [entries] — the week's
-  /// weigh-ins, in any order. An empty list is a week nothing was logged in.
+  /// The week [weekStart] opens, measured against the week before it.
+  ///
+  /// [entries] are the week's own weigh-ins and [previousEntries] the
+  /// preceding week's, both in any order. An empty list is a week nothing was
+  /// logged in.
   factory WeeklyWeightChange({
     required DateTime weekStart,
     List<Weight> entries = const [],
+    List<Weight> previousEntries = const [],
   }) {
     assert(
       entries.every((entry) => _fallsInWeek(entry, weekStart)),
       'every weigh-in must fall in the week weekStart opens',
     );
+    assert(
+      previousEntries.every(
+        (entry) => _fallsInWeek(entry, _weekBefore(weekStart)),
+      ),
+      'every previous weigh-in must fall in the week before weekStart',
+    );
 
-    if (entries.isEmpty) return WeeklyWeightChange._(weekStart: weekStart);
-
-    var first = entries.first;
-    var last = entries.first;
-    for (final entry in entries) {
-      if (entry.date.isBefore(first.date)) first = entry;
-      if (entry.date.isAfter(last.date)) last = entry;
-    }
     return WeeklyWeightChange._(
       weekStart: weekStart,
-      first: first,
-      last: last,
+      mean: _meanOf(entries),
+      count: entries.length,
+      previousMean: _meanOf(previousEntries),
+      previousCount: previousEntries.length,
     );
   }
 
-  const WeeklyWeightChange._({required this.weekStart, this.first, this.last});
-
-  /// Days a week's first and last weigh-in must lie apart before it reports a
-  /// [delta].
-  ///
-  /// The span states directly what a delta has to measure — the week, not a
-  /// two-day blip: a Sunday and a Saturday qualify on two weigh-ins, a Monday
-  /// and Tuesday never do. A lone weigh-in spans zero days, so its
-  /// `last - first == 0` cannot render as a faint loss.
-  static const int minSpanDays = 3;
+  const WeeklyWeightChange._({
+    required this.weekStart,
+    required this.mean,
+    required this.count,
+    required this.previousMean,
+    required this.previousCount,
+  });
 
   /// The Sunday opening the week, at local midnight.
   ///
-  /// The week's own identity, not something [entries] could supply: a week
+  /// The week's own identity, not something the weigh-ins could supply: a week
   /// nothing was logged in still has a cell to fill and a period to name.
   final DateTime weekStart;
 
-  /// The week's earliest and latest weigh-in, null only for a week that holds
-  /// none. They are the same weigh-in when the week holds exactly one.
-  final Weight? first;
-  final Weight? last;
+  /// The mean of the week's weigh-ins, null exactly when [count] is zero. One
+  /// weigh-in is enough to average: a thin week is a reading, not a blank, and
+  /// [count] is there so the thinness can be shown rather than hidden.
+  final double? mean;
 
-  /// Last weigh-in of the week minus its first, or null under [minSpanDays].
-  double? get delta => hasData ? last!.value - first!.value : null;
+  /// How many weigh-ins [mean] covers.
+  final int count;
 
-  /// The unit the weigh-ins were logged under, kept as provenance; null
-  /// exactly when [delta] is. Nothing computes from it: [delta] is kilograms,
-  /// and the screen states it in the unit Settings prefers.
-  WeightUnit? get unit => hasData ? last!.unit : null;
+  /// The same pair for the immediately preceding calendar week.
+  final double? previousMean;
+  final int previousCount;
 
-  bool get hasData => _spanInDays >= minSpanDays;
+  /// This week's mean minus the previous week's, or null when either week
+  /// holds no weigh-ins.
+  double? get delta {
+    final current = mean;
+    final previous = previousMean;
+    if (current == null || previous == null) return null;
+    return current - previous;
+  }
+
+  bool get hasData => delta != null;
 
   /// Whether the week ended heavier. A flat week counts as not gained.
   bool get isGain => (delta ?? 0) > 0;
 
-  /// Magnitude bucket, 1 (faintest) to 4 (strongest), or null without a
-  /// [delta]. Bounds are kilograms, the unit everything is stored in.
-  int? get level {
-    final magnitude = delta?.abs();
-    if (magnitude == null) return null;
-    if (magnitude < 0.25) return 1;
-    if (magnitude < 0.5) return 2;
-    if (magnitude < 1.0) return 3;
-    return 4;
+  /// The Sunday opening the week before the one [weekStart] opens.
+  static DateTime _weekBefore(DateTime weekStart) =>
+      DateTime(weekStart.year, weekStart.month, weekStart.day - 7);
+
+  static double? _meanOf(List<Weight> entries) {
+    if (entries.isEmpty) return null;
+    return entries.map((entry) => entry.value).reduce((a, b) => a + b) /
+        entries.length;
   }
-
-  /// Calendar days from the first weigh-in to the last, counted on UTC
-  /// midnights so a daylight-saving shift inside the week cannot shorten it.
-  int get _spanInDays {
-    final from = first?.date;
-    final to = last?.date;
-    if (from == null || to == null) return 0;
-    return DateTime.utc(to.year, to.month, to.day)
-        .difference(DateTime.utc(from.year, from.month, from.day))
-        .inDays;
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is WeeklyWeightChange &&
-      other.weekStart == weekStart &&
-      _sameWeighIn(other.first, first) &&
-      _sameWeighIn(other.last, last);
-
-  @override
-  int get hashCode => Object.hash(
-    weekStart,
-    first?.date,
-    first?.value,
-    last?.date,
-    last?.value,
-  );
-
-  /// `Weight` compares by identity, so weigh-ins are matched on what they say.
-  static bool _sameWeighIn(Weight? a, Weight? b) =>
-      a?.date == b?.date && a?.value == b?.value && a?.unit == b?.unit;
 
   /// Whether [entry] falls in the seven days [weekStart] opens.
   static bool _fallsInWeek(Weight entry, DateTime weekStart) {
@@ -122,8 +105,21 @@ class WeeklyWeightChange {
   }
 
   @override
+  bool operator ==(Object other) =>
+      other is WeeklyWeightChange &&
+      other.weekStart == weekStart &&
+      other.mean == mean &&
+      other.count == count &&
+      other.previousMean == previousMean &&
+      other.previousCount == previousCount;
+
+  @override
+  int get hashCode =>
+      Object.hash(weekStart, mean, count, previousMean, previousCount);
+
+  @override
   String toString() =>
-      'WeeklyWeightChange(weekStart: $weekStart, delta: $delta, unit: $unit, '
-      'first: ${first?.value} on ${first?.date}, '
-      'last: ${last?.value} on ${last?.date})';
+      'WeeklyWeightChange(weekStart: $weekStart, delta: $delta, '
+      'mean: $mean over $count, previousMean: $previousMean over '
+      '$previousCount)';
 }
