@@ -22,7 +22,7 @@ List<String> weeklyChangeSummary(
 
   final period =
       '${shortDateWithWeekday(week.weekStart, locale)} – '
-      '${shortDateWithWeekday(_weekEnd(week.weekStart), locale)}';
+      '${shortDateWithWeekday(week.weekEnd, locale)}';
   final mean = week.mean;
   final previousMean = week.previousMean;
   // Logging nothing and logging into a week whose predecessor is blank are
@@ -38,10 +38,6 @@ List<String> weeklyChangeSummary(
     _signedChange(week.delta!, system),
   ];
 }
-
-/// The Saturday closing the week [weekStart] opens.
-DateTime _weekEnd(DateTime weekStart) =>
-    DateTime(weekStart.year, weekStart.month, weekStart.day + 6);
 
 String _weighIns(int count) => '$count weigh-in${count == 1 ? '' : 's'}';
 

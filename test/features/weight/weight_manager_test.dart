@@ -43,6 +43,41 @@ void main() {
       expect(manager.changeFromLowest, closeTo(2.0, 1e-9));
     });
 
+    test('weeklyChange carries the periods and counts behind the figure',
+        () async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final thisWeek = DateTime(
+        today.year,
+        today.month,
+        today.day - (today.weekday % 7),
+      );
+      final lastWeek = DateTime(
+        thisWeek.year,
+        thisWeek.month,
+        thisWeek.day - 7,
+      );
+      final weekBefore = DateTime(
+        thisWeek.year,
+        thisWeek.month,
+        thisWeek.day - 14,
+      );
+      await manager.addWeight(weekBefore, 80.0);
+      await manager.addWeight(
+        DateTime(weekBefore.year, weekBefore.month, weekBefore.day + 1),
+        80.0,
+      );
+      await manager.addWeight(lastWeek, 79.0);
+
+      final week = manager.weeklyChange;
+
+      expect(week.delta, closeTo(-1.0, 1e-9));
+      expect(week.weekStart, lastWeek);
+      expect(week.previousWeekStart, weekBefore);
+      expect(week.count, 1);
+      expect(week.previousCount, 2);
+    });
+
     group('history', () {
       test('is empty when nothing is logged', () {
         expect(manager.history, isEmpty);

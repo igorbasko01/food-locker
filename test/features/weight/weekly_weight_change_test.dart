@@ -83,6 +83,24 @@ void main() {
     });
   });
 
+  group('week periods', () {
+    test('name the seven days the week and its predecessor cover', () {
+      final week = WeeklyWeightChange(weekStart: DateTime(2026, 8, 9));
+
+      expect(week.weekEnd, DateTime(2026, 8, 15));
+      expect(week.previousWeekStart, DateTime(2026, 8, 2));
+      expect(week.previousWeekEnd, DateTime(2026, 8, 8));
+    });
+
+    test('step by calendar days, so a month boundary does not throw them', () {
+      final week = WeeklyWeightChange(weekStart: DateTime(2026, 3, 1));
+
+      expect(week.weekEnd, DateTime(2026, 3, 7));
+      expect(week.previousWeekStart, DateTime(2026, 2, 22));
+      expect(week.previousWeekEnd, DateTime(2026, 2, 28));
+    });
+  });
+
   group('week delta', () {
     test('is this week\'s mean minus the previous week\'s', () async {
       await logRun(DateTime(2026, 8, 2), [80.0, 81.0, 82.0, 83.0]);
