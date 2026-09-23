@@ -49,16 +49,31 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          if (weeklyChanges.any((week) => week.hasData))
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: WeeklyChangeHeatmap(
-                  weeks: weeklyChanges,
-                  system: system,
-                ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  WeeklyChangeHeatmap(weeks: weeklyChanges, system: system),
+                  // An all-grey grid on its own reads as a bug rather than as
+                  // a log with nothing in it yet.
+                  if (!weeklyChanges.any((week) => week.hasData))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Weigh in regularly to fill this grid — a square needs '
+                        'a weigh-in in its own week and in the one before it.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
