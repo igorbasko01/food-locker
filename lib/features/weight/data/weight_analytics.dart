@@ -10,10 +10,12 @@ class WeightAnalytics {
   /// Weeks the Home heatmap draws.
   static const int heatmapWeeks = 52;
 
-  /// The span a window's weigh-ins must cover before it reports a figure,
-  /// shared with the Home heatmap so the two surfaces never disagree about
-  /// which weeks hold enough to speak for.
-  static const int minSpanDays = WeeklyWeightChange.minSpanDays;
+  /// The span a window's weigh-ins must cover before [weeklyChange] or
+  /// [trendPerWeek] reports a figure: the window, not a two-day blip.
+  ///
+  /// [weeklyChanges] does not gate on it — comparing whole weeks' means, a
+  /// lone weigh-in still says something about its week.
+  static const int minSpanDays = 3;
 
   /// Days [trendPerWeek] looks back over, the day it is asked about
   /// included.
@@ -137,12 +139,16 @@ class WeightAnalytics {
   ///
   /// Always [weeks] long: a week the store has too little for is present with
   /// no delta rather than missing, so callers can index it as a fixed grid.
+  ///
+  /// Each week is paired with the one before it, so one more week than is
+  /// drawn is read: the oldest cell would otherwise have no predecessor and
+  /// could never report a delta.
   List<WeeklyWeightChange> weeklyChanges({
     int weeks = heatmapWeeks,
     DateTime? asOf,
   }) {
     assert(weeks > 0);
-    final weekStarts = _weekStartsEndingAt(asOf ?? DateTime.now(), weeks);
+    final weekStarts = _weekStartsEndingAt(asOf ?? DateTime.now(), weeks + 1);
     final entriesByWeek = <DateTime, List<Weight>>{};
 
     for (final weight in _weightRepository.getWeightsSince(weekStarts.first)) {
@@ -154,10 +160,11 @@ class WeightAnalytics {
     }
 
     return [
-      for (final start in weekStarts)
+      for (var i = 1; i < weekStarts.length; i++)
         WeeklyWeightChange(
-          weekStart: start,
-          entries: entriesByWeek[start] ?? const [],
+          weekStart: weekStarts[i],
+          entries: entriesByWeek[weekStarts[i]] ?? const [],
+          previousEntries: entriesByWeek[weekStarts[i - 1]] ?? const [],
         ),
     ];
   }

@@ -8,8 +8,12 @@ import 'package:food_locker/ui/widgets/weekly_change_summary.dart';
 ///
 /// Fills row by row, oldest top-left to newest bottom-right, so the last cell
 /// is the week in progress. Holding a cell names the week it covers and the
-/// weigh-ins its colour came from; dragging carries that readout from cell to
+/// means its colour came from; dragging carries that readout from cell to
 /// cell, and lifting ends it.
+///
+/// Shade is relative to the grid: the whole list sets the scale the cells are
+/// drawn against, so the same week can read darker in a quiet year than in a
+/// dramatic one.
 class WeeklyChangeHeatmap extends StatefulWidget {
   const WeeklyChangeHeatmap({
     super.key,
@@ -49,6 +53,8 @@ class _WeeklyChangeHeatmapState extends State<WeeklyChangeHeatmap> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = WeeklyChangeScale.forWeeks(widget.weeks);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Each cell is a square of one column's width: the row's Expanded sets
@@ -74,6 +80,7 @@ class _WeeklyChangeHeatmapState extends State<WeeklyChangeHeatmap> {
                       Expanded(
                         child: _Cell(
                           week: _weekAt(_index(row, column)),
+                          scale: scale,
                           system: widget.system,
                         ),
                       ),
@@ -213,10 +220,13 @@ class _Readout extends StatelessWidget {
 }
 
 class _Cell extends StatelessWidget {
-  const _Cell({required this.week, required this.system});
+  const _Cell({required this.week, required this.scale, required this.system});
 
   /// The week this cell draws, or null past the end of the grid.
   final WeeklyWeightChange? week;
+
+  /// The grid's ramp, shared by every cell so their shades stay comparable.
+  final WeeklyChangeScale scale;
 
   final MeasurementSystem system;
 
@@ -233,7 +243,7 @@ class _Cell extends StatelessWidget {
             decoration: BoxDecoration(
               color: week == null
                   ? weeklyChangeNoDataColor
-                  : weeklyChangeColor(week!),
+                  : weeklyChangeColor(week!, scale),
               borderRadius: BorderRadius.circular(3),
             ),
           ),

@@ -158,8 +158,8 @@ void main() {
     tester,
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
-    // Four weeks of daily weigh-ins, so a full week clears the span gate
-    // whatever weekday the test runs on.
+    // Four weeks of daily weigh-ins, so a week and its predecessor are both
+    // logged whatever weekday the test runs on.
     for (var day = 0; day < 28; day++) {
       await manager.addWeight(daysAgo(day), 70.0 + day);
     }
@@ -175,9 +175,10 @@ void main() {
       tester.getTopLeft(find.byType(WeeklyChangeHeatmap)).dy,
       lessThan(tester.getTopLeft(find.text('Latest 7 Days of Weight')).dy),
     );
+    expect(find.textContaining('Weigh in regularly'), findsNothing);
   });
 
-  testWidgets('the heatmap stays hidden while no week has data', (
+  testWidgets('a grid with nothing coloured yet says what fills it', (
     tester,
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
@@ -185,6 +186,7 @@ void main() {
 
     await pumpPage(tester, manager);
 
-    expect(find.byType(WeeklyChangeHeatmap), findsNothing);
+    expect(find.byType(WeeklyChangeHeatmap), findsOneWidget);
+    expect(find.textContaining('Weigh in regularly'), findsOneWidget);
   });
 }
