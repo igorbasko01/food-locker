@@ -42,6 +42,11 @@ flutter_icons:
   ios: false
   image_path: "assets/icon/icon.png"
   min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#1A8690"
+    theme_color: "#1A8690"
 
 flutter:
   uses-material-design: true
