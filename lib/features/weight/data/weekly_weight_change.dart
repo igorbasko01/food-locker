@@ -72,9 +72,8 @@ class WeeklyWeightChange {
   /// The Saturday closing the week.
   DateTime get weekEnd => _weekEnd(weekStart);
 
-  /// The Sunday and Saturday of the week [previousMean] covers.
+  /// The Sunday opening the week [previousMean] covers.
   DateTime get previousWeekStart => _weekBefore(weekStart);
-  DateTime get previousWeekEnd => _weekEnd(previousWeekStart);
 
   /// This week's mean minus the previous week's, or null when either week
   /// holds no weigh-ins.

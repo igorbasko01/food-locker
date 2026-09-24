@@ -84,12 +84,11 @@ void main() {
   });
 
   group('week periods', () {
-    test('name the seven days the week and its predecessor cover', () {
+    test('close the week on its Saturday and open the one before it', () {
       final week = WeeklyWeightChange(weekStart: DateTime(2026, 8, 9));
 
       expect(week.weekEnd, DateTime(2026, 8, 15));
       expect(week.previousWeekStart, DateTime(2026, 8, 2));
-      expect(week.previousWeekEnd, DateTime(2026, 8, 8));
     });
 
     test('step by calendar days, so a month boundary does not throw them', () {
@@ -97,7 +96,6 @@ void main() {
 
       expect(week.weekEnd, DateTime(2026, 3, 7));
       expect(week.previousWeekStart, DateTime(2026, 2, 22));
-      expect(week.previousWeekEnd, DateTime(2026, 2, 28));
     });
   });
 

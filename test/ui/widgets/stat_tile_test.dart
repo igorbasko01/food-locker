@@ -13,43 +13,6 @@ void main() {
     );
   }
 
-  /// The tile as the Weight tab lays it out: a third of a phone's width, in a
-  /// row stretched to the height its tallest member intrinsically needs.
-  Future<double> stretchedHeight(WidgetTester tester, String value) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: appTheme,
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: 104,
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: StatTile(label: 'Weekly change', value: value),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    return tester.getSize(find.byType(StatTile)).height;
-  }
-
-  testWidgets('a figure wider than the tile scales instead of taking a line', (
-    tester,
-  ) async {
-    final long = await stretchedHeight(tester, '-0.70 kg/wk');
-    final short = await stretchedHeight(tester, '--');
-
-    expect(long, short);
-  });
-
   testWidgets('renders the label, value, and sub-label', (tester) async {
     await pumpTile(
       tester,

@@ -69,9 +69,9 @@ void main() {
     return manager;
   }
 
-  /// The sub-label the weekly-change tile should carry: the last two complete
-  /// weeks, each with its weigh-in count.
-  String expectedPeriods(int count, int previousCount) {
+  /// The sub-label the weekly-change tile should carry: the Sundays opening
+  /// the last two complete weeks.
+  String expectedWeeks() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final thisWeek = DateTime(
@@ -79,17 +79,13 @@ void main() {
       today.month,
       today.day - (today.weekday % 7),
     );
-    String span(int weeksBack) {
-      final start = DateTime(
-        thisWeek.year,
-        thisWeek.month,
-        thisWeek.day - 7 * weeksBack,
-      );
-      final end = DateTime(start.year, start.month, start.day + 6);
-      return '${shortDate(start)}–${shortDate(end)}';
-    }
+    DateTime weekStart(int weeksBack) => DateTime(
+      thisWeek.year,
+      thisWeek.month,
+      thisWeek.day - 7 * weeksBack,
+    );
 
-    return '${span(1)} ($count)\nvs ${span(2)} ($previousCount)';
+    return '${shortDate(weekStart(1))} vs ${shortDate(weekStart(2))}';
   }
 
   testWidgets('renders the current weight above the chart', (tester) async {
@@ -119,8 +115,8 @@ void main() {
 
     // A tenth of a kilogram a day: -0.7 a week, and -3.0 projected over a month.
     expect(find.widgetWithText(StatTile, '-0.7 kg'), findsOneWidget);
-    // The two complete weeks behind the figure, each with its seven weigh-ins.
-    expect(find.text(expectedPeriods(7, 7)), findsOneWidget);
+    // The two complete weeks behind the figure, so its lag is visible.
+    expect(find.text(expectedWeeks()), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-0.70 kg/wk'), findsOneWidget);
     expect(find.text('≈ -3.0 kg/month'), findsOneWidget);
 

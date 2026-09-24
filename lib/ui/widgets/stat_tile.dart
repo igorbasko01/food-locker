@@ -76,10 +76,6 @@ class StatTile extends StatelessWidget {
                     ],
                     Text(
                       value,
-                      // The scaling keeps the figure on one line whatever the
-                      // tile's width; saying so here keeps the intrinsic
-                      // height a caller measures from claiming otherwise.
-                      softWrap: false,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: figureColor,
