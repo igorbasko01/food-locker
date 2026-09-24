@@ -10,13 +10,6 @@ class WeightAnalytics {
   /// Weeks the Home heatmap draws.
   static const int heatmapWeeks = 52;
 
-  /// The span a window's weigh-ins must cover before [weeklyChange] or
-  /// [trendPerWeek] reports a figure: the window, not a two-day blip.
-  ///
-  /// [weeklyChanges] does not gate on it — comparing whole weeks' means, a
-  /// lone weigh-in still says something about its week.
-  static const int minSpanDays = 3;
-
   /// Days [trendPerWeek] looks back over, the day it is asked about
   /// included.
   static const int trendWindowDays = 30;
@@ -65,35 +58,16 @@ class WeightAnalytics {
     return a;
   }
 
-  /// The most recent complete week's mean weight minus the week before it,
-  /// over the same Sunday-to-Saturday weeks as [weeklyChanges].
+  /// The most recent complete week, measured against the week before it —
+  /// the same pairing, mean to mean, that the Home heatmap's second-to-last
+  /// cell draws, so the two can never drift apart.
   ///
-  /// Means rather than endpoints: a sparse day-granular store rarely has a
-  /// weigh-in on both ends of a window, and averaging damps day-to-day water
-  /// weight. The week holding [asOf] is skipped so a part-week's mean is never
-  /// compared against a full one, which leaves the figure up to six days stale.
-  ///
-  /// Null unless both weeks clear [minSpanDays].
-  double? weeklyChange({DateTime? asOf}) {
-    final currentWeekStart = _weekStart(asOf ?? DateTime.now());
-    final recentStart = _shiftWeeks(currentWeekStart, 1);
-    final previousStart = _shiftWeeks(currentWeekStart, 2);
-
-    final recent = <Weight>[];
-    final previous = <Weight>[];
-    for (final weight in _weightRepository.getWeightsInRange(
-      previousStart,
-      currentWeekStart,
-    )) {
-      final start = _weekStart(weight.date);
-      (start == recentStart ? recent : previous).add(weight);
-    }
-
-    final recentMean = _gatedMean(recent);
-    final previousMean = _gatedMean(previous);
-    if (recentMean == null || previousMean == null) return null;
-    return recentMean - previousMean;
-  }
+  /// The week holding [asOf] is skipped so a part-week's mean is never
+  /// compared against a full one, which leaves the figure up to six days
+  /// stale. The periods and weigh-in counts ride along with the delta, so a
+  /// caller can name the weeks it read and how thin they were.
+  WeeklyWeightChange weeklyChange({DateTime? asOf}) =>
+      weeklyChanges(weeks: 2, asOf: asOf).first;
 
   /// Least-squares slope over the last [trendWindowDays] days of weigh-ins,
   /// expressed as weight per week.
@@ -101,7 +75,8 @@ class WeightAnalytics {
   /// Regressing value on day number rather than on position in the list, so
   /// gaps in the log stretch the x axis instead of distorting the slope.
   ///
-  /// Null unless the window clears [minSpanDays].
+  /// Null when the window holds nothing, or when everything in it lands on one
+  /// day and leaves no x axis to regress against.
   double? trendPerWeek({DateTime? asOf}) {
     final today = _dayOf(asOf ?? DateTime.now());
     final from = DateTime(
@@ -113,7 +88,7 @@ class WeightAnalytics {
       from,
       DateTime(today.year, today.month, today.day + 1),
     );
-    if (!_spansEnough(entries)) return null;
+    if (entries.isEmpty) return null;
 
     final days = [
       for (final entry in entries) _daysBetween(from, entry.date).toDouble(),
@@ -167,25 +142,6 @@ class WeightAnalytics {
           previousEntries: entriesByWeek[weekStarts[i - 1]] ?? const [],
         ),
     ];
-  }
-
-  /// The mean of [entries], or null when they span under [minSpanDays].
-  static double? _gatedMean(List<Weight> entries) {
-    if (!_spansEnough(entries)) return null;
-    return entries.map((e) => e.value).reduce((a, b) => a + b) / entries.length;
-  }
-
-  /// Whether [entries]' first and last weigh-in lie at least [minSpanDays]
-  /// apart. An empty list, and a lone weigh-in's zero span, never do.
-  static bool _spansEnough(List<Weight> entries) {
-    if (entries.isEmpty) return false;
-    var earliest = entries.first.date;
-    var latest = entries.first.date;
-    for (final entry in entries) {
-      if (entry.date.isBefore(earliest)) earliest = entry.date;
-      if (entry.date.isAfter(latest)) latest = entry.date;
-    }
-    return _daysBetween(earliest, latest) >= minSpanDays;
   }
 
   /// Calendar days from [from] to [to]. Compared in UTC so a daylight-saving

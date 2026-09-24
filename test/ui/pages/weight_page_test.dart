@@ -69,6 +69,25 @@ void main() {
     return manager;
   }
 
+  /// The sub-label the weekly-change tile should carry: the Sundays opening
+  /// the last two complete weeks.
+  String expectedWeeks() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final thisWeek = DateTime(
+      today.year,
+      today.month,
+      today.day - (today.weekday % 7),
+    );
+    DateTime weekStart(int weeksBack) => DateTime(
+      thisWeek.year,
+      thisWeek.month,
+      thisWeek.day - 7 * weeksBack,
+    );
+
+    return '${shortDate(weekStart(1))} vs ${shortDate(weekStart(2))}';
+  }
+
   testWidgets('renders the current weight above the chart', (tester) async {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
@@ -96,7 +115,8 @@ void main() {
 
     // A tenth of a kilogram a day: -0.7 a week, and -3.0 projected over a month.
     expect(find.widgetWithText(StatTile, '-0.7 kg'), findsOneWidget);
-    expect(find.text('vs. previous week'), findsOneWidget);
+    // The two complete weeks behind the figure, so its lag is visible.
+    expect(find.text(expectedWeeks()), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-0.70 kg/wk'), findsOneWidget);
     expect(find.text('≈ -3.0 kg/month'), findsOneWidget);
 
@@ -146,20 +166,21 @@ void main() {
     expect(find.byIcon(Icons.emoji_events), findsNothing);
   });
 
-  testWidgets('falls back to -- for windows under the span gate', (
+  testWidgets('reads a trend off two weigh-ins, with no week to compare', (
     tester,
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    // Two weigh-ins a day apart span one day, under the gate's three.
     await manager.addWeight(DateTime(today.year, today.month, today.day - 1), 73.0);
     await manager.addWeight(today, 72.5);
 
     await pumpPage(tester, manager);
 
-    // The low is a distance rather than a window, so it reads through the gate.
-    expect(find.widgetWithText(StatTile, '--'), findsNWidgets(2));
+    // Half a kilogram a day fits a -3.5 kg/wk line; the weekly tile has no
+    // complete week to read.
+    expect(find.widgetWithText(StatTile, '-3.50 kg/wk'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '--'), findsOneWidget);
     expect(find.text('72.5 kg'), findsNWidgets(2));
     expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
   });

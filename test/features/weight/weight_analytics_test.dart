@@ -21,8 +21,15 @@ void main() {
     // 2023-12-24..2023-12-30.
     final asOf = DateTime(2024, 1, 10);
 
-    test('is null with nothing logged', () {
-      expect(analytics.weeklyChange(asOf: asOf), isNull);
+    test('has no delta with nothing logged', () {
+      expect(analytics.weeklyChange(asOf: asOf).delta, isNull);
+    });
+
+    test('names the two weeks it compares', () {
+      final week = analytics.weeklyChange(asOf: asOf);
+
+      expect(week.weekStart, DateTime(2023, 12, 31));
+      expect(week.previousWeekStart, DateTime(2023, 12, 24));
     });
 
     test('is the difference of the two weeks\' means', () async {
@@ -33,7 +40,11 @@ void main() {
       await log(DateTime(2024, 1, 3), 79.0);
       await log(DateTime(2024, 1, 6), 79.0);
 
-      expect(analytics.weeklyChange(asOf: asOf), closeTo(-1.0, 1e-9));
+      final week = analytics.weeklyChange(asOf: asOf);
+
+      expect(week.delta, closeTo(-1.0, 1e-9));
+      expect(week.count, 3);
+      expect(week.previousCount, 3);
     });
 
     test('averages rather than comparing endpoints', () async {
@@ -44,25 +55,39 @@ void main() {
       await log(DateTime(2024, 1, 6), 77.0);
 
       // Endpoint-to-endpoint would read 77.0 - 79.0; the means read 78.0 - 80.0.
-      expect(analytics.weeklyChange(asOf: asOf), closeTo(-2.0, 1e-9));
+      expect(analytics.weeklyChange(asOf: asOf).delta, closeTo(-2.0, 1e-9));
     });
 
-    test('is null when one window falls under the span gate', () async {
+    test('reports a week that spans only a day or two', () async {
       await log(DateTime(2023, 12, 24), 80.0);
       await log(DateTime(2023, 12, 30), 80.0);
-      // Two consecutive days span one, under the three the gate wants.
       await log(DateTime(2023, 12, 31), 79.0);
       await log(DateTime(2024, 1, 1), 79.0);
 
-      expect(analytics.weeklyChange(asOf: asOf), isNull);
+      expect(analytics.weeklyChange(asOf: asOf).delta, closeTo(-1.0, 1e-9));
     });
 
-    test('is null when only one of the two weeks holds anything', () async {
+    test('counts the weigh-ins behind a one-a-side figure', () async {
+      await log(DateTime(2023, 12, 27), 80.0);
+      await log(DateTime(2024, 1, 3), 79.0);
+
+      final week = analytics.weeklyChange(asOf: asOf);
+
+      expect(week.delta, closeTo(-1.0, 1e-9));
+      expect(week.count, 1);
+      expect(week.previousCount, 1);
+    });
+
+    test('has no delta when only one week holds anything', () async {
       await log(DateTime(2023, 12, 31), 79.0);
       await log(DateTime(2024, 1, 3), 79.0);
       await log(DateTime(2024, 1, 6), 79.0);
 
-      expect(analytics.weeklyChange(asOf: asOf), isNull);
+      final week = analytics.weeklyChange(asOf: asOf);
+
+      expect(week.delta, isNull);
+      expect(week.count, 3);
+      expect(week.previousCount, 0);
     });
 
     test('ignores the week in progress', () async {
@@ -76,16 +101,19 @@ void main() {
       await log(DateTime(2024, 1, 7), 60.0);
       await log(DateTime(2024, 1, 10), 60.0);
 
-      expect(analytics.weeklyChange(asOf: asOf), closeTo(-1.0, 1e-9));
+      expect(analytics.weeklyChange(asOf: asOf).delta, closeTo(-1.0, 1e-9));
     });
 
-    test('exactly three days apart clears the gate', () async {
-      await log(DateTime(2023, 12, 24), 80.0);
-      await log(DateTime(2023, 12, 27), 80.0);
+    test('is the same week the heatmap draws second from the end', () async {
+      await log(DateTime(2023, 12, 24), 81.0);
+      await log(DateTime(2023, 12, 30), 79.0);
       await log(DateTime(2023, 12, 31), 79.0);
-      await log(DateTime(2024, 1, 3), 79.0);
+      await log(DateTime(2024, 1, 6), 77.0);
+      await log(DateTime(2024, 1, 8), 60.0);
 
-      expect(analytics.weeklyChange(asOf: asOf), closeTo(-1.0, 1e-9));
+      final grid = analytics.weeklyChanges(asOf: asOf);
+
+      expect(analytics.weeklyChange(asOf: asOf), grid[grid.length - 2]);
     });
   });
 
@@ -115,11 +143,12 @@ void main() {
       expect(analytics.trendPerWeek(asOf: asOf), closeTo(-7.0, 1e-9));
     });
 
-    test('is null under the span gate', () async {
+    test('fits a line through two weigh-ins a day apart', () async {
       await log(DateTime(2024, 1, 28), 80.0);
       await log(DateTime(2024, 1, 29), 79.0);
 
-      expect(analytics.trendPerWeek(asOf: asOf), isNull);
+      // A kilogram a day, read off the only two points there are.
+      expect(analytics.trendPerWeek(asOf: asOf), closeTo(-7.0, 1e-9));
     });
 
     test('is null for a lone weigh-in, which has no slope to fit', () async {

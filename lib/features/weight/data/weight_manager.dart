@@ -104,8 +104,9 @@ class WeightManager extends ChangeNotifier {
   /// How far the latest weigh-in sits above the all-time low; never negative.
   double? get changeFromLowest => _analytics.changeFromLowest;
 
-  /// Last complete week's mean weight minus the week before it.
-  double? get weeklyChange => _analytics.weeklyChange();
+  /// Last complete week's mean weight against the week before it, carrying the
+  /// periods and weigh-in counts the tile labels the figure with.
+  WeeklyWeightChange get weeklyChange => _analytics.weeklyChange();
 
   /// The 30-day least-squares trend, as weight per week.
   double? get trendPerWeek => _analytics.trendPerWeek();

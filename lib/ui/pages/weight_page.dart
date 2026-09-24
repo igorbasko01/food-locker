@@ -3,6 +3,7 @@ import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/bmi.dart';
+import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/widgets/add_weight_dialog.dart';
@@ -202,9 +203,10 @@ class WeightPage extends StatelessWidget {
 
   Widget _buildWeeklyChangeTile(
     BuildContext context,
-    double? change,
+    WeeklyWeightChange week,
     MeasurementSystem system,
   ) {
+    final change = week.delta;
     if (change == null) return _missingStatTile('Weekly change');
 
     final rounded = _roundTo(system.weightFromKilograms(change), 1);
@@ -212,7 +214,7 @@ class WeightPage extends StatelessWidget {
       child: StatTile(
         label: 'Weekly change',
         value: '${_signed(rounded, 1)} ${system.weightSymbol}',
-        subLabel: 'vs. previous week',
+        subLabel: _weeklyChangeWeeks(week),
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
       ),
@@ -371,6 +373,15 @@ class _Bmi extends StatelessWidget {
     );
   }
 }
+
+/// The two weeks the weekly-change figure came from, each named by the Sunday
+/// it opens.
+///
+/// The comparison skips the week in progress, so an unlabelled tile reads as
+/// this week against last when it is up to six days behind. What each week's
+/// mean rests on is the heatmap cell's story, not the tile's.
+String _weeklyChangeWeeks(WeeklyWeightChange week) =>
+    '${shortDate(week.weekStart)} vs ${shortDate(week.previousWeekStart)}';
 
 /// The tile a statistic the store has too little for falls back to.
 Widget _missingStatTile(String label) =>

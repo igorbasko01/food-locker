@@ -69,6 +69,12 @@ class WeeklyWeightChange {
   final double? previousMean;
   final int previousCount;
 
+  /// The Saturday closing the week.
+  DateTime get weekEnd => _weekEnd(weekStart);
+
+  /// The Sunday opening the week [previousMean] covers.
+  DateTime get previousWeekStart => _weekBefore(weekStart);
+
   /// This week's mean minus the previous week's, or null when either week
   /// holds no weigh-ins.
   double? get delta {
@@ -86,6 +92,10 @@ class WeeklyWeightChange {
   /// The Sunday opening the week before the one [weekStart] opens.
   static DateTime _weekBefore(DateTime weekStart) =>
       DateTime(weekStart.year, weekStart.month, weekStart.day - 7);
+
+  /// The Saturday closing the week [weekStart] opens.
+  static DateTime _weekEnd(DateTime weekStart) =>
+      DateTime(weekStart.year, weekStart.month, weekStart.day + 6);
 
   static double? _meanOf(List<Weight> entries) {
     if (entries.isEmpty) return null;
