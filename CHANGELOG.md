@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/igorbasko01/food-locker/compare/v1.20.0...v1.21.0) (2026-09-25)
+
+
+### Features
+
+* add a Flutter web build target and PWA shell ([#147](https://github.com/igorbasko01/food-locker/issues/147)) ([dd83326](https://github.com/igorbasko01/food-locker/commit/dd83326f7d8c5390b499d3587b4f97eb994d1995))
+
 ## [1.20.0](https://github.com/igorbasko01/food-locker/compare/v1.19.0...v1.20.0) (2026-09-24)
 
 
