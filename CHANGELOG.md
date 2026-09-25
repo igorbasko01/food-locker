@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.20.0](https://github.com/igorbasko01/food-locker/compare/v1.19.0...v1.20.0) (2026-09-24)
+
+
+### Features
+
+* show current BMI on a banded scale (underweight / healthy / overweight / obese) ([#138](https://github.com/igorbasko01/food-locker/issues/138)) ([ee47c22](https://github.com/igorbasko01/food-locker/commit/ee47c2283ec9516b78b07b3420aeb2b9e683cf86))
+* **weight:** delete a weight only from the edit dialog ([#136](https://github.com/igorbasko01/food-locker/issues/136)) ([#137](https://github.com/igorbasko01/food-locker/issues/137)) ([53929df](https://github.com/igorbasko01/food-locker/commit/53929df8415e7e7c98465526039e1e05962d34ef))
+* work in kilograms everywhere, display in a preferred unit from Settings ([#135](https://github.com/igorbasko01/food-locker/issues/135)) ([fd1eb30](https://github.com/igorbasko01/food-locker/commit/fd1eb30d9d6e44c41a83f6a4d84a7b60c288be16))
+
+
+### Bug Fixes
+
+* make backup export and import work on web ([#139](https://github.com/igorbasko01/food-locker/issues/139)) ([15d2632](https://github.com/igorbasko01/food-locker/commit/15d26321de8c8ab38dbdf7179cf1320d6561efcc))
+* measure heatmap weeks mean-to-mean and scale cell colour to the grid ([#145](https://github.com/igorbasko01/food-locker/issues/145)) ([669c838](https://github.com/igorbasko01/food-locker/commit/669c8385ae110eaeae74e9ffbf4320cb7e68408c))
+* name the weeks the weekly-change tile compares and drop the span gate ([#146](https://github.com/igorbasko01/food-locker/issues/146)) ([401a495](https://github.com/igorbasko01/food-locker/commit/401a49539205e407a30cc7d2a98fdd94fa6919dd))
+
 ## [1.19.0](https://github.com/igorbasko01/food-locker/compare/v1.18.0...v1.19.0) (2026-09-10)
 
 
