@@ -16,3 +16,9 @@ jobs:
     - run: flutter pub get
     - run: flutter analyze
     - run: flutter test
+    - run: flutter build web --base-href=/ --no-web-resources-cdn
+    - name: Check web build output
+      run: |
+        test -f build/web/CNAME
+        test -f build/web/.nojekyll
+        test -d build/web/canvaskit

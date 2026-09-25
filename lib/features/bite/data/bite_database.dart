@@ -59,7 +59,11 @@ class PacingConfigs extends Table {
 @DriftDatabase(tables: [Bites, PacingConfigs])
 class BiteDatabase extends _$BiteDatabase {
   /// Production constructor: opens the on-disk `bites` database.
-  BiteDatabase() : super(driftDatabase(name: 'bites'));
+  ///
+  /// Opening is deferred to the first query because `driftDatabase` throws
+  /// synchronously on web until it is given web options, and that must not
+  /// stop the app from starting.
+  BiteDatabase() : super(LazyDatabase(() => driftDatabase(name: 'bites')));
 
   /// Test constructor: injects a custom (e.g. in-memory) executor so the
   /// schema can be exercised without touching the device filesystem.
