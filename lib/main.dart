@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
@@ -35,8 +34,7 @@ void main() async {
   final biteRepository = DriftBiteRepository(BiteDatabase());
 
   final biteManager = BiteManager(biteRepository);
-  // The Bite store cannot open on web yet; skip it so the other tabs load.
-  if (!kIsWeb) await biteManager.initialize();
+  await biteManager.initialize();
 
   final settingsRepository =
       PreferencesSettingsRepository(await SharedPreferences.getInstance());

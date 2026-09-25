@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 part 'bite_database.g.dart';
 
@@ -60,10 +61,24 @@ class PacingConfigs extends Table {
 class BiteDatabase extends _$BiteDatabase {
   /// Production constructor: opens the on-disk `bites` database.
   ///
-  /// Opening is deferred to the first query because `driftDatabase` throws
-  /// synchronously on web until it is given web options, and that must not
-  /// stop the app from starting.
-  BiteDatabase() : super(LazyDatabase(() => driftDatabase(name: 'bites')));
+  /// On web it runs on the sqlite3 WASM build and drift worker vendored in
+  /// `web/`, which must match the resolved `sqlite3` and `drift` versions.
+  BiteDatabase()
+    : super(
+        driftDatabase(
+          name: 'bites',
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+            onResult: (result) => debugPrint(
+              describeWebStorage(
+                result.chosenImplementation,
+                result.missingFeatures,
+              ),
+            ),
+          ),
+        ),
+      );
 
   /// Test constructor: injects a custom (e.g. in-memory) executor so the
   /// schema can be exercised without touching the device filesystem.
@@ -126,3 +141,14 @@ class BiteDatabase extends _$BiteDatabase {
 /// it. The `id` is store-assigned on insert, so the 0 here is a placeholder.
 const PacingConfig defaultPacingConfig =
     PacingConfig(id: 0, effectiveMs: 0, b1S: 15, b2S: 30);
+
+/// The log line recording which web storage tier drift picked, and why.
+String describeWebStorage(
+  WasmStorageImplementation chosen,
+  Set<MissingBrowserFeature> missing,
+) {
+  final reason = missing.isEmpty
+      ? 'no missing browser features'
+      : 'missing browser features: ${missing.map((f) => f.name).join(', ')}';
+  return 'Bite store on web uses ${chosen.name} ($reason)';
+}

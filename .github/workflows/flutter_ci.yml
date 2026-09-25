@@ -22,3 +22,5 @@ jobs:
         test -f build/web/CNAME
         test -f build/web/.nojekyll
         test -d build/web/canvaskit
+        test -f build/web/sqlite3.wasm
+        test -f build/web/drift_worker.js
