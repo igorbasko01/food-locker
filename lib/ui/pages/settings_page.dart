@@ -5,6 +5,7 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
+import 'package:food_locker/features/settings/data/storage_persistence.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/widgets/height_dialog.dart';
@@ -29,6 +30,12 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (settings.storagePersistence !=
+              StoragePersistenceState.notApplicable) ...[
+            _buildHeader(theme, 'Storage'),
+            _buildStorageCard(theme, settings),
+            const SizedBox(height: 24),
+          ],
           _buildHeader(theme, 'Profile'),
           _buildCard(
             theme,
@@ -303,6 +310,73 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (heightCm != null) await settings.setHeightCm(heightCm);
+  }
+
+  /// A browser build has no copy of the data anywhere but this origin, so the
+  /// persistence grant is shown up front, and a denial stays on screen with a
+  /// way to export for as long as it holds.
+  Widget _buildStorageCard(ThemeData theme, SettingsManager settings) {
+    if (settings.storagePersistence == StoragePersistenceState.persisted) {
+      return _buildCard(
+        theme,
+        ListTile(
+          leading: Icon(Icons.verified_user, color: theme.colorScheme.primary),
+          title: const Text(
+            'Storage is persistent',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: const Text(
+            "This browser won't clear your data to free up space, but it is "
+            'still the only copy. Export a backup to keep one elsewhere.',
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.errorContainer.withValues(alpha: 0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.error.withValues(alpha: 0.4),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(Icons.warning_amber, color: theme.colorScheme.error),
+            title: const Text(
+              'Your data may be cleared',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              'This browser can delete your data when it runs low on space, '
+              'and there is no copy anywhere else. Export a backup regularly.',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _busy ? null : settings.requestStoragePersistence,
+                  child: const Text('Ask again'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: _busy ? null : _exportData,
+                  icon: const Icon(Icons.download),
+                  label: const Text('Export backup'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCard(ThemeData theme, Widget child) {
