@@ -118,15 +118,20 @@ void main() {
       expect(manager.storagePersistence, StoragePersistenceState.notPersisted);
     });
 
-    test('a grant given since the last run is picked up', () async {
+    test('a grant given since the last run is picked up and recorded',
+        () async {
+      final repository = InMemorySettingsRepository(
+        storagePersistenceGranted: false,
+      );
       final manager = SettingsManager(
-        InMemorySettingsRepository(storagePersistenceGranted: false),
+        repository,
         storagePersistence: _FakeStoragePersistence(granted: true),
       );
 
       await manager.initializeStoragePersistence();
 
       expect(manager.storagePersistence, StoragePersistenceState.persisted);
+      expect(repository.storagePersistenceGranted, isTrue);
     });
 
     test('asking again records the new answer', () async {

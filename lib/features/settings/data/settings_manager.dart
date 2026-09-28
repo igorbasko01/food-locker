@@ -40,12 +40,14 @@ class SettingsManager extends ChangeNotifier {
       await requestStoragePersistence();
       return;
     }
-    _storagePersistenceState = await _storagePersistence.current();
-    notifyListeners();
+    await _record(await _storagePersistence.current());
   }
 
   Future<void> requestStoragePersistence() async {
-    final state = await _storagePersistence.request();
+    await _record(await _storagePersistence.request());
+  }
+
+  Future<void> _record(StoragePersistenceState state) async {
     if (state != StoragePersistenceState.notApplicable) {
       await _repository.setStoragePersistenceGranted(
         state == StoragePersistenceState.persisted,
