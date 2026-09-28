@@ -1,6 +1,7 @@
 import 'dart:js_interop';
 
-import 'package:food_locker/features/settings/data/storage_persistence.dart';
+import 'package:food_locker/features/settings/data/storage_persistence.dart'
+    show StoragePersistence, StoragePersistenceState;
 import 'package:web/web.dart' as web;
 
 StoragePersistence createStoragePersistence() => const WebStoragePersistence();

@@ -1,4 +1,5 @@
-import 'package:food_locker/features/settings/data/storage_persistence.dart';
+import 'package:food_locker/features/settings/data/storage_persistence.dart'
+    show StoragePersistence, StoragePersistenceState;
 
 StoragePersistence createStoragePersistence() =>
     const NativeStoragePersistence();

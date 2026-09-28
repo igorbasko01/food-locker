@@ -3,7 +3,8 @@ import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/storage_persistence.dart';
-import 'package:food_locker/features/settings/data/storage_persistence_io.dart';
+import 'package:food_locker/features/settings/data/storage_persistence_io.dart'
+    show NativeStoragePersistence;
 
 /// Answers every request with [granted] and counts how often it was asked.
 class _FakeStoragePersistence implements StoragePersistence {
