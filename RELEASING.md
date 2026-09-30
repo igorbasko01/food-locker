@@ -36,6 +36,18 @@ When the team decides it is time to cut a release:
 2. This triggers the bot to create an official GitHub Release and tag on the repository.
 3. The creation of that GitHub Release then triggers our `build_release.yml` workflow.
 4. `build_release.yml` builds a production-signed Android APK securely on CI, names it with the new version and build number, and uploads it to the action artifacts.
+5. The same GitHub Release triggers `deploy_web.yml`, which builds the web app and publishes it to GitHub Pages at `foodlocker.baskorp.com`. It also has a **Run workflow** button to redeploy without a release.
+
+### One-time web hosting setup
+
+`deploy_web.yml` cannot publish until these are done by hand:
+
+1. **Cloudflare DNS:** add `CNAME foodlocker → igorbasko01.github.io`, **DNS only (grey cloud)**. Proxying blocks GitHub's certificate challenge. If you proxy it later, set SSL/TLS to **Full (strict)** (Flexible causes redirect loops), and purge the Cloudflare cache after each deploy.
+2. **Repo Settings → Pages:** Source = **GitHub Actions**, custom domain = `foodlocker.baskorp.com`. Turn on **Enforce HTTPS** once the certificate has been provisioned.
+
+`web/CNAME` is also committed, so a deploy cannot clear the custom domain.
+
+After a deploy, check that an already-installed copy of the app picks up the new version. The site only updates through Flutter's service worker, because GitHub Pages doesn't let you set cache headers.
 
 ### Merging the Release PR automatically
 

@@ -1,0 +1,62 @@
+name: Deploy Web
+
+# Publishes the web build to GitHub Pages (foodlocker.baskorp.com) whenever
+# release-please publishes a release, so the live site always matches a tagged
+# version. Needs repo Settings -> Pages -> Source set to "GitHub Actions".
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# One deploy at a time; a newer release waits rather than cancelling one that
+# is mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Keeps the rolling `test-builds` prerelease off the live site.
+    if: github.event_name != 'release' || github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - run: flutter pub get
+
+    # --base-href must match start_url/scope in web/manifest.json.
+    - run: flutter build web --release --base-href=/ --no-web-resources-cdn
+
+    - name: Check web build output
+      run: |
+        test -f build/web/CNAME
+        test -f build/web/.nojekyll
+        test -f build/web/version.json
+        test -f build/web/flutter_service_worker.js
+        test -d build/web/canvaskit
+
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - id: deployment
+      uses: actions/deploy-pages@v4
