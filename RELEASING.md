@@ -44,6 +44,7 @@ When the team decides it is time to cut a release:
 
 1. **Cloudflare DNS:** add `CNAME foodlocker → igorbasko01.github.io`, **DNS only (grey cloud)**. Proxying blocks GitHub's certificate challenge. If you proxy it later, set SSL/TLS to **Full (strict)** (Flexible causes redirect loops), and purge the Cloudflare cache after each deploy.
 2. **Repo Settings → Pages:** Source = **GitHub Actions**, custom domain = `foodlocker.baskorp.com`. Turn on **Enforce HTTPS** once the certificate has been provisioned.
+3. **Repo Settings → Environments → `github-pages` → Deployment branches and tags:** add a tag rule `v*`. By default the environment only accepts deploys from `main`, and a release-triggered run is on the release tag, so without this rule the deploy is refused.
 
 `web/CNAME` is also committed, so a deploy cannot clear the custom domain.
 
