@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../tool/web_assets.dart';
+
 void main() {
   group('web/manifest.json', () {
     final manifest =
@@ -39,36 +41,23 @@ void main() {
         contains('<base href="\$FLUTTER_BASE_HREF">'));
   });
 
-  group('vendored Drift web assets', () {
-    // Re-download both from the matching GitHub releases whenever a
-    // dependency bump moves either version.
-    const vendoredDrift = '2.34.1';
-    const vendoredSqlite3 = '3.1.7';
+  group('vendored web assets', () {
+    const update = 'run `dart run tool/update_web_assets.dart`';
+    final manifest =
+        jsonDecode(File(manifestPath).readAsStringSync()) as Map<String, dynamic>;
 
-    String lockedVersion(String package) {
-      final lock = File('pubspec.lock').readAsStringSync();
-      final match = RegExp(
-        '\\n  $package:\\n(?:    .*\\n)*?    version: "([^"]+)"',
-      ).firstMatch(lock);
-      return match!.group(1)!;
+    test('the manifest covers every vendored asset', () {
+      expect(manifest.keys, unorderedEquals(vendoredAssets.keys));
+    });
+
+    for (final MapEntry(key: file, value: asset) in vendoredAssets.entries) {
+      test('web/$file matches the resolved ${asset.package} version', () {
+        final entry = manifest[file] as Map<String, dynamic>;
+        expect(entry['version'], lockedVersion(asset.package),
+            reason: '${asset.package} moved in pubspec.lock; $update');
+        expect(sha256Hex(File('web/$file').readAsBytesSync()), entry['sha256'],
+            reason: 'web/$file differs from what the manifest records; $update');
+      });
     }
-
-    test('match the resolved drift and sqlite3 versions', () {
-      expect(lockedVersion('drift'), vendoredDrift,
-          reason: 'update web/drift_worker.js from drift-${lockedVersion('drift')}');
-      expect(lockedVersion('sqlite3'), vendoredSqlite3,
-          reason:
-              'update web/sqlite3.wasm from sqlite3-${lockedVersion('sqlite3')}');
-    });
-
-    test('web/sqlite3.wasm is a WebAssembly module', () {
-      final bytes = File('web/sqlite3.wasm').readAsBytesSync();
-      expect(bytes.sublist(0, 4), [0x00, 0x61, 0x73, 0x6d]);
-    });
-
-    test('web/drift_worker.js is a compiled Dart worker', () {
-      expect(File('web/drift_worker.js').readAsStringSync(),
-          startsWith('(function dartProgram()'));
-    });
   });
 }
