@@ -38,4 +38,28 @@ void main() {
     expect(File('web/index.html').readAsStringSync(),
         contains('<base href="\$FLUTTER_BASE_HREF">'));
   });
+
+  group('.github/workflows/deploy_web.yml', () {
+    final workflow =
+        File('.github/workflows/deploy_web.yml').readAsStringSync();
+
+    test('deploys on a published release', () {
+      expect(workflow, contains('release:\n    types: [published]'));
+      expect(workflow, contains('github.event.release.prerelease == false'));
+    });
+
+    test('builds at the domain root with CanvasKit self-hosted', () {
+      expect(workflow, contains('flutter build web'));
+      expect(workflow, contains('--base-href=/ '));
+      expect(workflow, contains('--no-web-resources-cdn'));
+    });
+
+    test('publishes build/web through the Pages actions', () {
+      expect(workflow, contains('actions/upload-pages-artifact@'));
+      expect(workflow, contains('path: build/web'));
+      expect(workflow, contains('actions/deploy-pages@'));
+      expect(workflow, contains('pages: write'));
+      expect(workflow, contains('id-token: write'));
+    });
+  });
 }

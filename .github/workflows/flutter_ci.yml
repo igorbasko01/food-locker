@@ -21,4 +21,6 @@ jobs:
       run: |
         test -f build/web/CNAME
         test -f build/web/.nojekyll
+        test -f build/web/version.json
+        test -f build/web/flutter_service_worker.js
         test -d build/web/canvaskit
