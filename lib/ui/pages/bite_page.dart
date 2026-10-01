@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/pacing_zone.dart';
@@ -118,6 +119,8 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
     final theme = Theme.of(context);
     final biteManager = context.watch<BiteManager>();
 
+    if (biteManager.isUnavailable) return const _UnavailableNotice();
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -183,6 +186,51 @@ class _BitePageState extends State<BitePage> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the counter when the bite store could not be opened.
+class _UnavailableNotice extends StatelessWidget {
+  const _UnavailableNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Couldn't open your bite log.",
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  kIsWeb
+                      ? 'Refresh the page to try again.'
+                      : 'Restart the app to try again.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),

@@ -1,0 +1,12 @@
+{
+  "drift_worker.js": {
+    "package": "drift",
+    "version": "2.34.1",
+    "sha256": "7d4c84aff50fd4df31b43f1ab7276e25b224c8a3c4d89a46f3c316511ee5739f"
+  },
+  "sqlite3.wasm": {
+    "package": "sqlite3",
+    "version": "3.1.7",
+    "sha256": "3c611e38db0a2609c34a141ccf70c89b407b262c9bf06877c4ba213cf9f3624b"
+  }
+}
