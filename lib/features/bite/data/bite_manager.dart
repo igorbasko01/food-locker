@@ -42,6 +42,11 @@ class BiteManager extends ChangeNotifier {
   static const Duration _fallbackB1 = Duration(seconds: 15);
   static const Duration _fallbackB2 = Duration(seconds: 30);
 
+  bool _isUnavailable = false;
+
+  /// Whether the bite store could not be opened, leaving nothing to count.
+  bool get isUnavailable => _isUnavailable;
+
   int _todayCount = 0;
 
   /// Bites logged so far during the current local day — the headline metric.
@@ -100,15 +105,24 @@ class BiteManager extends ChangeNotifier {
   /// number and state even after an app restart. If that last bite is still
   /// within the countdown window the ticker resumes; otherwise it opens on the
   /// static clear state.
+  ///
+  /// A store that fails to open marks the manager [isUnavailable] rather than
+  /// throwing, so the rest of the app still starts.
   Future<void> initialize() async {
-    final now = clock.now();
-    _pacingConfig = await _repository.pacingConfigAt(now);
-    await _refreshTodayCount();
+    try {
+      final now = clock.now();
+      _pacingConfig = await _repository.pacingConfigAt(now);
+      await _refreshTodayCount();
 
-    final last = await _repository.lastBite();
-    if (last != null) {
-      _lastBiteAt = DateTime.fromMillisecondsSinceEpoch(last.atMs);
-      _startCountdown();
+      final last = await _repository.lastBite();
+      if (last != null) {
+        _lastBiteAt = DateTime.fromMillisecondsSinceEpoch(last.atMs);
+        _startCountdown();
+      }
+    } catch (error) {
+      debugPrint('Bite store failed to open: $error');
+      _isUnavailable = true;
+      notifyListeners();
     }
   }
 
@@ -121,6 +135,7 @@ class BiteManager extends ChangeNotifier {
   /// The thresholds are re-read on every call: a backup restore can replace the
   /// config history underneath the manager.
   Future<void> refresh() async {
+    if (_isUnavailable) return;
     final now = clock.now();
     _pacingConfig = await _repository.pacingConfigAt(now) ?? _pacingConfig;
     await _refreshTodayCount();
