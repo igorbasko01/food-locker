@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.21.0](https://github.com/igorbasko01/food-locker/compare/v1.20.0...v1.21.0) (2026-10-01)
+
+
+### Features
+
+* add a Flutter web build target and PWA shell ([#147](https://github.com/igorbasko01/food-locker/issues/147)) ([dd83326](https://github.com/igorbasko01/food-locker/commit/dd83326f7d8c5390b499d3587b4f97eb994d1995))
+
+
+### Bug Fixes
+
+* open the Bite store on web with sqlite3 WASM and the drift worker ([#149](https://github.com/igorbasko01/food-locker/issues/149)) ([9edaf15](https://github.com/igorbasko01/food-locker/commit/9edaf1518df9032549d8f2a68ca11817c653aede))
+
 ## [1.20.0](https://github.com/igorbasko01/food-locker/compare/v1.19.0...v1.20.0) (2026-09-24)
 
 
