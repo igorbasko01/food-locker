@@ -72,6 +72,7 @@ jobs:
         APP_LABEL: FoodLocker Test
       run: |
         flutter build apk --release \
+          --dart-define=TEST_BUILD=true \
           --build-name="$BUILD_NAME" \
           --build-number=${{ github.run_number }}
         mv build/app/outputs/flutter-apk/app-release.apk "$APK_NAME"
