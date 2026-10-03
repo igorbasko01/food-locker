@@ -11,6 +11,7 @@ import 'package:food_locker/features/settings/data/in_memory_settings_repository
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
+import 'package:food_locker/features/settings/data/storage_persistence.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
@@ -440,6 +441,93 @@ void main() {
       expect(find.text('No data to export'), findsOneWidget);
     });
   });
+
+  group('storage', () {
+    Future<_FakeStoragePersistence> pumpWithGrant(
+      WidgetTester tester, {
+      required bool granted,
+      SerializationService? service,
+    }) async {
+      final persistence = _FakeStoragePersistence(granted: granted);
+      final settingsRepo = InMemorySettingsRepository();
+      final settingsManager = SettingsManager(
+        settingsRepo,
+        storagePersistence: persistence,
+      );
+      await settingsManager.initializeStoragePersistence();
+      await pumpPage(
+        tester,
+        service ?? SerializationService(),
+        settingsRepo: settingsRepo,
+        settingsManager: settingsManager,
+      );
+      return persistence;
+    }
+
+    testWidgets('a native build shows no storage section', (tester) async {
+      await pumpPage(tester, SerializationService());
+
+      expect(find.text('Storage'), findsNothing);
+      expect(find.text('Your data may be cleared'), findsNothing);
+    });
+
+    testWidgets('a granted browser says storage is persistent', (tester) async {
+      await pumpWithGrant(tester, granted: true);
+
+      expect(find.text('Storage is persistent'), findsOneWidget);
+      expect(find.text('Your data may be cleared'), findsNothing);
+    });
+
+    testWidgets('a denied browser warns and offers an export', (tester) async {
+      final service = _FakeSerializationService();
+      await pumpWithGrant(tester, granted: false, service: service);
+
+      expect(find.text('Your data may be cleared'), findsOneWidget);
+
+      await tester.tap(find.text('Export backup'));
+      await tester.pump();
+      expect(find.text('Exporting data...'), findsOneWidget);
+
+      service.finish();
+      await pumpToast(tester);
+      expect(find.text('Data exported successfully'), findsOneWidget);
+      expect(find.text('Your data may be cleared'), findsOneWidget);
+    });
+
+    testWidgets('asking again clears the warning once the browser grants it',
+        (tester) async {
+      final persistence = await pumpWithGrant(tester, granted: false);
+
+      persistence.granted = true;
+      await tester.tap(find.text('Ask again'));
+      await tester.pumpAndSettle();
+
+      expect(persistence.requests, 2);
+      expect(find.text('Your data may be cleared'), findsNothing);
+      expect(find.text('Storage is persistent'), findsOneWidget);
+    });
+  });
+}
+
+/// Answers every request with [granted] and counts how often it was asked.
+class _FakeStoragePersistence implements StoragePersistence {
+  _FakeStoragePersistence({required this.granted});
+
+  bool granted;
+  int requests = 0;
+
+  StoragePersistenceState get _state => granted
+      ? StoragePersistenceState.persisted
+      : StoragePersistenceState.notPersisted;
+
+  @override
+  Future<StoragePersistenceState> current() async => _state;
+
+  @override
+  Future<StoragePersistenceState> request() async {
+    requests++;
+    return _state;
+  }
 }
 
 /// Replaces the file picker, the restore, and the share sheet, holding the work
