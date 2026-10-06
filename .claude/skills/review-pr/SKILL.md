@@ -90,9 +90,10 @@ prefix that matches what the change actually does, since the squashed subject is
 what computes the next version — a `feat:` on a bug fix inflates the minor, a
 `chore:` on a user-visible change hides it from the changelog.
 
-**Tests.** Tests mirror `lib/` under `test/`, and prefer
-`InMemoryWeightRepository` and `BiteDatabase.forTesting(NativeDatabase.memory())`
-over real stores. Ask whether the change's actual behaviour is covered, not
+**Tests.** Tests mirror `lib/` under `test/`, and build the production
+repositories over in-memory storage: the `test/helpers/test_repositories.dart`
+helpers for weight and settings, `BiteDatabase.forTesting(NativeDatabase.memory())`
+for bites. Ask whether the change's actual behaviour is covered, not
 whether a test file was touched.
 
 ## 3. The ordinary pass

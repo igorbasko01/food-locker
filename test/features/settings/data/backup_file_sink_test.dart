@@ -10,14 +10,14 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/backup_file_sink.dart';
 import 'package:food_locker/features/settings/data/backup_file_sink_io.dart'
     show IoBackupFileSink;
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:provider/provider.dart';
+import '../../../helpers/test_repositories.dart';
 
 /// Stands in for the platform's file handling, so an export can be driven
 /// without a share sheet and a picked path read without a file on disk.
@@ -142,8 +142,8 @@ void main() {
         .then((_) => body(captured));
   }
 
-  Future<InMemoryWeightRepository> weightRepoWith(double value) async {
-    final repo = InMemoryWeightRepository();
+  Future<PersistentWeightRepository> weightRepoWith(double value) async {
+    final repo = await openTestWeightRepository();
     await repo.saveWeight(Weight(date: DateTime(2023, 10, 27), value: value));
     return repo;
   }
@@ -159,7 +159,7 @@ void main() {
         tester,
         weightRepo: await weightRepoWith(75.5),
         biteRepo: _FakeBiteRepository(),
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
         body: service.exportData,
       );
 
@@ -180,7 +180,7 @@ void main() {
         tester,
         weightRepo: await weightRepoWith(75.5),
         biteRepo: _FakeBiteRepository(),
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
         body: (context) => service.exportData(
           context,
           onShareReady: () => savedWhenReady = sink.savedNames.length,
@@ -196,9 +196,9 @@ void main() {
 
       final exported = await withRepositories(
         tester,
-        weightRepo: InMemoryWeightRepository(),
+        weightRepo: await openTestWeightRepository(),
         biteRepo: _FakeBiteRepository(),
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
         body: service.exportData,
       );
 
@@ -276,9 +276,9 @@ void main() {
       final picked = _browserPick('food_locker_20231027120000.zip', zip);
       final bytes = await service.pickedBytes(picked);
 
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       final biteRepo = _FakeBiteRepository();
-      final settingsRepo = InMemorySettingsRepository();
+      final settingsRepo = await createTestSettingsRepository();
       final restored = await service.confirmAndRestore(
         weightRepo,
         biteRepo,
@@ -305,11 +305,11 @@ void main() {
       );
       final bytes = await service.pickedBytes(_browserPick('backup.zip', zip));
 
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(
         Weight(date: DateTime(2024, 1, 1), value: 80),
       );
-      final settingsRepo = InMemorySettingsRepository(heightCm: 170);
+      final settingsRepo = await createTestSettingsRepository(heightCm: 170);
 
       final restored = await service.confirmAndRestore(
         weightRepo,

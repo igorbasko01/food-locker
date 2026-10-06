@@ -59,8 +59,9 @@ Never commit to `main`.
   `schemaVersion` bump with a matching migration, and a new `@HiveType` needs a
   fresh `typeId` (never a reused one).
 - Cover the acceptance criteria with tests, mirroring `lib/` under `test/`.
-  Prefer `InMemoryWeightRepository` and `BiteDatabase.forTesting` over real
-  stores.
+  Build weight and settings repositories with the helpers in
+  `test/helpers/test_repositories.dart`, and bite stores with
+  `BiteDatabase.forTesting`, rather than on-disk stores.
 - Once the change is written, run the **concise-comments** skill
   (`Skill(concise-comments)`) over the diff and apply its edits, so every
   comment you added or touched matches the repo's house style before you

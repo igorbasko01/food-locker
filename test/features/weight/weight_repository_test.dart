@@ -1,13 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
+import '../../helpers/test_repositories.dart';
 
 void main() {
-  group('WeightRepositoryHelper / InMemoryWeightRepository', () {
-    late InMemoryWeightRepository repository;
+  group('WeightRepositoryHelper / PersistentWeightRepository', () {
+    late PersistentWeightRepository repository;
 
-    setUp(() {
-      repository = InMemoryWeightRepository();
+    setUp(() async {
+      repository = await openTestWeightRepository();
     });
 
     test('getKey returns formatted date string', () {

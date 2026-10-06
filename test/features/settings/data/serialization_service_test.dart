@@ -6,18 +6,20 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
 import 'package:food_locker/features/settings/data/profile_backup_codec.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
+import '../../../helpers/test_repositories.dart';
 
 /// A repository that records the order of the mutations it receives, so tests
 /// can assert on the clear-then-restore sequence rather than only the end state.
-class _RecordingWeightRepository extends InMemoryWeightRepository {
+class _RecordingWeightRepository extends PersistentWeightRepository {
   final List<String> operations = [];
+
+  _RecordingWeightRepository(super.box);
 
   @override
   Future<void> clear() async {
@@ -179,7 +181,7 @@ void main() {
     final service = SerializationService();
 
     test('replaces existing weights with the backup contents', () async {
-      final repo = InMemoryWeightRepository();
+      final repo = await openTestWeightRepository();
       await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
 
       final backup = codec.encode([
@@ -187,7 +189,7 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: await createTestSettingsRepository());
 
       final restored = repo.getAllWeights();
       expect(restored.map((w) => w.value), containsAll([75.5, 75.0]));
@@ -197,7 +199,7 @@ void main() {
     });
 
     test('clears before restoring any weight', () async {
-      final repo = _RecordingWeightRepository();
+      final repo = _RecordingWeightRepository(await openTestWeightBox());
       await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
       repo.operations.clear(); // ignore the setup save
 
@@ -206,21 +208,21 @@ void main() {
         Weight(date: DateTime(2023, 10, 28), value: 75.0),
       ]);
 
-      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
+      await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: await createTestSettingsRepository());
 
       // clear must come first, then one save per restored weight.
       expect(repo.operations, ['clear', 'save', 'save']);
     });
 
     test('an empty backup clears all existing weights', () async {
-      final repo = InMemoryWeightRepository();
+      final repo = await openTestWeightRepository();
       await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
 
       await service.restoreFromBackup(
         repo,
         _RecordingBiteRepository(),
         codec.encode([]),
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(repo.getAllWeights(), isEmpty);
@@ -235,10 +237,10 @@ void main() {
       );
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       // clear must come first, then one log per restored bite.
@@ -256,10 +258,10 @@ void main() {
       );
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(biteRepo.loggedMs, [1000]);
@@ -274,10 +276,10 @@ void main() {
       );
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       // The bite log is a real (empty) snapshot: cleared, nothing logged.
@@ -292,10 +294,10 @@ void main() {
       ]);
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(biteRepo.operations, isEmpty);
@@ -315,10 +317,10 @@ void main() {
       );
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       // clear must come first, then one set per restored version.
@@ -343,10 +345,10 @@ void main() {
       );
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(biteRepo.savedConfigs, hasLength(1));
@@ -367,10 +369,10 @@ void main() {
       final backup = ZipEncoder().encode(archive);
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         biteRepo,
         backup,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(biteRepo.configOperations, isEmpty);
@@ -390,7 +392,7 @@ void main() {
 
     test('leaves every store untouched when the confirmation is declined',
         () async {
-      final weightRepo = _RecordingWeightRepository();
+      final weightRepo = _RecordingWeightRepository(await openTestWeightBox());
       await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
       weightRepo.operations.clear(); // ignore the setup save
       final biteRepo = _RecordingBiteRepository();
@@ -403,7 +405,7 @@ void main() {
         fileName: 'backup.zip',
         onConfirm: (_) async => false,
         onRestoreStart: () => restoreStarted = true,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(restored, isFalse);
@@ -415,7 +417,7 @@ void main() {
     });
 
     test('restores when the confirmation is accepted', () async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
       final biteRepo = _RecordingBiteRepository();
       var restoreStarted = false;
@@ -427,7 +429,7 @@ void main() {
         fileName: 'backup.zip',
         onConfirm: (_) async => true,
         onRestoreStart: () => restoreStarted = true,
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(restored, isTrue);
@@ -439,7 +441,7 @@ void main() {
 
     test('asks before touching a store, and names the file it would replace',
         () async {
-      final weightRepo = _RecordingWeightRepository();
+      final weightRepo = _RecordingWeightRepository(await openTestWeightBox());
       await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
       weightRepo.operations.clear();
       final asked = <String>[];
@@ -455,21 +457,21 @@ void main() {
           expect(weightRepo.operations, isEmpty);
           return true;
         },
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(asked, ['food_locker_20260101120000.zip']);
     });
 
     test('restores without asking when no confirmation is supplied', () async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
 
       final restored = await service.confirmAndRestore(
         weightRepo,
         _RecordingBiteRepository(),
         fullBackup(),
         fileName: 'backup.zip',
-        settingsRepo: InMemorySettingsRepository(),
+        settingsRepo: await createTestSettingsRepository(),
       );
 
       expect(restored, isTrue);
@@ -481,7 +483,7 @@ void main() {
     final service = SerializationService();
 
     test('empties every dataset and reseeds the default thresholds', () async {
-      final weightRepo = _RecordingWeightRepository();
+      final weightRepo = _RecordingWeightRepository(await openTestWeightBox());
       await weightRepo.saveWeight(Weight(date: DateTime(2026, 1, 1), value: 80));
       final biteRepo = _RecordingBiteRepository();
       await biteRepo.logBite(DateTime(2026, 1, 1, 12));
@@ -492,7 +494,7 @@ void main() {
       biteRepo.operations.clear();
       biteRepo.configOperations.clear();
 
-      await service.clearAllData(weightRepo, biteRepo, settingsRepo: InMemorySettingsRepository());
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: await createTestSettingsRepository());
 
       expect(weightRepo.operations, ['clear']);
       expect(weightRepo.getAllWeights(), isEmpty);
@@ -509,14 +511,14 @@ void main() {
       final db = BiteDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
       final biteRepo = DriftBiteRepository(db);
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(Weight(date: DateTime(2026, 1, 1), value: 80));
       await biteRepo.logBite(DateTime(2026, 1, 1, 12));
       await biteRepo.setPacingConfig(
         const PacingConfig(id: 0, effectiveMs: 1, b1S: 40, b2S: 90),
       );
 
-      await service.clearAllData(weightRepo, biteRepo, settingsRepo: InMemorySettingsRepository());
+      await service.clearAllData(weightRepo, biteRepo, settingsRepo: await createTestSettingsRepository());
 
       expect(weightRepo.getAllWeights(), isEmpty);
       expect(
@@ -551,10 +553,10 @@ void main() {
     });
 
     test('a restore replaces the stored height', () async {
-      final settingsRepo = InMemorySettingsRepository(heightCm: 165);
+      final settingsRepo = await createTestSettingsRepository(heightCm: 165);
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         _RecordingBiteRepository(),
         backupWithHeight(178.5),
         settingsRepo: settingsRepo,
@@ -565,10 +567,10 @@ void main() {
 
     test('a backup taken before a height was entered restores as unset',
         () async {
-      final settingsRepo = InMemorySettingsRepository(heightCm: 165);
+      final settingsRepo = await createTestSettingsRepository(heightCm: 165);
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         _RecordingBiteRepository(),
         backupWithHeight(null),
         settingsRepo: settingsRepo,
@@ -579,13 +581,13 @@ void main() {
 
     test('an archive without a profile entry leaves the height alone',
         () async {
-      final settingsRepo = InMemorySettingsRepository(heightCm: 165);
+      final settingsRepo = await createTestSettingsRepository(heightCm: 165);
       // An older backup: weights only, no profile entry to speak of.
       final backup = const WeightBackupCodec()
           .encode([Weight(date: DateTime(2026, 1, 1), value: 75.5)]);
 
       await service.restoreFromBackup(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         _RecordingBiteRepository(),
         backup,
         settingsRepo: settingsRepo,
@@ -595,10 +597,10 @@ void main() {
     });
 
     test('a clear takes the height with it', () async {
-      final settingsRepo = InMemorySettingsRepository(heightCm: 178.5);
+      final settingsRepo = await createTestSettingsRepository(heightCm: 178.5);
 
       await service.clearAllData(
-        InMemoryWeightRepository(),
+        await openTestWeightRepository(),
         _RecordingBiteRepository(),
         settingsRepo: settingsRepo,
       );

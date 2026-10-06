@@ -6,28 +6,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/pages/bite_analytics_page.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
+import '../../helpers/test_repositories.dart';
 
 /// The stat tiles read against a seeded fixture, over a real in-memory Drift
 /// store so the day-grouping query backs the numbers the tiles show.
 void main() {
   late BiteDatabase db;
   late BiteRepository repo;
-  late InMemoryWeightRepository weightRepo;
+  late PersistentWeightRepository weightRepo;
 
-  setUp(() {
+  setUp(() async {
     db = BiteDatabase.forTesting(NativeDatabase.memory());
     repo = DriftBiteRepository(db);
-    weightRepo = InMemoryWeightRepository();
+    weightRepo = await openTestWeightRepository();
   });
 
   tearDown(() async {
@@ -79,12 +79,13 @@ void main() {
     // (`shortDateWithWeekday` formats against the platform locale).
     tester.platformDispatcher.localeTestValue = const Locale('en', 'US');
     addTearDown(tester.platformDispatcher.clearLocaleTestValue);
+    final settingsRepository = await createTestSettingsRepository();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           Provider<BiteRepository>.value(value: repo),
           ChangeNotifierProvider<SettingsManager>(
-            create: (_) => SettingsManager(InMemorySettingsRepository()),
+            create: (_) => SettingsManager(settingsRepository),
           ),
           Provider<WeightRepository>.value(value: weightRepo),
         ],

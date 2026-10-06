@@ -1,16 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
+import '../../helpers/test_repositories.dart';
 
 void main() {
   group('WeightManager Statistics', () {
     late WeightManager manager;
-    late InMemoryWeightRepository repository;
+    late PersistentWeightRepository repository;
 
-    setUp(() {
-      repository = InMemoryWeightRepository();
+    setUp(() async {
+      repository = await openTestWeightRepository();
       manager = WeightManager(repository);
     });
 
@@ -185,7 +186,7 @@ void main() {
 
   group('WeightManager refresh', () {
     test('picks up entries written straight to the repository', () async {
-      final repository = InMemoryWeightRepository();
+      final repository = await openTestWeightRepository();
       final manager = WeightManager(repository);
       await manager.initialize();
 
@@ -200,7 +201,7 @@ void main() {
     });
 
     test('drops entries the repository no longer holds', () async {
-      final repository = InMemoryWeightRepository();
+      final repository = await openTestWeightRepository();
       final manager = WeightManager(repository);
       await manager.addWeight(DateTime.now(), 80.0);
       expect(manager.history, hasLength(1));
@@ -212,7 +213,7 @@ void main() {
     });
 
     test('notifies listeners so the tab rebuilds', () async {
-      final repository = InMemoryWeightRepository();
+      final repository = await openTestWeightRepository();
       final manager = WeightManager(repository);
       var notifications = 0;
       manager.addListener(() => notifications++);

@@ -1,18 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
+import '../../helpers/test_repositories.dart';
 
 void main() {
   // A Saturday: the week it closes opens on Sunday the 9th.
   final asOf = DateTime(2026, 8, 15);
 
-  late InMemoryWeightRepository repository;
+  late PersistentWeightRepository repository;
   late WeightAnalytics analytics;
 
-  setUp(() {
-    repository = InMemoryWeightRepository();
+  setUp(() async {
+    repository = await openTestWeightRepository();
     analytics = WeightAnalytics(repository);
   });
 

@@ -1,19 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/units.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
+import '../../../helpers/test_repositories.dart';
 
 void main() {
   test('an unanswered height reads as null, with no default standing in for it',
-      () {
-    final manager = SettingsManager(InMemorySettingsRepository());
+      () async {
+    final manager = SettingsManager(await createTestSettingsRepository());
 
     expect(manager.heightCm, isNull);
     expect(manager.measurementSystem, MeasurementSystem.metric);
   });
 
   test('a stored height is written through and announced', () async {
-    final repository = InMemorySettingsRepository();
+    final repository = await createTestSettingsRepository();
     final manager = SettingsManager(repository);
     var notifications = 0;
     manager.addListener(() => notifications++);
@@ -26,7 +26,7 @@ void main() {
   });
 
   test('null clears the height back to unanswered', () async {
-    final repository = InMemorySettingsRepository(heightCm: 178.5);
+    final repository = await createTestSettingsRepository(heightCm: 178.5);
     final manager = SettingsManager(repository);
 
     await manager.setHeightCm(null);
@@ -36,7 +36,7 @@ void main() {
   });
 
   test('the measurement system is written through and announced', () async {
-    final repository = InMemorySettingsRepository();
+    final repository = await createTestSettingsRepository();
     final manager = SettingsManager(repository);
     var notifications = 0;
     manager.addListener(() => notifications++);
@@ -49,7 +49,7 @@ void main() {
   });
 
   test('refresh announces a height written behind the manager', () async {
-    final repository = InMemorySettingsRepository();
+    final repository = await createTestSettingsRepository();
     final manager = SettingsManager(repository);
     var notifications = 0;
     manager.addListener(() => notifications++);

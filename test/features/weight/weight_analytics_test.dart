@@ -1,14 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_analytics.dart';
+import '../../helpers/test_repositories.dart';
 
 void main() {
-  late InMemoryWeightRepository repository;
+  late PersistentWeightRepository repository;
   late WeightAnalytics analytics;
 
-  setUp(() {
-    repository = InMemoryWeightRepository();
+  setUp(() async {
+    repository = await openTestWeightRepository();
     analytics = WeightAnalytics(repository);
   });
 
