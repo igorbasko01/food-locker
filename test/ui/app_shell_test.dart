@@ -4,23 +4,22 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/app_shell.dart';
 import 'package:provider/provider.dart';
+import '../helpers/test_repositories.dart';
 
 void main() {
   Future<void> pumpShell(WidgetTester tester, BiteRepository biteRepository) async {
-    final weightRepository = InMemoryWeightRepository();
+    final weightRepository = await openTestWeightRepository();
     final weightManager = WeightManager(weightRepository);
     await weightManager.initialize();
     final biteManager = BiteManager(biteRepository);
-    final settingsRepository = InMemorySettingsRepository();
+    final settingsRepository = await createTestSettingsRepository();
 
     await tester.pumpWidget(
       MultiProvider(

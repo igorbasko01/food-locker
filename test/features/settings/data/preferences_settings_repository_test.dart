@@ -4,8 +4,7 @@ import 'package:food_locker/features/settings/data/preferences_settings_reposito
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The real persistence path for the profile preferences, on mocked
-/// `shared_preferences` — the store the app ships with, unlike the in-memory
-/// one the other tests lean on.
+/// `shared_preferences`.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

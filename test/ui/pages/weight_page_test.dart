@@ -3,9 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/core/units.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -14,6 +12,7 @@ import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:food_locker/ui/widgets/history_range_selector.dart';
 import 'package:food_locker/ui/widgets/stat_tile.dart';
 import 'package:provider/provider.dart';
+import '../../helpers/test_repositories.dart';
 
 void main() {
   Future<void> pumpPage(
@@ -29,22 +28,22 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    final settings =
+        settingsManager ??
+        SettingsManager(
+          await createTestSettingsRepository(
+            heightCm: 175.0,
+            measurementSystem: system,
+          ),
+        );
+
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<WeightManager>.value(value: manager),
-            ChangeNotifierProvider<SettingsManager>.value(
-              value:
-                  settingsManager ??
-                  SettingsManager(
-                    InMemorySettingsRepository(
-                      heightCm: 175.0,
-                      measurementSystem: system,
-                    ),
-                  ),
-            ),
+            ChangeNotifierProvider<SettingsManager>.value(value: settings),
           ],
           child: const WeightPage(),
         ),
@@ -57,7 +56,7 @@ void main() {
   /// whole 30-day regression, whichever weekday the suite runs on. A negative
   /// [dailyLoss] ramps the other way.
   Future<WeightManager> rampedManager(double dailyLoss) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     for (var daysAgo = 0; daysAgo < 28; daysAgo++) {
@@ -89,7 +88,7 @@ void main() {
   }
 
   testWidgets('renders the current weight above the chart', (tester) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     await manager.addWeight(DateTime(today.year, today.month, today.day - 3), 80.0);
@@ -152,7 +151,7 @@ void main() {
   testWidgets('shows the distance from an older low as a signed gap', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lowDay = DateTime(today.year, today.month, today.day - 10);
@@ -169,7 +168,7 @@ void main() {
   testWidgets('reads a trend off two weigh-ins, with no week to compare', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     await manager.addWeight(DateTime(today.year, today.month, today.day - 1), 73.0);
@@ -208,7 +207,7 @@ void main() {
   testWidgets('history list only lists the last 7 days of entries', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final recentDay = DateTime(today.year, today.month, today.day - 6);
@@ -228,7 +227,7 @@ void main() {
   });
 
   testWidgets('picking a wider range reveals older entries', (tester) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lastMonth = DateTime(today.year, today.month, today.day - 20);
@@ -256,7 +255,7 @@ void main() {
   testWidgets('shows the empty-state placeholder when a stat is missing', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
 
     await pumpPage(tester, manager);
 
@@ -267,7 +266,7 @@ void main() {
   });
 
   testWidgets('swiping a history row leaves the entry alone', (tester) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     await manager.addWeight(today, 72.5);
@@ -289,7 +288,7 @@ void main() {
   testWidgets('the row dialog is still a way to delete an entry', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     await manager.addWeight(today, 72.5);
@@ -309,7 +308,7 @@ void main() {
     testWidgets('reads the latest weigh-in against the stored height', (
       tester,
     ) async {
-      final manager = WeightManager(InMemoryWeightRepository());
+      final manager = WeightManager(await openTestWeightRepository());
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       await manager.addWeight(today, 81.0);
@@ -318,7 +317,7 @@ void main() {
         tester,
         manager,
         settingsManager:
-            SettingsManager(InMemorySettingsRepository(heightCm: 180.0)),
+            SettingsManager(await createTestSettingsRepository(heightCm: 180.0)),
       );
 
       // 81 kg over 1.8 m squared is 25.0 — overweight, the band above healthy.
@@ -327,10 +326,10 @@ void main() {
     });
 
     testWidgets('prompts for a height rather than guessing one', (tester) async {
-      final manager = WeightManager(InMemoryWeightRepository());
+      final manager = WeightManager(await openTestWeightRepository());
       final now = DateTime.now();
       await manager.addWeight(DateTime(now.year, now.month, now.day), 81.0);
-      final settings = SettingsManager(InMemorySettingsRepository());
+      final settings = SettingsManager(await createTestSettingsRepository());
 
       await pumpPage(tester, manager, settingsManager: settings);
 
@@ -348,7 +347,7 @@ void main() {
     });
 
     testWidgets('waits for a weigh-in before computing anything', (tester) async {
-      final manager = WeightManager(InMemoryWeightRepository());
+      final manager = WeightManager(await openTestWeightRepository());
 
       await pumpPage(tester, manager);
 

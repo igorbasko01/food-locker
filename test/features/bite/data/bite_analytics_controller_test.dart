@@ -4,8 +4,9 @@ import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
+import '../../../helpers/test_repositories.dart';
 
 /// [BiteAnalyticsController] over an in-memory Drift store, covering the
 /// pickable breakdown day: `load` seeds today, `selectDay` re-queries another
@@ -14,13 +15,13 @@ import 'package:food_locker/features/weight/data/weight.dart';
 void main() {
   late BiteDatabase db;
   late BiteRepository repo;
-  late InMemoryWeightRepository weightRepo;
+  late PersistentWeightRepository weightRepo;
   late BiteAnalyticsController controller;
 
-  setUp(() {
+  setUp(() async {
     db = BiteDatabase.forTesting(NativeDatabase.memory());
     repo = DriftBiteRepository(db);
-    weightRepo = InMemoryWeightRepository();
+    weightRepo = await openTestWeightRepository();
     controller = BiteAnalyticsController(repo, weightRepo);
   });
 
