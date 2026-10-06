@@ -39,7 +39,7 @@ Future<PreferencesSettingsRepository> createTestSettingsRepository({
 }) async {
   SharedPreferences.setMockInitialValues({
     PreferencesSettingsRepository.measurementSystemKey: measurementSystem.name,
-    if (heightCm != null) PreferencesSettingsRepository.heightKey: heightCm,
+    PreferencesSettingsRepository.heightKey: ?heightCm,
   });
   return PreferencesSettingsRepository(await SharedPreferences.getInstance());
 }
