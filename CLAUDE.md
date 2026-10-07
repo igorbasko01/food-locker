@@ -15,6 +15,7 @@ FoodLocker is a Flutter (mobile, primarily Android) app with two shipped feature
 - `flutter test --name "substring"` — run tests whose description matches
 - `flutter run` — run on a connected device/emulator (see `.agents/skills/flutter-emulator-run/SKILL.md` for the emulator workflow)
 - `dart run build_runner build --delete-conflicting-outputs` — regenerate generated code: Hive adapters after changing a `@HiveType`/`@HiveField` model, and the Drift database (`bite_database.g.dart`) after changing a bite table
+- `dart run tool/update_web_assets.dart` — re-download `web/drift_worker.js` and `web/sqlite3.wasm` at the versions `pubspec.lock` resolves (see Bite store on web)
 - `./setup.sh` — one-time local setup; points `core.hooksPath` at `.githooks`
 
 `flutter analyze` and `flutter test` both gate pushes locally (`.githooks/pre-push`) and PRs to `main` (`.github/workflows/flutter_ci.yml`). Run them before pushing.
@@ -45,6 +46,10 @@ The bite feature mirrors this shape (interface + manager) on Drift instead of Hi
 - **`BiteDatabase`** (`bite_database.dart`) — two tables: `bites` (append-only `at_ms` epoch-millis log; only the raw timestamp is stored) and `pacing_config` (versioned `b1_s`/`b2_s` thresholds, a slowly-changing dimension seeded with a default on first run).
 - **`BiteRepository`** — persistence interface; `DriftBiteRepository` is the production impl, injected as a `Provider<BiteRepository>`.
 - **`BiteManager extends ChangeNotifier`** — UI state for the Bite tab: owns today's count and drives the pacing ticker/zone in memory. Counts, inter-bite deltas, and pacing zones (`PacingZone`) are all **derived at read time** from the stored timestamps, never persisted.
+
+### Bite store on web
+
+On web, `BiteDatabase()` runs on `web/sqlite3.wasm` and `web/drift_worker.js`, vendored from the `sqlite3-<version>` and `drift-<version>` GitHub releases matching `pubspec.lock`. `tool/vendored_web_assets.json` records the version and sha256 each was fetched at; after any `flutter pub upgrade` that moves `drift` or `sqlite3`, run `dart run tool/update_web_assets.dart` and commit the result — `test/web/web_shell_test.dart` fails until you do. Drift picks a storage tier per browser and logs it with any `missingFeatures` on open. With no COOP/COEP headers (GitHub Pages) the reachable tiers are `opfsShared` (Firefox), `sharedIndexedDb` (browsers with `SharedWorker`: one worker hosts the database for every tab, so multi-tab is safe), and `unsafeIndexedDb` (no `SharedWorker`: each tab holds its own copy, and concurrent writes from two tabs can overwrite each other). `opfsLocks` is the only tier that needs cross-origin isolation, and none of the headerless tiers loses data in single-tab use, so isolation is not needed unless the logged tier on a target browser turns out to be `unsafeIndexedDb` and multi-tab use matters.
 
 ### Preferences
 

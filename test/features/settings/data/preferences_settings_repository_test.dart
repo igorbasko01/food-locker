@@ -56,4 +56,15 @@ void main() {
 
     expect(repository.measurementSystem, MeasurementSystem.metric);
   });
+
+  test('storage persistence reads as never asked until an answer is stored',
+      () async {
+    final repository = await repositoryWith({});
+
+    expect(repository.storagePersistenceGranted, isNull);
+
+    await repository.setStoragePersistenceGranted(false);
+
+    expect(repository.storagePersistenceGranted, isFalse);
+  });
 }

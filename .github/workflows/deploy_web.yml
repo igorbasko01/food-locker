@@ -42,6 +42,8 @@ jobs:
         test -f build/web/version.json
         test -f build/web/flutter_service_worker.js
         test -d build/web/canvaskit
+        test -f build/web/sqlite3.wasm
+        test -f build/web/drift_worker.js
 
     - uses: actions/upload-pages-artifact@v3
       with:

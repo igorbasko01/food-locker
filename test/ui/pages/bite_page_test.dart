@@ -78,6 +78,20 @@ void main() {
 
     manager.dispose();
   });
+
+  testWidgets('asks for a restart instead of the counter when the store fails',
+      (tester) async {
+    final manager = await pumpPage(tester, _UnopenableBiteRepository());
+
+    expect(manager.isUnavailable, isTrue);
+    expect(find.text("Couldn't open your bite log."), findsOneWidget);
+    expect(find.text('Restart the app to try again.'), findsOneWidget);
+    expect(find.text('Tap for each bite'), findsNothing);
+
+    await manager.refresh();
+
+    manager.dispose();
+  });
 }
 
 /// A minimal in-memory [BiteRepository] returning bites chronologically.
@@ -133,4 +147,18 @@ class _FakeBiteRepository implements BiteRepository {
 
   @override
   Future<void> clearPacingConfigs() async {}
+}
+
+/// A store that fails on every read, as when the database cannot be opened.
+class _UnopenableBiteRepository extends _FakeBiteRepository {
+  @override
+  Future<PacingConfig?> pacingConfigAt(DateTime instant) =>
+      Future.error(StateError('database unavailable'));
+
+  @override
+  Future<List<Bite>> bitesInRange(DateTime from, DateTime to) =>
+      Future.error(StateError('database unavailable'));
+
+  @override
+  Future<Bite?> lastBite() => Future.error(StateError('database unavailable'));
 }

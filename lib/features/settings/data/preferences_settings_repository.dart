@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class PreferencesSettingsRepository implements SettingsRepository {
   static const String heightKey = 'height_cm';
   static const String measurementSystemKey = 'measurement_system';
+  static const String storagePersistenceGrantedKey =
+      'storage_persistence_granted';
 
   final SharedPreferences _preferences;
 
@@ -38,5 +40,14 @@ class PreferencesSettingsRepository implements SettingsRepository {
   @override
   Future<void> setMeasurementSystem(MeasurementSystem system) async {
     await _preferences.setString(measurementSystemKey, system.name);
+  }
+
+  @override
+  bool? get storagePersistenceGranted =>
+      _preferences.getBool(storagePersistenceGrantedKey);
+
+  @override
+  Future<void> setStoragePersistenceGranted(bool granted) async {
+    await _preferences.setBool(storagePersistenceGrantedKey, granted);
   }
 }
