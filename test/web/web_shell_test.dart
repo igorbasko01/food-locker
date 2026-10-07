@@ -56,12 +56,14 @@ void main() {
       expect(workflow, contains('--no-web-resources-cdn'));
     });
 
-    test('publishes build/web through the Pages actions', () {
-      expect(workflow, contains('actions/upload-pages-artifact@'));
-      expect(workflow, contains('path: build/web'));
-      expect(workflow, contains('actions/deploy-pages@'));
-      expect(workflow, contains('pages: write'));
-      expect(workflow, contains('id-token: write'));
+    test('publishes build/web to the production Cloudflare Pages branch', () {
+      expect(workflow, contains('cloudflare/wrangler-action@'));
+      expect(
+          workflow,
+          contains(
+              'pages deploy build/web --project-name=food-locker --branch=main'));
+      expect(workflow, contains(r'secrets.CLOUDFLARE_API_TOKEN'));
+      expect(workflow, contains(r'secrets.CLOUDFLARE_ACCOUNT_ID'));
     });
   });
 
