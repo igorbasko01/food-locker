@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/igorbasko01/food-locker/compare/v1.21.0...v1.22.0) (2026-10-07)
+
+
+### Features
+
+* request persistent storage on web and warn when it is denied ([#150](https://github.com/igorbasko01/food-locker/issues/150)) ([0c33a7a](https://github.com/igorbasko01/food-locker/commit/0c33a7a812016fa471ab0566d280a2bbde12d5f7))
+
 ## [1.21.0](https://github.com/igorbasko01/food-locker/compare/v1.20.0...v1.21.0) (2026-10-01)
 
 
