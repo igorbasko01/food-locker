@@ -36,6 +36,18 @@ When the team decides it is time to cut a release:
 2. This triggers the bot to create an official GitHub Release and tag on the repository.
 3. The creation of that GitHub Release then triggers our `build_release.yml` workflow.
 4. `build_release.yml` builds a production-signed Android APK securely on CI, names it with the new version and build number, and uploads it to the action artifacts.
+5. The same GitHub Release triggers `deploy_web.yml`, which builds the web app and publishes it to the `food-locker` Cloudflare Pages project at `foodlocker.baskorp.com`. It also has a **Run workflow** button to redeploy without a release.
+
+### One-time web hosting setup
+
+`deploy_web.yml` cannot publish until these are done by hand:
+
+1. **Cloudflare → Workers & Pages → Create → Pages → Upload assets:** create a project named `food-locker` with production branch `main`. Choose direct upload, not "Connect to Git": Cloudflare's build image has no Flutter, so CI builds the app and uploads the output.
+2. **The `food-locker` project → Custom domains:** add `foodlocker.baskorp.com`. The `baskorp.com` zone is already on Cloudflare, so the DNS record and certificate are created for you.
+3. **Cloudflare → My Profile → API Tokens:** create a token with the **Account → Cloudflare Pages → Edit** permission.
+4. **Repo Settings → Secrets and variables → Actions:** add `CLOUDFLARE_API_TOKEN` (the token) and `CLOUDFLARE_ACCOUNT_ID` (shown on the Workers & Pages overview).
+
+Pages serves every file with `Cache-Control: public, max-age=0, must-revalidate`, so browsers revalidate on each load and pick up a new deploy; Flutter's service worker handles the offline copy. After a deploy, check that an already-installed copy of the app picks up the new version.
 
 ### Merging the Release PR automatically
 

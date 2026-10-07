@@ -1,0 +1,52 @@
+name: Deploy Web
+
+# Publishes the web build to the `food-locker` Cloudflare Pages project
+# (foodlocker.baskorp.com) whenever release-please publishes a release, so the
+# live site always matches a tagged version.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# One deploy at a time; a newer release waits rather than cancelling one that
+# is mid-publish.
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Keeps the rolling `test-builds` prerelease off the live site.
+    if: github.event_name != 'release' || github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - run: flutter pub get
+
+    # --base-href must match start_url/scope in web/manifest.json.
+    - run: flutter build web --release --base-href=/ --no-web-resources-cdn
+
+    - name: Check web build output
+      run: |
+        test -f build/web/version.json
+        test -f build/web/flutter_service_worker.js
+        test -d build/web/canvaskit
+        test -f build/web/sqlite3.wasm
+        test -f build/web/drift_worker.js
+
+    # A release run checks out a tag, so without --branch=main Pages would
+    # file it as a preview deployment instead of production.
+    - uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy build/web --project-name=food-locker --branch=main
