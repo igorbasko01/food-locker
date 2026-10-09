@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.0](https://github.com/igorbasko01/food-locker/compare/v1.22.0...v1.23.0) (2026-10-09)
+
+
+### Features
+
+* add a text backup format so web exports can open the share sheet ([#157](https://github.com/igorbasko01/food-locker/issues/157)) ([5ffd5b6](https://github.com/igorbasko01/food-locker/commit/5ffd5b60ef7fd3d743073f97a992065c6aee5cf0))
+
 ## [1.22.0](https://github.com/igorbasko01/food-locker/compare/v1.21.0...v1.22.0) (2026-10-07)
 
 
