@@ -60,14 +60,26 @@ void main() async {
   );
 }
 
+/// Set by the Build Test APK workflow with `--dart-define=TEST_BUILD=true`.
+const bool kIsTestBuild = bool.fromEnvironment('TEST_BUILD');
+
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({super.key, this.isTestBuild = kIsTestBuild});
+
+  final bool isTestBuild;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FoodLocker',
       theme: appTheme,
+      builder: isTestBuild
+          ? (context, child) => Banner(
+                message: 'TEST',
+                location: BannerLocation.topStart,
+                child: child!,
+              )
+          : null,
       home: const AppShell(),
     );
   }
