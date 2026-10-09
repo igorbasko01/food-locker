@@ -41,6 +41,28 @@ void main() {
         contains('<base href="\$FLUTTER_BASE_HREF">'));
   });
 
+  test('web/flutter_bootstrap.js registers our worker, not Flutter\'s stub', () {
+    final bootstrap = File('web/flutter_bootstrap.js').readAsStringSync();
+    expect(bootstrap, contains('{{flutter_js}}'));
+    expect(bootstrap, contains('{{flutter_build_config}}'));
+    expect(bootstrap, isNot(contains('serviceWorkerSettings')));
+    expect(bootstrap, contains("register('service_worker.js')"));
+  });
+
+  for (final path in [
+    '.github/workflows/deploy_web.yml',
+    '.github/workflows/flutter_ci.yml',
+  ]) {
+    test('$path generates the service worker after the web build', () {
+      final workflow = File(path).readAsStringSync();
+      final build = workflow.indexOf('flutter build web');
+      final generate =
+          workflow.indexOf('dart run tool/generate_service_worker.dart');
+      expect(build, isNonNegative);
+      expect(generate, greaterThan(build));
+    });
+  }
+
   group('.github/workflows/deploy_web.yml', () {
     final workflow =
         File('.github/workflows/deploy_web.yml').readAsStringSync();
