@@ -17,4 +17,10 @@ abstract class SettingsRepository {
   MeasurementSystem get measurementSystem;
 
   Future<void> setMeasurementSystem(MeasurementSystem system);
+
+  /// Whether the browser granted storage persistence the last time it was
+  /// asked, or null when it has never been asked.
+  bool? get storagePersistenceGranted;
+
+  Future<void> setStoragePersistenceGranted(bool granted);
 }

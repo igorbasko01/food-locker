@@ -41,6 +41,32 @@ void main() {
         contains('<base href="\$FLUTTER_BASE_HREF">'));
   });
 
+  group('.github/workflows/deploy_web.yml', () {
+    final workflow =
+        File('.github/workflows/deploy_web.yml').readAsStringSync();
+
+    test('deploys on a published release', () {
+      expect(workflow, contains('release:\n    types: [published]'));
+      expect(workflow, contains('github.event.release.prerelease == false'));
+    });
+
+    test('builds at the domain root with CanvasKit self-hosted', () {
+      expect(workflow, contains('flutter build web'));
+      expect(workflow, contains('--base-href=/ '));
+      expect(workflow, contains('--no-web-resources-cdn'));
+    });
+
+    test('publishes build/web to the production Cloudflare Pages branch', () {
+      expect(workflow, contains('cloudflare/wrangler-action@'));
+      expect(
+          workflow,
+          contains(
+              'pages deploy build/web --project-name=food-locker --branch=main'));
+      expect(workflow, contains(r'secrets.CLOUDFLARE_API_TOKEN'));
+      expect(workflow, contains(r'secrets.CLOUDFLARE_ACCOUNT_ID'));
+    });
+  });
+
   group('vendored web assets', () {
     const update = 'run `dart run tool/update_web_assets.dart`';
     final manifest =

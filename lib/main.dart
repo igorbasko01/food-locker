@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
@@ -39,6 +41,8 @@ void main() async {
   final settingsRepository =
       PreferencesSettingsRepository(await SharedPreferences.getInstance());
   final settingsManager = SettingsManager(settingsRepository);
+  // Not awaited: some browsers answer only once the user responds to a prompt.
+  unawaited(settingsManager.initializeStoragePersistence());
 
   runApp(
     MultiProvider(
