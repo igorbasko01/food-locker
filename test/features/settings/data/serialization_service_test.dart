@@ -5,6 +5,7 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
+import 'package:food_locker/features/settings/data/backup_format.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
@@ -89,17 +90,26 @@ class _RecordingBiteRepository implements BiteRepository {
 }
 
 void main() {
-  group('SerializationService Zip File Name', () {
-    test('generateZipFileName creates timestamped filename', () {
+  group('SerializationService file name', () {
+    test('generateFileName creates timestamped filename', () {
       final timestamp = DateTime(2026, 3, 7, 21, 59, 30);
-      final fileName = SerializationService.generateZipFileName(timestamp);
+      final fileName =
+          SerializationService.generateFileName(BackupFormat.zip, timestamp);
       expect(fileName, 'food_locker_20260307215930.zip');
     });
 
-    test('generateZipFileName pads single digit values', () {
+    test('generateFileName pads single digit values', () {
       final timestamp = DateTime(2026, 1, 5, 3, 2, 1);
-      final fileName = SerializationService.generateZipFileName(timestamp);
+      final fileName =
+          SerializationService.generateFileName(BackupFormat.zip, timestamp);
       expect(fileName, 'food_locker_20260105030201.zip');
+    });
+
+    test('generateFileName carries the format extension', () {
+      final timestamp = DateTime(2026, 3, 7, 21, 59, 30);
+      final fileName =
+          SerializationService.generateFileName(BackupFormat.text, timestamp);
+      expect(fileName, 'food_locker_20260307215930.txt');
     });
   });
 
@@ -374,6 +384,81 @@ void main() {
       );
 
       expect(biteRepo.configOperations, isEmpty);
+    });
+  });
+
+  group('SerializationService text backup', () {
+    final service = SerializationService();
+
+    List<int> backup(BackupFormat format) => service.encodeBackup(
+          [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+          [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 2000)],
+          [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
+          heightCm: 180,
+          format: format,
+        );
+
+    test('encodes as text that starts with the text header', () {
+      final text = String.fromCharCodes(backup(BackupFormat.text));
+      expect(text, startsWith('food_locker backup v1\n[weight.csv]\n'));
+    });
+
+    for (final format in BackupFormat.values) {
+      test('restores every store from a ${format.name} backup', () async {
+        final weightRepo = InMemoryWeightRepository();
+        final biteRepo = _RecordingBiteRepository();
+        final settingsRepo = InMemorySettingsRepository();
+
+        await service.restoreFromBackup(
+          weightRepo,
+          biteRepo,
+          backup(format),
+          settingsRepo: settingsRepo,
+        );
+
+        expect(weightRepo.getAllWeights().single.value, 75.5);
+        expect(biteRepo.loggedMs, [1000, 2000]);
+        expect(biteRepo.savedConfigs.single.b2S, 30);
+        expect(settingsRepo.heightCm, 180);
+      });
+    }
+
+    test('a weight-only text backup leaves the other stores alone', () async {
+      final biteRepo = _RecordingBiteRepository();
+      final settingsRepo = InMemorySettingsRepository(heightCm: 170);
+      final textOnlyWeights = BackupFormat.text.encode(
+        Archive()
+          ..addFile(const WeightBackupCodec().toArchiveFile(
+            [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+          )),
+      );
+
+      await service.restoreFromBackup(
+        InMemoryWeightRepository(),
+        biteRepo,
+        textOnlyWeights,
+        settingsRepo: settingsRepo,
+      );
+
+      expect(biteRepo.operations, isEmpty);
+      expect(biteRepo.configOperations, isEmpty);
+      expect(settingsRepo.heightCm, 170);
+    });
+
+    test('rejects a file that is neither format before touching a store',
+        () async {
+      final weightRepo = _RecordingWeightRepository();
+
+      await expectLater(
+        service.restoreFromBackup(
+          weightRepo,
+          _RecordingBiteRepository(),
+          'date,value\n2023-10-27,75.5\n'.codeUnits,
+          settingsRepo: InMemorySettingsRepository(),
+        ),
+        throwsA(anything),
+      );
+      expect(weightRepo.operations, isEmpty);
     });
   });
 
