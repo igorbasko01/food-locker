@@ -90,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   enabled: !_busy,
                   leading: Icon(Icons.download, color: theme.colorScheme.primary),
                   title: const Text('Export Data', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Save your weight history data into a zip file.'),
+                  subtitle: const Text('Save all your data into a backup file.'),
                   onTap: _exportData,
                 ),
                 const Divider(height: 1),
@@ -98,7 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   enabled: !_busy,
                   leading: Icon(Icons.upload, color: theme.colorScheme.primary),
                   title: const Text('Import Data', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Replace your data with a backup zip file.'),
+                  subtitle: const Text('Replace your data with a backup file.'),
                   onTap: _importData,
                 ),
               ],
@@ -196,7 +196,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   /// An import replaces what is already stored, so it asks first — and names
-  /// the file, since picking the wrong zip is the likely mistake.
+  /// the file, since picking the wrong backup is the likely mistake.
   Future<bool> _confirmImport(String fileName) async {
     if (!mounted) return false;
 

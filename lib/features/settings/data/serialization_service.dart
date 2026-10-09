@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/backup_file_sink.dart';
+import 'package:food_locker/features/settings/data/backup_format.dart';
 import 'package:food_locker/features/settings/data/bite_backup_codec.dart';
 import 'package:food_locker/features/settings/data/pacing_config_backup_codec.dart';
 import 'package:food_locker/features/settings/data/profile_backup_codec.dart';
@@ -19,7 +20,7 @@ typedef ConfirmRestore = Future<bool> Function(String fileName);
 
 class SerializationService {
   @visibleForTesting
-  static String generateZipFileName([DateTime? now]) {
+  static String generateFileName(BackupFormat format, [DateTime? now]) {
     final timestamp = now ?? DateTime.now();
     final formatted = '${timestamp.year}'
         '${timestamp.month.toString().padLeft(2, '0')}'
@@ -27,16 +28,19 @@ class SerializationService {
         '${timestamp.hour.toString().padLeft(2, '0')}'
         '${timestamp.minute.toString().padLeft(2, '0')}'
         '${timestamp.second.toString().padLeft(2, '0')}';
-    return 'food_locker_$formatted.zip';
+    return 'food_locker_$formatted.${format.extension}';
   }
 
   /// [fileSink] is the only platform-dependent part of the backup path, kept
   /// injectable so export and import stay testable without a share sheet or a
-  /// file on disk. It defaults to the current platform's.
-  SerializationService({BackupFileSink? fileSink})
-      : _fileSink = fileSink ?? createBackupFileSink();
+  /// file on disk. It defaults to the current platform's, as does
+  /// [exportFormat]; import accepts every [BackupFormat] regardless.
+  SerializationService({BackupFileSink? fileSink, BackupFormat? exportFormat})
+      : _fileSink = fileSink ?? createBackupFileSink(),
+        exportFormat = exportFormat ?? BackupFormat.platformDefault;
 
   final BackupFileSink _fileSink;
+  final BackupFormat exportFormat;
 
   /// Returns whether there was anything to export — `false` means both stores
   /// were empty and no file was produced, which callers must not report as a
@@ -63,18 +67,24 @@ class SerializationService {
     // "non-empty".
     final configs = await biteRepo.allPacingConfigs();
 
-    final zipData = encodeBackup(weights, bites, configs, heightCm: heightCm);
+    final data = encodeBackup(
+      weights,
+      bites,
+      configs,
+      heightCm: heightCm,
+      format: exportFormat,
+    );
 
     await _fileSink.save(
-      generateZipFileName(),
-      zipData,
+      generateFileName(exportFormat),
+      data,
       onReady: onShareReady,
     );
     return true;
   }
 
-  /// Packs every dataset into a single backup zip — weights, bites, the
-  /// pacing-config history, and the profile. Each dataset owns its own codec;
+  /// Packs every dataset into a single backup in [format] — weights, bites,
+  /// the pacing-config history, and the profile. Each dataset owns its own codec;
   /// the coordination — one archive, one file per dataset — lives here so a
   /// single export call spans every store.
   @visibleForTesting
@@ -83,13 +93,14 @@ class SerializationService {
     List<Bite> bites,
     List<PacingConfig> configs, {
     double? heightCm,
+    BackupFormat format = BackupFormat.zip,
   }) {
     final archive = Archive()
       ..addFile(const WeightBackupCodec().toArchiveFile(weights))
       ..addFile(const BiteBackupCodec().toArchiveFile(bites))
       ..addFile(const PacingConfigBackupCodec().toArchiveFile(configs))
       ..addFile(const ProfileBackupCodec().toArchiveFile(heightCm));
-    return ZipEncoder().encode(archive);
+    return format.encode(archive);
   }
 
   /// Every logged bite, read through the repository seam. The bite interface
@@ -124,7 +135,7 @@ class SerializationService {
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['zip'],
+      allowedExtensions: BackupFormat.extensions,
     );
     final picked = result?.files.single;
     if (picked == null) return false;
@@ -169,7 +180,7 @@ class SerializationService {
   Future<bool> confirmAndRestore(
     WeightRepository weightRepo,
     BiteRepository biteRepo,
-    List<int> zipBytes, {
+    List<int> backupBytes, {
     required SettingsRepository settingsRepo,
     required String fileName,
     ConfirmRestore? onConfirm,
@@ -182,7 +193,7 @@ class SerializationService {
     await restoreFromBackup(
       weightRepo,
       biteRepo,
-      zipBytes,
+      backupBytes,
       settingsRepo: settingsRepo,
     );
     return true;
@@ -209,9 +220,9 @@ class SerializationService {
     await settingsRepo.setHeightCm(null);
   }
 
-  /// Replaces every store's contents with a backup zip — the destructive core
-  /// of [importData], kept separate from the file-picker and file-I/O plumbing
-  /// so the clear-then-restore path stays unit-testable.
+  /// Replaces every store's contents with a backup in any [BackupFormat] — the
+  /// destructive core of [importData], kept separate from the file-picker and
+  /// file-I/O plumbing so the clear-then-restore path stays unit-testable.
   ///
   /// The single decode is where the stores are coordinated: weights, bites and
   /// the profile are restored from the same archive. Weights are always
@@ -222,10 +233,10 @@ class SerializationService {
   Future<void> restoreFromBackup(
     WeightRepository weightRepo,
     BiteRepository biteRepo,
-    List<int> zipBytes, {
+    List<int> backupBytes, {
     required SettingsRepository settingsRepo,
   }) async {
-    final archive = ZipDecoder().decodeBytes(zipBytes);
+    final archive = BackupFormat.decode(backupBytes);
 
     final weights = const WeightBackupCodec().fromArchive(archive);
     await weightRepo.clear();

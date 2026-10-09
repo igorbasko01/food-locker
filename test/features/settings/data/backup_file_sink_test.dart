@@ -10,6 +10,7 @@ import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/settings/data/backup_file_sink.dart';
 import 'package:food_locker/features/settings/data/backup_file_sink_io.dart'
     show IoBackupFileSink;
+import 'package:food_locker/features/settings/data/backup_format.dart';
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
@@ -169,6 +170,34 @@ void main() {
       expect(weights.single.value, 75.5);
     });
 
+    testWidgets('a text export hands the sink a timestamped txt', (
+      tester,
+    ) async {
+      final sink = _RecordingBackupFileSink();
+      final service = SerializationService(
+        fileSink: sink,
+        exportFormat: BackupFormat.text,
+      );
+
+      await withRepositories(
+        tester,
+        weightRepo: await weightRepoWith(75.5),
+        biteRepo: _FakeBiteRepository(),
+        settingsRepo: InMemorySettingsRepository(),
+        body: service.exportData,
+      );
+
+      expect(sink.savedNames.single, matches(r'^food_locker_\d{14}\.txt$'));
+      final weightRepo = InMemoryWeightRepository();
+      await service.restoreFromBackup(
+        weightRepo,
+        _FakeBiteRepository(),
+        sink.savedBytes.single,
+        settingsRepo: InMemorySettingsRepository(),
+      );
+      expect(weightRepo.getAllWeights().single.value, 75.5);
+    });
+
     testWidgets('fires onShareReady once the bytes are handed over', (
       tester,
     ) async {
@@ -285,6 +314,45 @@ void main() {
         bytes!,
         settingsRepo: settingsRepo,
         fileName: picked.name,
+      );
+
+      expect(restored, isTrue);
+      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(biteRepo.bites.single.millisecondsSinceEpoch, 1000);
+      expect(biteRepo.configs.single.b2S, 30);
+      expect(settingsRepo.heightCm, 180);
+    });
+
+    test('a text backup written on web restores from a native pick', () async {
+      final service = SerializationService(
+        fileSink: _RecordingBackupFileSink(),
+      );
+      final text = service.encodeBackup(
+        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [const Bite(id: 1, atMs: 1000)],
+        [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
+        heightCm: 180,
+        format: BackupFormat.text,
+      );
+      final nativeService = SerializationService(
+        fileSink: _RecordingBackupFileSink(
+          staged: {'/tmp/backup.txt': text},
+        ),
+      );
+
+      final bytes = await nativeService.pickedBytes(
+        _nativePick('backup.txt', '/tmp/backup.txt', text.length),
+      );
+
+      final weightRepo = InMemoryWeightRepository();
+      final biteRepo = _FakeBiteRepository();
+      final settingsRepo = InMemorySettingsRepository();
+      final restored = await nativeService.confirmAndRestore(
+        weightRepo,
+        biteRepo,
+        bytes!,
+        settingsRepo: settingsRepo,
+        fileName: 'backup.txt',
       );
 
       expect(restored, isTrue);
