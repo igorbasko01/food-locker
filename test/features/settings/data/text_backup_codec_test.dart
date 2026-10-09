@@ -94,6 +94,14 @@ void main() {
       }
     });
 
+    test('rejects bytes that are neither format', () {
+      expect(
+        () => BackupFormat.decode(utf8.encode('date,value\n')),
+        throwsFormatException,
+      );
+      expect(() => BackupFormat.decode(const []), throwsFormatException);
+    });
+
     test('maps file names to formats', () {
       expect(BackupFormat.fromFileName('a.zip'), BackupFormat.zip);
       expect(BackupFormat.fromFileName('A.TXT'), BackupFormat.text);

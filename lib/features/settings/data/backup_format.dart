@@ -38,10 +38,24 @@ enum BackupFormat {
 
   /// Unpacks either format, told apart by content rather than by file name so
   /// a renamed backup still restores.
+  ///
+  /// Throws a [FormatException] for anything else. The zip decoder reads
+  /// arbitrary bytes as an empty archive, which a restore would take as a
+  /// backup with no weights and clear them.
   static Archive decode(List<int> bytes) {
     if (TextBackupCodec.looksLikeTextBackup(bytes)) {
       return const TextBackupCodec().decode(bytes);
     }
-    return ZipDecoder().decodeBytes(bytes);
+    if (_isZip(bytes)) return ZipDecoder().decodeBytes(bytes);
+    throw const FormatException('Not a Food Locker backup');
   }
+
+  /// A local file header, or the end record an archive with no entries opens
+  /// with.
+  static bool _isZip(List<int> bytes) =>
+      bytes.length >= 4 &&
+      bytes[0] == 0x50 &&
+      bytes[1] == 0x4B &&
+      ((bytes[2] == 0x03 && bytes[3] == 0x04) ||
+          (bytes[2] == 0x05 && bytes[3] == 0x06));
 }
