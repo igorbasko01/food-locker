@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/app_updates.dart';
 import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
@@ -15,7 +18,11 @@ import 'package:food_locker/ui/app_shell.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  Future<void> pumpShell(WidgetTester tester, BiteRepository biteRepository) async {
+  Future<void> pumpShell(
+    WidgetTester tester,
+    BiteRepository biteRepository, {
+    AppUpdates? appUpdates,
+  }) async {
     final weightRepository = InMemoryWeightRepository();
     final weightManager = WeightManager(weightRepository);
     await weightManager.initialize();
@@ -35,7 +42,7 @@ void main() {
             value: SettingsManager(settingsRepository),
           ),
         ],
-        child: const MaterialApp(home: AppShell()),
+        child: MaterialApp(home: AppShell(appUpdates: appUpdates)),
       ),
     );
     await tester.pumpAndSettle();
@@ -85,6 +92,40 @@ void main() {
     expect(find.text('Bite Analytics'), findsNothing);
     expect(analyticsButton(), findsOneWidget);
   });
+
+  group('new version', () {
+    testWidgets('offers nothing until an update is ready', (tester) async {
+      await pumpShell(tester, _FakeBiteRepository(),
+          appUpdates: _FakeAppUpdates());
+      expect(find.text('A new version is ready'), findsNothing);
+    });
+
+    testWidgets('offers a reload once an update is ready', (tester) async {
+      final updates = _FakeAppUpdates();
+      await pumpShell(tester, _FakeBiteRepository(), appUpdates: updates);
+
+      updates.readyNow();
+      await tester.pumpAndSettle();
+      expect(find.text('A new version is ready'), findsOneWidget);
+      expect(updates.reloads, 0);
+
+      await tester.tap(find.text('Reload'));
+      expect(updates.reloads, 1);
+    });
+  });
+}
+
+class _FakeAppUpdates implements AppUpdates {
+  final _ready = Completer<void>();
+  int reloads = 0;
+
+  void readyNow() => _ready.complete();
+
+  @override
+  Future<void> get ready => _ready.future;
+
+  @override
+  void reload() => reloads++;
 }
 
 /// A minimal in-memory [BiteRepository] for the shell widget test: only
