@@ -35,10 +35,16 @@ jobs:
     # --base-href must match start_url/scope in web/manifest.json.
     - run: flutter build web --release --base-href=/ --no-web-resources-cdn
 
+    # Precaches the build for offline use; must run after every web build.
+    - run: dart run tool/generate_service_worker.dart
+
     - name: Check web build output
       run: |
         test -f build/web/version.json
-        test -f build/web/flutter_service_worker.js
+        test -f build/web/service_worker.js
+        grep -q 'flutter_bootstrap.js' build/web/service_worker.js
+        ! grep -q '{{' build/web/flutter_bootstrap.js
+        ! grep -q 'serviceWorkerSettings' build/web/flutter_bootstrap.js
         test -d build/web/canvaskit
         test -f build/web/sqlite3.wasm
         test -f build/web/drift_worker.js

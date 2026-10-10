@@ -16,6 +16,7 @@ FoodLocker is a Flutter (mobile, primarily Android) app with two shipped feature
 - `flutter run` — run on a connected device/emulator (see `.agents/skills/flutter-emulator-run/SKILL.md` for the emulator workflow)
 - `dart run build_runner build --delete-conflicting-outputs` — regenerate generated code: Hive adapters after changing a `@HiveType`/`@HiveField` model, and the Drift database (`bite_database.g.dart`) after changing a bite table
 - `dart run tool/update_web_assets.dart` — re-download `web/drift_worker.js` and `web/sqlite3.wasm` at the versions `pubspec.lock` resolves (see Bite store on web)
+- `dart run tool/generate_service_worker.dart` — after `flutter build web`, write `build/web/service_worker.js` (see Offline on web)
 - `./setup.sh` — one-time local setup; points `core.hooksPath` at `.githooks`
 
 `flutter analyze` and `flutter test` both gate pushes locally (`.githooks/pre-push`) and PRs to `main` (`.github/workflows/flutter_ci.yml`). Run them before pushing.
@@ -50,6 +51,10 @@ The bite feature mirrors this shape (interface + manager) on Drift instead of Hi
 ### Bite store on web
 
 On web, `BiteDatabase()` runs on `web/sqlite3.wasm` and `web/drift_worker.js`, vendored from the `sqlite3-<version>` and `drift-<version>` GitHub releases matching `pubspec.lock`. `tool/vendored_web_assets.json` records the version and sha256 each was fetched at; after any `flutter pub upgrade` that moves `drift` or `sqlite3`, run `dart run tool/update_web_assets.dart` and commit the result — `test/web/web_shell_test.dart` fails until you do. Drift picks a storage tier per browser and logs it with any `missingFeatures` on open. With no COOP/COEP headers (the default; `web/_headers` could add them on Cloudflare Pages) the reachable tiers are `opfsShared` (Firefox), `sharedIndexedDb` (browsers with `SharedWorker`: one worker hosts the database for every tab, so multi-tab is safe), and `unsafeIndexedDb` (no `SharedWorker`: each tab holds its own copy, and concurrent writes from two tabs can overwrite each other). `opfsLocks` is the only tier that needs cross-origin isolation, and none of the headerless tiers loses data in single-tab use, so isolation is not needed unless the logged tier on a target browser turns out to be `unsafeIndexedDb` and multi-tab use matters.
+
+### Offline on web
+
+Flutter's generated `flutter_service_worker.js` is a self-unregistering stub, so `web/flutter_bootstrap.js` loads the app without `serviceWorkerSettings` and registers our own `service_worker.js` instead. That worker does not exist in `web/`: `tool/generate_service_worker.dart` writes it into `build/web` after the build, from `tool/service_worker.template.js` plus a manifest of every build file's sha256, and both CI workflows run it right after `flutter build web`. It precaches the whole build on first visit and serves it cache-first, keyed by content hash so an update re-downloads only changed files; a new deploy takes effect on the next launch after the worker updates. When a new worker takes over a page an older one served, the bootstrap raises a flag and event that `AppUpdates` (`lib/core/app_updates.dart`, web/native behind a conditional import like `StoragePersistence`) surfaces, and `AppShell` shows a "new version" snackbar whose Reload action is the only thing that reloads; the bootstrap also re-checks for a new worker whenever the app returns to the foreground. Any new web build step must run the generator afterwards or the deployed site loses offline support.
 
 ### Preferences
 
