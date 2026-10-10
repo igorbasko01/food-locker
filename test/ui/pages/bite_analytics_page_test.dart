@@ -274,7 +274,7 @@ void main() {
 
     await pumpPage(tester);
 
-    expect(find.text('80.4 kg'), findsOneWidget);
+    expect(find.text('80.40 kg'), findsOneWidget);
 
     // Bar 0 is yesterday: the line follows the selection. Its stored value is
     // read as kilograms and shown in the preferred unit, whatever the legacy
@@ -282,9 +282,9 @@ void main() {
     tapBar(tester, 0);
     await tester.pumpAndSettle();
 
-    expect(find.text('81.2 kg'), findsOneWidget);
-    expect(find.text('81.2 lbs'), findsNothing);
-    expect(find.text('80.4 kg'), findsNothing);
+    expect(find.text('81.20 kg'), findsOneWidget);
+    expect(find.text('81.20 lbs'), findsNothing);
+    expect(find.text('80.40 kg'), findsNothing);
   });
 
   testWidgets('meal breakdown card marks a day with no weigh-in', (

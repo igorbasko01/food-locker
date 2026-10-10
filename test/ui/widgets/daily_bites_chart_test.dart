@@ -133,7 +133,7 @@ void main() {
 
     expect(find.text('Weight (lbs)'), findsOneWidget);
     expect(
-      find.bySemanticsLabel(RegExp(r'Weight overlaid, 160\.0 to 160\.0 lbs\.')),
+      find.bySemanticsLabel(RegExp(r'Weight overlaid, 160\.00 to 160\.00 lbs\.')),
       findsOneWidget,
     );
     // The bars are unaffected: only the weight overlay reads in pounds.
@@ -212,7 +212,7 @@ void main() {
 
     expect(
       find.bySemanticsLabel(
-        RegExp(r'Weight overlaid, 80\.0 to 81\.0 kg\.'),
+        RegExp(r'Weight overlaid, 80\.00 to 81\.00 kg\.'),
       ),
       findsOneWidget,
     );

@@ -57,8 +57,8 @@ void main() {
 
     await pumpPage(tester, manager, system: MeasurementSystem.imperial);
 
-    expect(find.text('160.0 lbs'), findsOneWidget);
-    expect(find.text('158.0 lbs'), findsOneWidget);
+    expect(find.text('160.00 lbs'), findsOneWidget);
+    expect(find.text('158.00 lbs'), findsOneWidget);
     // The day-on-day change is converted from kilograms too.
     expect(find.text('+2.0 lbs'), findsOneWidget);
   });
