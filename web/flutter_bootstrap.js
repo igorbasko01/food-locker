@@ -1,7 +1,7 @@
 {{flutter_js}}
 {{flutter_build_config}}
 
-// No serviceWorkerSettings: Flutter's own worker is a self-unregistering stub.
+// Loads without Flutter's own worker, which is a self-unregistering stub.
 // Offline support comes from service_worker.js, which
 // tool/generate_service_worker.dart writes into build/web after the build.
 _flutter.loader.load();
