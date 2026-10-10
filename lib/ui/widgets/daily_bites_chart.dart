@@ -170,7 +170,7 @@ class DailyBitesChart extends StatelessWidget {
       final weighedMax = weightByDay.values.reduce((a, b) => a > b ? a : b);
       summary.write(
         ' Weight overlaid, '
-        '${weightSystem.weightFromKilograms(weighedMin).toStringAsFixed(1)} '
+        '${weightSystem.weightFromKilograms(weighedMin).toStringAsFixed(2)} '
         'to ${weightSystem.formatWeight(weighedMax)}.',
       );
     }

@@ -110,13 +110,14 @@ void main() {
       );
     });
 
-    test('formatWeight renders one decimal and the system symbol', () {
-      expect(MeasurementSystem.metric.formatWeight(72.5748), '72.6 kg');
-      expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.0 lbs');
+    test('formatWeight renders two decimals and the system symbol', () {
+      expect(MeasurementSystem.metric.formatWeight(72.5748), '72.57 kg');
+      expect(MeasurementSystem.metric.formatWeight(72.5), '72.50 kg');
+      expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.00 lbs');
     });
 
-    test('formatWeight keeps the sign of a change', () {
-      expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.0 lbs');
+    test('formatWeight keeps the sign of a negative value', () {
+      expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.00 lbs');
     });
   });
 }

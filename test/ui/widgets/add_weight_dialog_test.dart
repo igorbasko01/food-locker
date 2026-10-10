@@ -103,7 +103,25 @@ void main() {
       initialWeight: 72.5748,
     );
 
-    expect(find.text('160.0'), findsOneWidget);
+    expect(find.text('160.00'), findsOneWidget);
+  });
+
+  testWidgets('an existing entry prefills with two decimals', (tester) async {
+    await pumpDialog(tester, DateTime(2026, 3, 8), initialWeight: 72.35);
+
+    expect(find.text('72.35'), findsOneWidget);
+  });
+
+  testWidgets('a two-decimal kilogram entry is stored as typed', (
+    tester,
+  ) async {
+    final result = await submit(
+      tester,
+      system: MeasurementSystem.metric,
+      typed: '72.35',
+    );
+
+    expect(result!['value'] as double, 72.35);
   });
 
   testWidgets('a whole-pound entry saves as kilograms', (tester) async {
