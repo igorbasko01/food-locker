@@ -79,7 +79,7 @@ extension WeightDisplay on MeasurementSystem {
   double weightToKilograms(double value) =>
       this == MeasurementSystem.imperial ? poundsToKilograms(value) : value;
 
-  /// [kilograms] as it appears on screen: `72.6 kg`, `160.0 lbs`.
+  /// [kilograms] as it appears on screen: `72.57 kg`, `160.00 lbs`.
   String formatWeight(double kilograms) =>
-      '${weightFromKilograms(kilograms).toStringAsFixed(1)} $weightSymbol';
+      '${weightFromKilograms(kilograms).toStringAsFixed(2)} $weightSymbol';
 }

@@ -253,7 +253,7 @@ class WeightPage extends StatelessWidget {
     }
 
     final rounded = _roundTo(system.weightFromKilograms(change), 1);
-    final low = system.weightFromKilograms(lowest.value).toStringAsFixed(1);
+    final low = system.weightFromKilograms(lowest.value).toStringAsFixed(2);
     return Expanded(
       child: StatTile(
         label: 'Vs. low',

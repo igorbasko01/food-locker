@@ -27,7 +27,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
   final TextEditingController _weightController = TextEditingController();
 
   /// What [initState] prefilled the field with. Converting that back on save
-  /// would quantise the stored kilograms — up to ~23 g per save in pounds — so
+  /// would quantise the stored kilograms — up to ~2 g per save in pounds — so
   /// an untouched field returns the stored value instead of a round trip.
   String _prefilled = '';
 
@@ -39,7 +39,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     if (initialWeight != null) {
       _prefilled = widget.system
           .weightFromKilograms(initialWeight)
-          .toStringAsFixed(1);
+          .toStringAsFixed(2);
       _weightController.text = _prefilled;
     }
   }

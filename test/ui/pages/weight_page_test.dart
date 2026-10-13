@@ -98,7 +98,7 @@ void main() {
     await pumpPage(tester, manager);
 
     // The hero figure, plus today's row in the history list below it.
-    expect(find.text('72.5 kg'), findsNWidgets(2));
+    expect(find.text('72.50 kg'), findsNWidgets(2));
     expect(find.text('as of ${fullDateWithWeekday(today)}'), findsOneWidget);
   });
 
@@ -145,7 +145,7 @@ void main() {
 
     // The ramp bottoms out today, so the distance from the low is zero.
     expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
-    expect(find.text('low 70.0 on ${shortDate(today)}'), findsOneWidget);
+    expect(find.text('low 70.00 on ${shortDate(today)}'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events), findsOneWidget);
   });
 
@@ -162,7 +162,7 @@ void main() {
     await pumpPage(tester, manager);
 
     expect(find.widgetWithText(StatTile, '+1.4 kg'), findsOneWidget);
-    expect(find.text('low 72.3 on ${shortDate(lowDay)}'), findsOneWidget);
+    expect(find.text('low 72.30 on ${shortDate(lowDay)}'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events), findsNothing);
   });
 
@@ -181,7 +181,7 @@ void main() {
     // complete week to read.
     expect(find.widgetWithText(StatTile, '-3.50 kg/wk'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '--'), findsOneWidget);
-    expect(find.text('72.5 kg'), findsNWidgets(2));
+    expect(find.text('72.50 kg'), findsNWidgets(2));
     expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
   });
 
@@ -194,15 +194,15 @@ void main() {
 
     await pumpPage(tester, manager, system: MeasurementSystem.imperial);
 
-    // The hero figure and today's history row, both 70.0 kg.
-    expect(find.text('154.3 lbs'), findsNWidgets(2));
-    expect(find.text('70.0 kg'), findsNothing);
+    // The hero figure and today's history row, both 70 kg.
+    expect(find.text('154.32 lbs'), findsNWidgets(2));
+    expect(find.text('70.00 kg'), findsNothing);
 
     // Each tile converts before rounding, so its digits, sign and arrow agree.
     expect(find.widgetWithText(StatTile, '-1.5 lbs'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-1.54 lbs/wk'), findsOneWidget);
     expect(find.text('≈ -6.6 lbs/month'), findsOneWidget);
-    expect(find.text('low 154.3 on ${shortDate(today)}'), findsOneWidget);
+    expect(find.text('low 154.32 on ${shortDate(today)}'), findsOneWidget);
   });
 
   testWidgets('history list only lists the last 7 days of entries', (
@@ -222,9 +222,9 @@ void main() {
     expect(find.text(fullDateWithWeekday(recentDay)), findsOneWidget);
     // Scoped to the row: the current-weight figure above the chart carries the
     // latest weigh-in's value too, whatever the history range holds.
-    expect(find.widgetWithText(ListTile, '71.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '71.00 kg'), findsOneWidget);
     expect(find.text(fullDateWithWeekday(oldDay)), findsNothing);
-    expect(find.text('73.0 kg'), findsNothing);
+    expect(find.text('73.00 kg'), findsNothing);
   });
 
   testWidgets('picking a wider range reveals older entries', (tester) async {
@@ -249,7 +249,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(fullDateWithWeekday(lastMonth)), findsOneWidget);
-    expect(find.widgetWithText(ListTile, '73.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '73.00 kg'), findsOneWidget);
     expect(manager.historyRange, const DateRange.lastDays(30));
   });
 
@@ -275,14 +275,14 @@ void main() {
     await pumpPage(tester, manager);
 
     await tester.drag(
-      find.widgetWithText(ListTile, '72.5 kg'),
+      find.widgetWithText(ListTile, '72.50 kg'),
       const Offset(-500, 0),
     );
     await tester.pumpAndSettle();
 
     expect(find.byType(Dismissible), findsNothing);
     expect(find.text(fullDateWithWeekday(today)), findsOneWidget);
-    expect(find.widgetWithText(ListTile, '72.5 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '72.50 kg'), findsOneWidget);
     expect(manager.history, hasLength(1));
   });
 
