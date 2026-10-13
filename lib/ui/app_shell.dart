@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/app_updates.dart';
 import 'package:food_locker/ui/pages/bite_analytics_page.dart';
 import 'package:food_locker/ui/pages/bite_page.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
@@ -12,7 +13,10 @@ import 'package:food_locker/ui/pages/weight_page.dart';
 enum AppTab { home, weight, bite, settings }
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  const AppShell({super.key, this.appUpdates});
+
+  /// Defaults to the platform's own; tests pass a fake.
+  final AppUpdates? appUpdates;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -20,6 +24,27 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  late final AppUpdates _appUpdates = widget.appUpdates ?? createAppUpdates();
+
+  @override
+  void initState() {
+    super.initState();
+    _appUpdates.ready.then((_) {
+      if (!mounted) return;
+      // Left for the user to act on, so a reload never lands mid-meal.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('A new version is ready'),
+          duration: const Duration(days: 1),
+          showCloseIcon: true,
+          action: SnackBarAction(
+            label: 'Reload',
+            onPressed: _appUpdates.reload,
+          ),
+        ),
+      );
+    });
+  }
 
   static const List<String> _titles = ['Home', 'Weight', 'Bite', 'Settings'];
 
