@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.0](https://github.com/igorbasko01/food-locker/compare/v1.22.0...v1.23.0) (2026-10-13)
+
+
+### Features
+
+* add a text backup format so web exports can open the share sheet ([#157](https://github.com/igorbasko01/food-locker/issues/157)) ([5ffd5b6](https://github.com/igorbasko01/food-locker/commit/5ffd5b60ef7fd3d743073f97a992065c6aee5cf0))
+* make the web PWA work offline with a precaching service worker ([#160](https://github.com/igorbasko01/food-locker/issues/160)) ([69f18d9](https://github.com/igorbasko01/food-locker/commit/69f18d9c3b1095c6d0b0db14310575fda713b50f))
+* show a TEST banner in test builds ([#152](https://github.com/igorbasko01/food-locker/issues/152)) ([#153](https://github.com/igorbasko01/food-locker/issues/153)) ([b9628b5](https://github.com/igorbasko01/food-locker/commit/b9628b502d14cc04a6c84afa287f1c8a2db521e9))
+
 ## [1.22.0](https://github.com/igorbasko01/food-locker/compare/v1.21.0...v1.22.0) (2026-10-07)
 
 
