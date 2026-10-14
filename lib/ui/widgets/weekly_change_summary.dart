@@ -41,10 +41,12 @@ List<String> weeklyChangeSummary(
 
 String _weighIns(int count) => '$count weigh-in${count == 1 ? '' : 's'}';
 
-/// The delta with its sign, to one decimal like a history row's change.
+/// The delta with its sign, matching how a history row states a change.
 String _signedChange(double delta, MeasurementSystem system) {
-  final change =
-      '${system.weightFromKilograms(delta).toStringAsFixed(1)} '
-      '${system.weightSymbol}';
-  return delta > 0 ? '+$change' : change;
+  final shown = system.weightFromKilograms(delta).toStringAsFixed(2);
+  final rounded = double.parse(shown);
+  final magnitude = '${rounded.abs().toStringAsFixed(2)} ${system.weightSymbol}';
+  if (rounded > 0) return '+$magnitude';
+  if (rounded < 0) return '-$magnitude';
+  return magnitude;
 }

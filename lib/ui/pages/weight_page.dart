@@ -209,11 +209,11 @@ class WeightPage extends StatelessWidget {
     final change = week.delta;
     if (change == null) return _missingStatTile('Weekly change');
 
-    final rounded = _roundTo(system.weightFromKilograms(change), 1);
+    final rounded = _roundTo(system.weightFromKilograms(change), 2);
     return Expanded(
       child: StatTile(
         label: 'Weekly change',
-        value: '${_signed(rounded, 1)} ${system.weightSymbol}',
+        value: '${_signed(rounded, 2)} ${system.weightSymbol}',
         subLabel: _weeklyChangeWeeks(week),
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
@@ -252,12 +252,12 @@ class WeightPage extends StatelessWidget {
       return _missingStatTile('Vs. low');
     }
 
-    final rounded = _roundTo(system.weightFromKilograms(change), 1);
+    final rounded = _roundTo(system.weightFromKilograms(change), 2);
     final low = system.weightFromKilograms(lowest.value).toStringAsFixed(2);
     return Expanded(
       child: StatTile(
         label: 'Vs. low',
-        value: '${_signed(rounded, 1)} ${system.weightSymbol}',
+        value: '${_signed(rounded, 2)} ${system.weightSymbol}',
         subLabel: 'low $low on ${shortDate(lowest.date)}',
         // Never negative, so signed green/red would leave this tile
         // permanently red. Standing on the low earns the trophy instead.

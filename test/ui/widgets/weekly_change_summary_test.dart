@@ -45,21 +45,28 @@ void main() {
     expect(weeklyChangeSummary(week(delta: 0.6), locale: 'en_US'), [
       'Sun, 3/8 – Sat, 3/14',
       'avg 83.00 kg (2 weigh-ins) vs 82.40 kg the week before (2)',
-      '+0.6 kg',
+      '+0.60 kg',
     ]);
   });
 
   test('a losing week signs its change with a minus', () {
     expect(
       weeklyChangeSummary(week(delta: -1.2), locale: 'en_US').last,
-      '-1.2 kg',
+      '-1.20 kg',
     );
   });
 
   test('a flat week states zero rather than a sign', () {
     expect(
       weeklyChangeSummary(week(delta: 0.0), locale: 'en_US').last,
-      '0.0 kg',
+      '0.00 kg',
+    );
+  });
+
+  test('a change that rounds to zero carries no sign', () {
+    expect(
+      weeklyChangeSummary(week(delta: -0.004), locale: 'en_US').last,
+      '0.00 kg',
     );
   });
 
@@ -84,7 +91,7 @@ void main() {
       summary[1],
       'avg 183.66 lbs (2 weigh-ins) vs 181.66 lbs the week before (2)',
     );
-    expect(summary.last, '+2.0 lbs');
+    expect(summary.last, '+2.00 lbs');
   });
 
   test('a week nothing was logged in says so', () {

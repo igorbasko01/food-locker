@@ -24,27 +24,40 @@ void main() {
 
   testWidgets('shows positive difference with + sign and up arrow', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(1.5));
-    expect(find.text('+1.5 kg'), findsOneWidget);
+    expect(find.text('+1.50 kg'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
   });
 
   testWidgets('shows negative difference with - sign and down arrow', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(-0.8));
-    expect(find.text('-0.8 kg'), findsOneWidget);
+    expect(find.text('-0.80 kg'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });
 
-  testWidgets('shows 0.0 kg and neutral icon when diff is 0', (tester) async {
+  testWidgets('shows 0.00 kg and neutral icon when diff is 0', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(0.0));
-    expect(find.text('0.0 kg'), findsOneWidget);
+    expect(find.text('0.00 kg'), findsOneWidget);
     expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
+  });
+
+  testWidgets('shows a change of a few hundredths', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest(89.40 - 89.45));
+    expect(find.text('-0.05 kg'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
+  });
+
+  testWidgets('a change that rounds to zero reads as flat', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest(-0.004));
+    expect(find.text('0.00 kg'), findsOneWidget);
+    expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_downward_rounded), findsNothing);
   });
 
   testWidgets('converts the kilogram diff under imperial', (tester) async {
     await tester.pumpWidget(
       createWidgetUnderTest(2.4, MeasurementSystem.imperial),
     );
-    expect(find.text('+5.3 lbs'), findsOneWidget);
+    expect(find.text('+5.29 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
   });
 
@@ -52,7 +65,7 @@ void main() {
     await tester.pumpWidget(
       createWidgetUnderTest(-0.9071847, MeasurementSystem.imperial),
     );
-    expect(find.text('-2.0 lbs'), findsOneWidget);
+    expect(find.text('-2.00 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });
 }

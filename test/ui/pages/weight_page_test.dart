@@ -114,7 +114,7 @@ void main() {
     expect(find.text('Vs. low'), findsOneWidget);
 
     // A tenth of a kilogram a day: -0.7 a week, and -3.0 projected over a month.
-    expect(find.widgetWithText(StatTile, '-0.7 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '-0.70 kg'), findsOneWidget);
     // The two complete weeks behind the figure, so its lag is visible.
     expect(find.text(expectedWeeks()), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-0.70 kg/wk'), findsOneWidget);
@@ -130,7 +130,7 @@ void main() {
 
     await pumpPage(tester, manager);
 
-    expect(find.widgetWithText(StatTile, '+0.7 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '+0.70 kg'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '+0.70 kg/wk'), findsOneWidget);
     expect(find.text('≈ +3.0 kg/month'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsNWidgets(2));
@@ -144,7 +144,7 @@ void main() {
     await pumpPage(tester, manager);
 
     // The ramp bottoms out today, so the distance from the low is zero.
-    expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '0.00 kg'), findsOneWidget);
     expect(find.text('low 70.00 on ${shortDate(today)}'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events), findsOneWidget);
   });
@@ -161,7 +161,7 @@ void main() {
 
     await pumpPage(tester, manager);
 
-    expect(find.widgetWithText(StatTile, '+1.4 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '+1.40 kg'), findsOneWidget);
     expect(find.text('low 72.30 on ${shortDate(lowDay)}'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events), findsNothing);
   });
@@ -182,7 +182,7 @@ void main() {
     expect(find.widgetWithText(StatTile, '-3.50 kg/wk'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '--'), findsOneWidget);
     expect(find.text('72.50 kg'), findsNWidgets(2));
-    expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '0.00 kg'), findsOneWidget);
   });
 
   testWidgets('an imperial preference converts every figure on the tab', (
@@ -199,7 +199,7 @@ void main() {
     expect(find.text('70.00 kg'), findsNothing);
 
     // Each tile converts before rounding, so its digits, sign and arrow agree.
-    expect(find.widgetWithText(StatTile, '-1.5 lbs'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '-1.54 lbs'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-1.54 lbs/wk'), findsOneWidget);
     expect(find.text('≈ -6.6 lbs/month'), findsOneWidget);
     expect(find.text('low 154.32 on ${shortDate(today)}'), findsOneWidget);
