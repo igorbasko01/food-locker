@@ -198,9 +198,7 @@ class DailyBitesChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          weightSystem
-                              .weightFromKilograms(yToWeight(value))
-                              .toStringAsFixed(1),
+                          weightSystem.formatWeightTick(yToWeight(value)),
                           style: TextStyle(fontSize: 10, color: weightColor),
                         ),
                       );

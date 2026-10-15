@@ -118,7 +118,7 @@ void main() {
     // The two complete weeks behind the figure, so its lag is visible.
     expect(find.text(expectedWeeks()), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-0.70 kg/wk'), findsOneWidget);
-    expect(find.text('≈ -3.0 kg/month'), findsOneWidget);
+    expect(find.text('≈ -3.00 kg/month'), findsOneWidget);
 
     expect(find.byIcon(Icons.arrow_downward_rounded), findsNWidgets(2));
   });
@@ -132,7 +132,7 @@ void main() {
 
     expect(find.widgetWithText(StatTile, '+0.70 kg'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '+0.70 kg/wk'), findsOneWidget);
-    expect(find.text('≈ +3.0 kg/month'), findsOneWidget);
+    expect(find.text('≈ +3.00 kg/month'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsNWidgets(2));
   });
 
@@ -201,7 +201,7 @@ void main() {
     // Each tile converts before rounding, so its digits, sign and arrow agree.
     expect(find.widgetWithText(StatTile, '-1.54 lbs'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-1.54 lbs/wk'), findsOneWidget);
-    expect(find.text('≈ -6.6 lbs/month'), findsOneWidget);
+    expect(find.text('≈ -6.61 lbs/month'), findsOneWidget);
     expect(find.text('low 154.32 on ${shortDate(today)}'), findsOneWidget);
   });
 

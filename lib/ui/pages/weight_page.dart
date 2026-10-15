@@ -228,14 +228,12 @@ class WeightPage extends StatelessWidget {
   ) {
     if (perWeek == null) return _missingStatTile('30-day trend');
 
-    final shown = system.weightFromKilograms(perWeek);
-    final rounded = roundTo(shown, 2);
+    final rounded = system.shownWeightChange(perWeek);
     return Expanded(
       child: StatTile(
         label: '30-day trend',
-        value: '${formatSigned(shown, 2)} ${system.weightSymbol}/wk',
-        subLabel:
-            '≈ ${formatSigned(shown * 30 / 7, 1)} ${system.weightSymbol}/month',
+        value: '${system.formatWeightChange(perWeek)}/wk',
+        subLabel: '≈ ${system.formatWeightChange(perWeek * 30 / 7)}/month',
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
       ),

@@ -35,7 +35,7 @@ double feetInchesToCentimetres(int feet, double inches) =>
 /// `5' 12"`.
 FeetInches roundedFeetInches(double centimetres, int decimals) {
   final split = centimetresToFeetInches(centimetres);
-  final inches = roundTo(split.inches, decimals);
+  final inches = _roundTo(split.inches, decimals);
   return inches >= inchesPerFoot
       ? FeetInches(split.feet + 1, 0)
       : FeetInches(split.feet, inches);
@@ -47,13 +47,13 @@ FeetInches roundedFeetInches(double centimetres, int decimals) {
 /// Parsed back from [double.toStringAsFixed] rather than computed as
 /// `(value * 100).round() / 100`, whose binary error can round the other way
 /// from the printed text.
-double roundTo(double value, int decimals) =>
+double _roundTo(double value, int decimals) =>
     double.parse(value.toStringAsFixed(decimals));
 
 /// [value] at [decimals] places with an explicit `+` on a gain, and no sign
 /// once it rounds to zero: `+0.05`, `-1.5`, `0.00`.
-String formatSigned(double value, int decimals) {
-  final rounded = roundTo(value, decimals);
+String _formatSigned(double value, int decimals) {
+  final rounded = _roundTo(value, decimals);
   final magnitude = rounded.abs().toStringAsFixed(decimals);
   if (rounded > 0) return '+$magnitude';
   if (rounded < 0) return '-$magnitude';
@@ -83,6 +83,10 @@ const double kilogramsPerPound = 0.45359237;
 /// The places every weight and change in weight is shown to.
 const int _weightDecimals = 2;
 
+/// Chart axes are too narrow for [_weightDecimals], and a tick is a scale
+/// mark rather than a reading.
+const int _weightTickDecimals = 1;
+
 double poundsToKilograms(double pounds) => pounds * kilogramsPerPound;
 
 double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
@@ -106,6 +110,10 @@ extension WeightDisplay on MeasurementSystem {
   String formatWeightValue(double kilograms) =>
       weightFromKilograms(kilograms).toStringAsFixed(_weightDecimals);
 
+  /// [kilograms] as a chart axis tick: `72.5`, `160.0`.
+  String formatWeightTick(double kilograms) =>
+      weightFromKilograms(kilograms).toStringAsFixed(_weightTickDecimals);
+
   /// [kilograms] as it appears on screen: `72.57 kg`, `160.00 lbs`.
   String formatWeight(double kilograms) =>
       '${formatWeightValue(kilograms)} $weightSymbol';
@@ -113,11 +121,11 @@ extension WeightDisplay on MeasurementSystem {
   /// A stored change of [kilograms], in this system's unit (pounds under
   /// imperial) and rounded to what [formatWeightChange] prints.
   double shownWeightChange(double kilograms) =>
-      roundTo(weightFromKilograms(kilograms), _weightDecimals);
+      _roundTo(weightFromKilograms(kilograms), _weightDecimals);
 
   /// A change of [kilograms] as it appears on screen: `+0.05 kg`, `-1.54 lbs`,
   /// `0.00 kg`.
   String formatWeightChange(double kilograms) =>
-      '${formatSigned(weightFromKilograms(kilograms), _weightDecimals)} '
+      '${_formatSigned(weightFromKilograms(kilograms), _weightDecimals)} '
       '$weightSymbol';
 }
