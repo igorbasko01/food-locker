@@ -125,6 +125,11 @@ void main() {
       expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.00 lbs');
     });
 
+    test('formatWeightValue is the bare number in the system', () {
+      expect(MeasurementSystem.metric.formatWeightValue(72.3), '72.30');
+      expect(MeasurementSystem.imperial.formatWeightValue(72.5748), '160.00');
+    });
+
     test('formatWeight keeps the sign of a negative value', () {
       expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.00 lbs');
     });
@@ -137,7 +142,11 @@ void main() {
 
     test('a change too small to show is unsigned zero', () {
       expect(MeasurementSystem.metric.formatWeightChange(-0.004), '0.00 kg');
-      expect(MeasurementSystem.metric.weightChange(-0.004), 0);
+      expect(MeasurementSystem.metric.shownWeightChange(-0.004), 0);
+      expect(
+        MeasurementSystem.imperial.shownWeightChange(0.7),
+        closeTo(1.54, 1e-9),
+      );
     });
   });
 }

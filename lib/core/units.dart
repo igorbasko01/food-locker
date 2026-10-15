@@ -43,6 +43,10 @@ FeetInches roundedFeetInches(double centimetres, int decimals) {
 
 /// [value] rounded to the [decimals] it prints with, so a sign, colour or arrow
 /// taken from it agrees with the digits — `-0.004` at two places is zero.
+///
+/// Parsed back from [double.toStringAsFixed] rather than computed as
+/// `(value * 100).round() / 100`, whose binary error can round the other way
+/// from the printed text.
 double roundTo(double value, int decimals) =>
     double.parse(value.toStringAsFixed(decimals));
 
@@ -77,7 +81,7 @@ String formatHeight(double centimetres, MeasurementSystem system) {
 const double kilogramsPerPound = 0.45359237;
 
 /// The places every weight and change in weight is shown to.
-const int weightDecimals = 2;
+const int _weightDecimals = 2;
 
 double poundsToKilograms(double pounds) => pounds * kilogramsPerPound;
 
@@ -97,19 +101,23 @@ extension WeightDisplay on MeasurementSystem {
   double weightToKilograms(double value) =>
       this == MeasurementSystem.imperial ? poundsToKilograms(value) : value;
 
+  /// [kilograms] as a bare number in this system, for a field or a label that
+  /// names the unit elsewhere: `72.57`, `160.00`.
+  String formatWeightValue(double kilograms) =>
+      weightFromKilograms(kilograms).toStringAsFixed(_weightDecimals);
+
   /// [kilograms] as it appears on screen: `72.57 kg`, `160.00 lbs`.
   String formatWeight(double kilograms) =>
-      '${weightFromKilograms(kilograms).toStringAsFixed(weightDecimals)} '
-      '$weightSymbol';
+      '${formatWeightValue(kilograms)} $weightSymbol';
 
-  /// A change of [kilograms] in this system, rounded to what
-  /// [formatWeightChange] prints.
-  double weightChange(double kilograms) =>
-      roundTo(weightFromKilograms(kilograms), weightDecimals);
+  /// A stored change of [kilograms], in this system's unit (pounds under
+  /// imperial) and rounded to what [formatWeightChange] prints.
+  double shownWeightChange(double kilograms) =>
+      roundTo(weightFromKilograms(kilograms), _weightDecimals);
 
   /// A change of [kilograms] as it appears on screen: `+0.05 kg`, `-1.54 lbs`,
   /// `0.00 kg`.
   String formatWeightChange(double kilograms) =>
-      '${formatSigned(weightFromKilograms(kilograms), weightDecimals)} '
+      '${formatSigned(weightFromKilograms(kilograms), _weightDecimals)} '
       '$weightSymbol';
 }

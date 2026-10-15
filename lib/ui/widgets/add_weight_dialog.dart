@@ -37,9 +37,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     _selectedDate = widget.initialDate;
     final initialWeight = widget.initialWeight;
     if (initialWeight != null) {
-      _prefilled = widget.system
-          .weightFromKilograms(initialWeight)
-          .toStringAsFixed(weightDecimals);
+      _prefilled = widget.system.formatWeightValue(initialWeight);
       _weightController.text = _prefilled;
     }
   }

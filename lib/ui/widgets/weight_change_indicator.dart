@@ -18,7 +18,7 @@ class WeightChangeIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentDiff = diff == null ? null : system.weightChange(diff!);
+    final currentDiff = diff == null ? null : system.shownWeightChange(diff!);
     final text = diff == null ? 'Baseline' : system.formatWeightChange(diff!);
 
     final Color backgroundColor;

@@ -209,7 +209,7 @@ class WeightPage extends StatelessWidget {
     final change = week.delta;
     if (change == null) return _missingStatTile('Weekly change');
 
-    final rounded = system.weightChange(change);
+    final rounded = system.shownWeightChange(change);
     return Expanded(
       child: StatTile(
         label: 'Weekly change',
@@ -252,9 +252,7 @@ class WeightPage extends StatelessWidget {
       return _missingStatTile('Vs. low');
     }
 
-    final low = system
-        .weightFromKilograms(lowest.value)
-        .toStringAsFixed(weightDecimals);
+    final low = system.formatWeightValue(lowest.value);
     return Expanded(
       child: StatTile(
         label: 'Vs. low',
@@ -263,7 +261,7 @@ class WeightPage extends StatelessWidget {
         // Never negative, so signed green/red would leave this tile
         // permanently red. Standing on the low earns the trophy instead.
         valueColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        icon: system.weightChange(change) == 0 ? Icons.emoji_events : null,
+        icon: system.shownWeightChange(change) == 0 ? Icons.emoji_events : null,
       ),
     );
   }
