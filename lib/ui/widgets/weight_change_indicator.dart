@@ -18,41 +18,33 @@ class WeightChangeIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Rounded to what the pill prints, so a change too small to show reads as
-    // flat instead of a green or red "0.00".
-    final currentDiff = diff == null
-        ? null
-        : double.parse(system.weightFromKilograms(diff!).toStringAsFixed(2));
+    final currentDiff = diff == null ? null : system.weightChange(diff!);
+    final text = diff == null ? 'Baseline' : system.formatWeightChange(diff!);
 
     final Color backgroundColor;
     final Color textColor;
     final IconData? icon;
-    final String text;
     final FontWeight fontWeight;
 
     if (currentDiff == null) {
       backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
       textColor = theme.colorScheme.onSurfaceVariant;
       icon = null;
-      text = 'Baseline';
       fontWeight = FontWeight.normal;
     } else if (currentDiff > 0) {
       backgroundColor = theme.colorScheme.errorContainer.withValues(alpha: 0.5);
       textColor = theme.colorScheme.error;
       icon = Icons.arrow_upward_rounded;
-      text = '+${currentDiff.toStringAsFixed(2)} ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     } else if (currentDiff < 0) {
       backgroundColor = Colors.green.withValues(alpha: 0.15);
       textColor = Colors.green;
       icon = Icons.arrow_downward_rounded;
-      text = '${currentDiff.toStringAsFixed(2)} ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     } else {
       backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
       textColor = theme.colorScheme.outline;
       icon = Icons.remove_rounded;
-      text = '0.00 ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     }
 

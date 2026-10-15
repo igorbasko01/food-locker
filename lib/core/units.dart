@@ -35,10 +35,25 @@ double feetInchesToCentimetres(int feet, double inches) =>
 /// `5' 12"`.
 FeetInches roundedFeetInches(double centimetres, int decimals) {
   final split = centimetresToFeetInches(centimetres);
-  final inches = double.parse(split.inches.toStringAsFixed(decimals));
+  final inches = roundTo(split.inches, decimals);
   return inches >= inchesPerFoot
       ? FeetInches(split.feet + 1, 0)
       : FeetInches(split.feet, inches);
+}
+
+/// [value] rounded to the [decimals] it prints with, so a sign, colour or arrow
+/// taken from it agrees with the digits — `-0.004` at two places is zero.
+double roundTo(double value, int decimals) =>
+    double.parse(value.toStringAsFixed(decimals));
+
+/// [value] at [decimals] places with an explicit `+` on a gain, and no sign
+/// once it rounds to zero: `+0.05`, `-1.5`, `0.00`.
+String formatSigned(double value, int decimals) {
+  final rounded = roundTo(value, decimals);
+  final magnitude = rounded.abs().toStringAsFixed(decimals);
+  if (rounded > 0) return '+$magnitude';
+  if (rounded < 0) return '-$magnitude';
+  return magnitude;
 }
 
 /// A bare number with at most one decimal and no trailing `.0`, so a whole
@@ -61,6 +76,9 @@ String formatHeight(double centimetres, MeasurementSystem system) {
 /// Exact by definition, and the only place the pound is spelled out.
 const double kilogramsPerPound = 0.45359237;
 
+/// The places every weight and change in weight is shown to.
+const int weightDecimals = 2;
+
 double poundsToKilograms(double pounds) => pounds * kilogramsPerPound;
 
 double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
@@ -81,5 +99,17 @@ extension WeightDisplay on MeasurementSystem {
 
   /// [kilograms] as it appears on screen: `72.57 kg`, `160.00 lbs`.
   String formatWeight(double kilograms) =>
-      '${weightFromKilograms(kilograms).toStringAsFixed(2)} $weightSymbol';
+      '${weightFromKilograms(kilograms).toStringAsFixed(weightDecimals)} '
+      '$weightSymbol';
+
+  /// A change of [kilograms] in this system, rounded to what
+  /// [formatWeightChange] prints.
+  double weightChange(double kilograms) =>
+      roundTo(weightFromKilograms(kilograms), weightDecimals);
+
+  /// A change of [kilograms] as it appears on screen: `+0.05 kg`, `-1.54 lbs`,
+  /// `0.00 kg`.
+  String formatWeightChange(double kilograms) =>
+      '${formatSigned(weightFromKilograms(kilograms), weightDecimals)} '
+      '$weightSymbol';
 }

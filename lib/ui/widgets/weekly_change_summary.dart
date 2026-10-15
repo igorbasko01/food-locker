@@ -35,18 +35,8 @@ List<String> weeklyChangeSummary(
     'avg ${system.formatWeight(mean)} (${_weighIns(week.count)}) vs '
         '${system.formatWeight(previousMean)} the week before '
         '(${week.previousCount})',
-    _signedChange(week.delta!, system),
+    system.formatWeightChange(week.delta!),
   ];
 }
 
 String _weighIns(int count) => '$count weigh-in${count == 1 ? '' : 's'}';
-
-/// The delta with its sign, matching how a history row states a change.
-String _signedChange(double delta, MeasurementSystem system) {
-  final shown = system.weightFromKilograms(delta).toStringAsFixed(2);
-  final rounded = double.parse(shown);
-  final magnitude = '${rounded.abs().toStringAsFixed(2)} ${system.weightSymbol}';
-  if (rounded > 0) return '+$magnitude';
-  if (rounded < 0) return '-$magnitude';
-  return magnitude;
-}

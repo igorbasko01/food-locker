@@ -209,11 +209,11 @@ class WeightPage extends StatelessWidget {
     final change = week.delta;
     if (change == null) return _missingStatTile('Weekly change');
 
-    final rounded = _roundTo(system.weightFromKilograms(change), 2);
+    final rounded = system.weightChange(change);
     return Expanded(
       child: StatTile(
         label: 'Weekly change',
-        value: '${_signed(rounded, 2)} ${system.weightSymbol}',
+        value: system.formatWeightChange(change),
         subLabel: _weeklyChangeWeeks(week),
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
@@ -229,13 +229,13 @@ class WeightPage extends StatelessWidget {
     if (perWeek == null) return _missingStatTile('30-day trend');
 
     final shown = system.weightFromKilograms(perWeek);
-    final rounded = _roundTo(shown, 2);
-    final perMonth = _roundTo(shown * 30 / 7, 1);
+    final rounded = roundTo(shown, 2);
     return Expanded(
       child: StatTile(
         label: '30-day trend',
-        value: '${_signed(rounded, 2)} ${system.weightSymbol}/wk',
-        subLabel: '≈ ${_signed(perMonth, 1)} ${system.weightSymbol}/month',
+        value: '${formatSigned(shown, 2)} ${system.weightSymbol}/wk',
+        subLabel:
+            '≈ ${formatSigned(shown * 30 / 7, 1)} ${system.weightSymbol}/month',
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
       ),
@@ -252,17 +252,18 @@ class WeightPage extends StatelessWidget {
       return _missingStatTile('Vs. low');
     }
 
-    final rounded = _roundTo(system.weightFromKilograms(change), 2);
-    final low = system.weightFromKilograms(lowest.value).toStringAsFixed(2);
+    final low = system
+        .weightFromKilograms(lowest.value)
+        .toStringAsFixed(weightDecimals);
     return Expanded(
       child: StatTile(
         label: 'Vs. low',
-        value: '${_signed(rounded, 2)} ${system.weightSymbol}',
+        value: system.formatWeightChange(change),
         subLabel: 'low $low on ${shortDate(lowest.date)}',
         // Never negative, so signed green/red would leave this tile
         // permanently red. Standing on the low earns the trophy instead.
         valueColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        icon: rounded == 0 ? Icons.emoji_events : null,
+        icon: system.weightChange(change) == 0 ? Icons.emoji_events : null,
       ),
     );
   }
@@ -386,18 +387,6 @@ String _weeklyChangeWeeks(WeeklyWeightChange week) =>
 /// The tile a statistic the store has too little for falls back to.
 Widget _missingStatTile(String label) =>
     Expanded(child: StatTile(label: label, value: '--'));
-
-/// [value] rounded to what the tile will print, so its sign, colour, and arrow
-/// agree with the digits — a -0.04 kg week reads as flat, not as a loss.
-double _roundTo(double value, int decimals) =>
-    double.parse(value.toStringAsFixed(decimals));
-
-String _signed(double value, int decimals) {
-  final magnitude = value.abs().toStringAsFixed(decimals);
-  if (value > 0) return '+$magnitude';
-  if (value < 0) return '-$magnitude';
-  return magnitude;
-}
 
 /// Down is green and up is the error colour, matching the history rows'
 /// change indicator so the whole tab reads the same way.

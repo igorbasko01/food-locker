@@ -84,6 +84,15 @@ void main() {
     });
   });
 
+  group('formatSigned', () {
+    test('rounds before choosing the sign', () {
+      expect(formatSigned(0.05, 2), '+0.05');
+      expect(formatSigned(-1.54, 1), '-1.5');
+      expect(formatSigned(-0.004, 2), '0.00');
+      expect(formatSigned(0.0, 2), '0.00');
+    });
+  });
+
   group('kilogram/pound conversion', () {
     test('a pound is the defined 0.45359237 kg', () {
       expect(poundsToKilograms(1), kilogramsPerPound);
@@ -118,6 +127,17 @@ void main() {
 
     test('formatWeight keeps the sign of a negative value', () {
       expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.00 lbs');
+    });
+
+    test('formatWeightChange signs a gain and a loss in the system', () {
+      expect(MeasurementSystem.metric.formatWeightChange(89.40 - 89.45), '-0.05 kg');
+      expect(MeasurementSystem.metric.formatWeightChange(1.4), '+1.40 kg');
+      expect(MeasurementSystem.imperial.formatWeightChange(0.7), '+1.54 lbs');
+    });
+
+    test('a change too small to show is unsigned zero', () {
+      expect(MeasurementSystem.metric.formatWeightChange(-0.004), '0.00 kg');
+      expect(MeasurementSystem.metric.weightChange(-0.004), 0);
     });
   });
 }
