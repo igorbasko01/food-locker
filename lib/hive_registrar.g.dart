@@ -7,14 +7,14 @@ import 'package:food_locker/features/weight/data/weight.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
-    registerAdapter(WeightAdapter());
+    registerAdapter(WeightEntryAdapter());
     registerAdapter(WeightUnitAdapter());
   }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
-    registerAdapter(WeightAdapter());
+    registerAdapter(WeightEntryAdapter());
     registerAdapter(WeightUnitAdapter());
   }
 }
