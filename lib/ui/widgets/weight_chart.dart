@@ -68,7 +68,7 @@ class WeightChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Text(
-                      system.formatWeightTick(value),
+                      system.formatWeightValue(value, decimals: 1),
                       style: const TextStyle(fontSize: 10),
                     ),
                   );

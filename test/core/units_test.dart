@@ -116,9 +116,15 @@ void main() {
       expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.00 lbs');
     });
 
-    test('formatWeightTick keeps one decimal for a narrow axis', () {
-      expect(MeasurementSystem.metric.formatWeightTick(72.34), '72.3');
-      expect(MeasurementSystem.imperial.formatWeightTick(72.5748), '160.0');
+    test('formatWeightValue takes fewer decimals when asked', () {
+      expect(
+        MeasurementSystem.metric.formatWeightValue(72.34, decimals: 1),
+        '72.3',
+      );
+      expect(
+        MeasurementSystem.imperial.formatWeightValue(72.5748, decimals: 1),
+        '160.0',
+      );
     });
 
     test('formatWeightValue is the bare number in the system', () {

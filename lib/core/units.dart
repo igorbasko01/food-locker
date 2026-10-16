@@ -83,10 +83,6 @@ const double kilogramsPerPound = 0.45359237;
 /// The places every weight and change in weight is shown to.
 const int _weightDecimals = 2;
 
-/// Chart axes are too narrow for [_weightDecimals], and a tick is a scale
-/// mark rather than a reading.
-const int _weightTickDecimals = 1;
-
 double poundsToKilograms(double pounds) => pounds * kilogramsPerPound;
 
 double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
@@ -105,14 +101,12 @@ extension WeightDisplay on MeasurementSystem {
   double weightToKilograms(double value) =>
       this == MeasurementSystem.imperial ? poundsToKilograms(value) : value;
 
-  /// [kilograms] as a bare number in this system, for a field or a label that
-  /// names the unit elsewhere: `72.57`, `160.00`.
-  String formatWeightValue(double kilograms) =>
-      weightFromKilograms(kilograms).toStringAsFixed(_weightDecimals);
-
-  /// [kilograms] as a chart axis tick: `72.5`, `160.0`.
-  String formatWeightTick(double kilograms) =>
-      weightFromKilograms(kilograms).toStringAsFixed(_weightTickDecimals);
+  /// [kilograms] as a bare number in this system, for a field, label or axis
+  /// that names the unit elsewhere: `72.57`, `160.00`.
+  String formatWeightValue(
+    double kilograms, {
+    int decimals = _weightDecimals,
+  }) => weightFromKilograms(kilograms).toStringAsFixed(decimals);
 
   /// [kilograms] as it appears on screen: `72.57 kg`, `160.00 lbs`.
   String formatWeight(double kilograms) =>
