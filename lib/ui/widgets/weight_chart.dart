@@ -29,11 +29,11 @@ class WeightChart extends StatelessWidget {
     final spots = sortedWeights.map((w) {
       // Use time relative to first entry for X-axis to keep values smaller
       final ms = w.date.millisecondsSinceEpoch.toDouble();
-      return FlSpot(ms, w.kilograms);
+      return FlSpot(ms, w.weight.value(MeasurementSystem.metric));
     }).toList();
 
-    double minY = sortedWeights.map((e) => e.kilograms).reduce((a, b) => a < b ? a : b);
-    double maxY = sortedWeights.map((e) => e.kilograms).reduce((a, b) => a > b ? a : b);
+    double minY = sortedWeights.map((e) => e.weight.value(MeasurementSystem.metric)).reduce((a, b) => a < b ? a : b);
+    double maxY = sortedWeights.map((e) => e.weight.value(MeasurementSystem.metric)).reduce((a, b) => a > b ? a : b);
 
     // Padding for Y axis
     minY = (minY - 2).clamp(0, double.infinity);
@@ -68,7 +68,7 @@ class WeightChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Text(
-                      Weight.kilograms(value).stringify(
+                      Weight(value, MeasurementSystem.metric).stringify(
                         system,
                         decimals: 1,
                         withSymbol: false,
@@ -105,7 +105,7 @@ class WeightChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final date = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
                   return LineTooltipItem(
-                    '${fullDateWithWeekday(date)}\n${Weight.kilograms(spot.y).stringify(system)}',
+                    '${fullDateWithWeekday(date)}\n${Weight(spot.y, MeasurementSystem.metric).stringify(system)}',
                     const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   );
                 }).toList();

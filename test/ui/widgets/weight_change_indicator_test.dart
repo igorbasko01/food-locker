@@ -12,7 +12,7 @@ void main() {
     return MaterialApp(
       home: Scaffold(
         body: WeightChangeIndicator(
-          diff: kilograms == null ? null : WeightChange.kilograms(kilograms),
+          diff: kilograms == null ? null : WeightChange(kilograms, MeasurementSystem.metric),
           system: system,
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 /// One calendar week's weight change, as the Home heatmap reads it.
@@ -87,7 +88,7 @@ class WeeklyWeightChange {
   bool get hasData => delta != null;
 
   /// Whether the week ended heavier. A flat week counts as not gained.
-  bool get isGain => (delta?.kilograms ?? 0) > 0;
+  bool get isGain => (delta?.value(MeasurementSystem.metric) ?? 0) > 0;
 
   /// The Sunday opening the week before the one [weekStart] opens.
   static DateTime _weekBefore(DateTime weekStart) =>

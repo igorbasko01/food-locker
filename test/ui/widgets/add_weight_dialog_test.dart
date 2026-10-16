@@ -101,14 +101,14 @@ void main() {
       tester,
       DateTime(2026, 3, 8),
       system: MeasurementSystem.imperial,
-      initialWeight: const Weight.kilograms(72.5748),
+      initialWeight: Weight(72.5748, MeasurementSystem.metric),
     );
 
     expect(find.text('160.00'), findsOneWidget);
   });
 
   testWidgets('an existing entry prefills with two decimals', (tester) async {
-    await pumpDialog(tester, DateTime(2026, 3, 8), initialWeight: const Weight.kilograms(72.35));
+    await pumpDialog(tester, DateTime(2026, 3, 8), initialWeight: Weight(72.35, MeasurementSystem.metric));
 
     expect(find.text('72.35'), findsOneWidget);
   });
@@ -122,7 +122,7 @@ void main() {
       typed: '72.35',
     );
 
-    expect((result!['weight'] as Weight).kilograms, 72.35);
+    expect((result!['weight'] as Weight).value(MeasurementSystem.metric), 72.35);
   });
 
   testWidgets('a whole-pound entry saves as kilograms', (tester) async {
@@ -132,7 +132,7 @@ void main() {
       typed: '160',
     );
 
-    expect((result!['weight'] as Weight).kilograms, closeTo(72.5748, 1e-4));
+    expect((result!['weight'] as Weight).value(MeasurementSystem.metric), closeTo(72.5748, 1e-4));
   });
 
   testWidgets('a one-decimal pound entry saves as kilograms', (tester) async {
@@ -142,7 +142,7 @@ void main() {
       typed: '159.8',
     );
 
-    expect((result!['weight'] as Weight).kilograms, closeTo(72.4841, 1e-4));
+    expect((result!['weight'] as Weight).value(MeasurementSystem.metric), closeTo(72.4841, 1e-4));
   });
 
   testWidgets('kilograms are stored as typed', (tester) async {
@@ -152,7 +152,7 @@ void main() {
       typed: '75.5',
     );
 
-    expect((result!['weight'] as Weight).kilograms, 75.5);
+    expect((result!['weight'] as Weight).value(MeasurementSystem.metric), 75.5);
   });
 
   testWidgets('saving an untouched imperial edit leaves the stored kg exact', (
@@ -163,10 +163,10 @@ void main() {
     final result = await submit(
       tester,
       system: MeasurementSystem.imperial,
-      initialWeight: const Weight.kilograms(stored),
+      initialWeight: Weight(stored, MeasurementSystem.metric),
     );
 
-    expect((result!['weight'] as Weight).kilograms, stored);
+    expect((result!['weight'] as Weight).value(MeasurementSystem.metric), stored);
   });
 
   testWidgets('a deliberate imperial edit converts the new figure', (
@@ -175,11 +175,11 @@ void main() {
     final result = await submit(
       tester,
       system: MeasurementSystem.imperial,
-      initialWeight: const Weight.kilograms(72.57432),
+      initialWeight: Weight(72.57432, MeasurementSystem.metric),
       typed: '158.0',
     );
 
-    expect((result!['weight'] as Weight).kilograms, closeTo(71.6676, 1e-3));
+    expect((result!['weight'] as Weight).value(MeasurementSystem.metric), closeTo(71.6676, 1e-3));
   });
 
   testWidgets('a non-positive entry does not pop a value', (tester) async {

@@ -1,3 +1,4 @@
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -53,8 +54,8 @@ class WeightAnalytics {
   static WeightEntry _newer(WeightEntry a, WeightEntry b) => b.date.isAfter(a.date) ? b : a;
 
   static WeightEntry _lower(WeightEntry a, WeightEntry b) {
-    if (b.kilograms < a.kilograms) return b;
-    if (b.kilograms == a.kilograms && b.date.isAfter(a.date)) return b;
+    if (b.weight < a.weight) return b;
+    if (b.weight == a.weight && b.date.isAfter(a.date)) return b;
     return a;
   }
 
@@ -93,7 +94,7 @@ class WeightAnalytics {
     final days = [
       for (final entry in entries) _daysBetween(from, entry.date).toDouble(),
     ];
-    final values = [for (final entry in entries) entry.kilograms];
+    final values = [for (final entry in entries) entry.weight.value(MeasurementSystem.metric)];
     final meanDay = days.reduce((a, b) => a + b) / days.length;
     final meanValue = values.reduce((a, b) => a + b) / values.length;
 
@@ -106,7 +107,7 @@ class WeightAnalytics {
     }
     if (variance == 0) return null;
 
-    return WeightChange.kilograms(covariance / variance * 7);
+    return WeightChange(covariance / variance * 7, MeasurementSystem.metric);
   }
 
   /// The last [weeks] Sunday-to-Saturday weeks of weight change, oldest first

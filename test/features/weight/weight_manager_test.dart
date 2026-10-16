@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
@@ -19,11 +20,11 @@ void main() {
     });
 
     test('lowestAllTime returns global minimum', () async {
-      await manager.addWeight(DateTime(2023, 1, 1), const Weight.kilograms(80.0));
-      await manager.addWeight(DateTime(2023, 2, 1), const Weight.kilograms(75.0));
-      await manager.addWeight(DateTime(2023, 3, 1), const Weight.kilograms(77.0));
+      await manager.addWeight(DateTime(2023, 1, 1), Weight(80.0, MeasurementSystem.metric));
+      await manager.addWeight(DateTime(2023, 2, 1), Weight(75.0, MeasurementSystem.metric));
+      await manager.addWeight(DateTime(2023, 3, 1), Weight(77.0, MeasurementSystem.metric));
 
-      expect(manager.lowestAllTime?.kilograms, 75.0);
+      expect(manager.lowestAllTime?.value(MeasurementSystem.metric), 75.0);
     });
 
     test('latestEntry and lowestEntry are null when empty', () {
@@ -34,13 +35,13 @@ void main() {
 
     test('changeFromLowest measures the latest weigh-in against the low',
         () async {
-      await manager.addWeight(DateTime(2023, 1, 1), const Weight.kilograms(80.0));
-      await manager.addWeight(DateTime(2023, 2, 1), const Weight.kilograms(75.0));
-      await manager.addWeight(DateTime(2023, 3, 1), const Weight.kilograms(77.0));
+      await manager.addWeight(DateTime(2023, 1, 1), Weight(80.0, MeasurementSystem.metric));
+      await manager.addWeight(DateTime(2023, 2, 1), Weight(75.0, MeasurementSystem.metric));
+      await manager.addWeight(DateTime(2023, 3, 1), Weight(77.0, MeasurementSystem.metric));
 
       expect(manager.latestEntry?.kilograms, 77.0);
       expect(manager.lowestEntry?.date, DateTime(2023, 2, 1));
-      expect(manager.changeFromLowest?.kilograms, closeTo(2.0, 1e-9));
+      expect(manager.changeFromLowest?.value(MeasurementSystem.metric), closeTo(2.0, 1e-9));
     });
 
     test('weeklyChange carries the periods and counts behind the figure',
@@ -62,16 +63,16 @@ void main() {
         thisWeek.month,
         thisWeek.day - 14,
       );
-      await manager.addWeight(weekBefore, const Weight.kilograms(80.0));
+      await manager.addWeight(weekBefore, Weight(80.0, MeasurementSystem.metric));
       await manager.addWeight(
         DateTime(weekBefore.year, weekBefore.month, weekBefore.day + 1),
-        const Weight.kilograms(80.0),
+        Weight(80.0, MeasurementSystem.metric),
       );
-      await manager.addWeight(lastWeek, const Weight.kilograms(79.0));
+      await manager.addWeight(lastWeek, Weight(79.0, MeasurementSystem.metric));
 
       final week = manager.weeklyChange;
 
-      expect(week.delta?.kilograms, closeTo(-1.0, 1e-9));
+      expect(week.delta?.value(MeasurementSystem.metric), closeTo(-1.0, 1e-9));
       expect(week.weekStart, lastWeek);
       expect(week.previousWeekStart, weekBefore);
       expect(week.count, 1);
@@ -90,7 +91,7 @@ void main() {
         for (var daysAgo = 0; daysAgo <= 8; daysAgo++) {
           await manager.addWeight(
             DateTime(today.year, today.month, today.day - daysAgo),
-            Weight.kilograms(80.0 + daysAgo),
+            Weight(80.0 + daysAgo, MeasurementSystem.metric),
           );
         }
 
@@ -108,7 +109,7 @@ void main() {
 
         await manager.addWeight(
           DateTime(today.year, today.month, today.day - 30),
-          const Weight.kilograms(90.0),
+          Weight(90.0, MeasurementSystem.metric),
         );
 
         expect(repository.getAllWeights(), hasLength(1));
@@ -122,10 +123,10 @@ void main() {
       test('selecting a wider range brings older entries back', () async {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        await manager.addWeight(today, const Weight.kilograms(75.0));
+        await manager.addWeight(today, Weight(75.0, MeasurementSystem.metric));
         await manager.addWeight(
           DateTime(today.year, today.month, today.day - 20),
-          const Weight.kilograms(78.0),
+          Weight(78.0, MeasurementSystem.metric),
         );
 
         expect(manager.history.map((w) => w.kilograms), [75.0]);
@@ -143,10 +144,10 @@ void main() {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
         manager.selectHistoryRange(const DateRange.lastDays(365));
-        await manager.addWeight(today, const Weight.kilograms(75.0));
+        await manager.addWeight(today, Weight(75.0, MeasurementSystem.metric));
         await manager.addWeight(
           DateTime(today.year, today.month - 3, today.day),
-          const Weight.kilograms(79.0),
+          Weight(79.0, MeasurementSystem.metric),
         );
 
         expect(manager.history, hasLength(2));
@@ -202,7 +203,7 @@ void main() {
     test('drops entries the repository no longer holds', () async {
       final repository = InMemoryWeightRepository();
       final manager = WeightManager(repository);
-      await manager.addWeight(DateTime.now(), const Weight.kilograms(80.0));
+      await manager.addWeight(DateTime.now(), Weight(80.0, MeasurementSystem.metric));
       expect(manager.history, hasLength(1));
 
       await repository.clear();

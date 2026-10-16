@@ -3,126 +3,93 @@ import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 void main() {
+  const metric = MeasurementSystem.metric;
+  const imperial = MeasurementSystem.imperial;
+
   group('Weight', () {
     test('stringify renders two decimals and the system symbol', () {
-      const weight = Weight.kilograms(72.5748);
-      expect(weight.stringify(MeasurementSystem.metric), '72.57 kg');
-      expect(weight.stringify(MeasurementSystem.imperial), '160.00 lbs');
-      expect(
-        const Weight.kilograms(72.5).stringify(MeasurementSystem.metric),
-        '72.50 kg',
-      );
+      final weight = Weight(72.5748, metric);
+      expect(weight.stringify(metric), '72.57 kg');
+      expect(weight.stringify(imperial), '160.00 lbs');
+      expect(Weight(72.5, metric).stringify(metric), '72.50 kg');
     });
 
     test('stringify takes fewer decimals and drops the symbol when asked', () {
-      const weight = Weight.kilograms(72.5748);
+      final weight = Weight(72.5748, metric);
+      expect(weight.stringify(metric, decimals: 1), '72.6 kg');
       expect(
-        weight.stringify(MeasurementSystem.metric, decimals: 1),
-        '72.6 kg',
-      );
-      expect(
-        weight.stringify(
-          MeasurementSystem.imperial,
-          decimals: 1,
-          withSymbol: false,
-        ),
+        weight.stringify(imperial, decimals: 1, withSymbol: false),
         '160.0',
       );
-      expect(
-        const Weight.kilograms(72.3).stringify(
-          MeasurementSystem.metric,
-          withSymbol: false,
-        ),
-        '72.30',
-      );
+      expect(Weight(72.3, metric).stringify(metric, withSymbol: false), '72.30');
     });
 
     test('value reads the amount in the system', () {
-      const weight = Weight.kilograms(72.5748);
-      expect(weight.value(MeasurementSystem.metric), 72.5748);
-      expect(weight.value(MeasurementSystem.imperial), closeTo(160, 1e-3));
+      final weight = Weight(72.5748, metric);
+      expect(weight.value(metric), 72.5748);
+      expect(weight.value(imperial), closeTo(160, 1e-3));
     });
 
-    test('inSystem takes a typed figure back to the same amount', () {
-      expect(
-        Weight.inSystem(160, MeasurementSystem.imperial).kilograms,
-        closeTo(72.5748, 1e-4),
-      );
-      expect(Weight.inSystem(75.5, MeasurementSystem.metric).kilograms, 75.5);
+    test('a figure given in one system reads back in the other', () {
+      expect(Weight(160, imperial).value(metric), closeTo(72.5748, 1e-4));
+      expect(Weight(75.5, metric).value(metric), 75.5);
     });
 
     test('diff is this weight minus the other', () {
-      const today = Weight.kilograms(89.40);
-      const yesterday = Weight.kilograms(89.45);
-      expect(today.diff(yesterday).kilograms, closeTo(-0.05, 1e-9));
-      expect(yesterday.diff(today).kilograms, closeTo(0.05, 1e-9));
+      final today = Weight(89.40, metric);
+      final yesterday = Weight(89.45, metric);
+      expect(today.diff(yesterday).value(metric), closeTo(-0.05, 1e-9));
+      expect(yesterday.diff(today).value(metric), closeTo(0.05, 1e-9));
     });
 
     test('mean averages the weights, and is null for none', () {
       expect(
-        Weight.mean(const [Weight.kilograms(80), Weight.kilograms(81)]),
-        const Weight.kilograms(80.5),
+        Weight.mean([Weight(80, metric), Weight(81, metric)]),
+        Weight(80.5, metric),
       );
       expect(Weight.mean(const []), isNull);
     });
 
     test('compares by amount', () {
-      expect(const Weight.kilograms(72) < const Weight.kilograms(73), isTrue);
-      expect(const Weight.kilograms(73) < const Weight.kilograms(72), isFalse);
+      expect(Weight(72, metric) < Weight(73, metric), isTrue);
+      expect(Weight(73, metric) < Weight(72, metric), isFalse);
     });
   });
 
   group('WeightChange', () {
     test('stringify signs a gain and a loss in the system', () {
-      const today = Weight.kilograms(89.40);
-      const yesterday = Weight.kilograms(89.45);
-      expect(
-        today.diff(yesterday).stringify(MeasurementSystem.metric),
-        '-0.05 kg',
-      );
-      expect(
-        const WeightChange.kilograms(1.4).stringify(MeasurementSystem.metric),
-        '+1.40 kg',
-      );
-      expect(
-        const WeightChange.kilograms(0.7).stringify(MeasurementSystem.imperial),
-        '+1.54 lbs',
-      );
+      final today = Weight(89.40, metric);
+      final yesterday = Weight(89.45, metric);
+      expect(today.diff(yesterday).stringify(metric), '-0.05 kg');
+      expect(WeightChange(1.4, metric).stringify(metric), '+1.40 kg');
+      expect(WeightChange(0.7, metric).stringify(imperial), '+1.54 lbs');
     });
 
     test('a change too small to show is an unsigned zero', () {
-      const change = WeightChange.kilograms(-0.004);
-      expect(change.stringify(MeasurementSystem.metric), '0.00 kg');
-      expect(change.value(MeasurementSystem.metric), 0);
+      final change = WeightChange(-0.004, metric);
+      expect(change.stringify(metric), '0.00 kg');
+      expect(change.value(metric), 0);
     });
 
     test('value is rounded to what stringify prints, in the system', () {
-      const change = WeightChange.kilograms(0.7);
-      expect(change.value(MeasurementSystem.imperial), closeTo(1.54, 1e-9));
-      expect(
-        change.value(MeasurementSystem.imperial, decimals: 1),
-        closeTo(1.5, 1e-9),
-      );
-      expect(
-        change.stringify(MeasurementSystem.imperial, decimals: 1),
-        '+1.5 lbs',
-      );
+      final change = WeightChange(0.7, metric);
+      expect(change.value(imperial), closeTo(1.54, 1e-9));
+      expect(change.value(imperial, decimals: 1), closeTo(1.5, 1e-9));
+      expect(change.stringify(imperial, decimals: 1), '+1.5 lbs');
     });
 
     test('scales, as a weekly trend projected over a month', () {
       expect(
-        (const WeightChange.kilograms(-0.7) * (30 / 7)).stringify(
-          MeasurementSystem.metric,
-        ),
+        (WeightChange(-0.7, metric) * (30 / 7)).stringify(metric),
         '-3.00 kg',
       );
     });
   });
 
   group('WeightEntry', () {
-    test('weight is the stored kilograms as a Weight', () {
+    test('weight is the stored metric figure as a Weight', () {
       final entry = WeightEntry(date: DateTime(2026, 10, 14), kilograms: 89.4);
-      expect(entry.weight, const Weight.kilograms(89.4));
+      expect(entry.weight, Weight(89.4, metric));
     });
   });
 }

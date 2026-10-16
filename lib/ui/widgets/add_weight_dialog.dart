@@ -64,7 +64,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     if (weight != null && weight > 0) {
       Navigator.of(context).pop({
         'date': _selectedDate,
-        'weight': Weight.inSystem(weight, widget.system),
+        'weight': Weight(weight, widget.system),
       });
     }
   }

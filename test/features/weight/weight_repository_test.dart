@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
@@ -33,7 +34,7 @@ void main() {
       await repository.saveWeight(WeightEntry(date: DateTime(2023, 5, 11), kilograms: 75.0));
       await repository.saveWeight(WeightEntry(date: DateTime(2023, 5, 12), kilograms: 78.0));
 
-      expect(repository.getLowestWeight()?.kilograms, 75.0);
+      expect(repository.getLowestWeight()?.value(MeasurementSystem.metric), 75.0);
     });
 
     test('getLowestWeight with since parameter filters correctly', () async {
@@ -42,20 +43,20 @@ void main() {
       await repository.saveWeight(WeightEntry(date: baseDate.add(const Duration(days: 2)), kilograms: 75.0));
       await repository.saveWeight(WeightEntry(date: baseDate.add(const Duration(days: 4)), kilograms: 72.0));
 
-      expect(repository.getLowestWeight(since: baseDate.add(const Duration(days: 1)))?.kilograms, 72.0);
+      expect(repository.getLowestWeight(since: baseDate.add(const Duration(days: 1)))?.value(MeasurementSystem.metric), 72.0);
     });
 
     test('getLowestWeight caches result and invalidates correctly', () async {
       await repository.saveWeight(WeightEntry(date: DateTime(2023, 5, 10), kilograms: 80.0));
-      expect(repository.getLowestWeight()?.kilograms, 80.0);
+      expect(repository.getLowestWeight()?.value(MeasurementSystem.metric), 80.0);
 
       // Save a new lower weight, which should invalidate cache
       await repository.saveWeight(WeightEntry(date: DateTime(2023, 5, 11), kilograms: 75.0));
-      expect(repository.getLowestWeight()?.kilograms, 75.0);
+      expect(repository.getLowestWeight()?.value(MeasurementSystem.metric), 75.0);
 
       // Delete weight, which should invalidate cache
       await repository.deleteWeight(DateTime(2023, 5, 11));
-      expect(repository.getLowestWeight()?.kilograms, 80.0);
+      expect(repository.getLowestWeight()?.value(MeasurementSystem.metric), 80.0);
 
       // Clear, which should invalidate cache
       await repository.clear();

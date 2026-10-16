@@ -64,7 +64,7 @@ void main() {
     for (var daysAgo = 0; daysAgo < 28; daysAgo++) {
       await manager.addWeight(
         DateTime(today.year, today.month, today.day - daysAgo),
-        Weight.kilograms(70.0 + dailyLoss * daysAgo),
+        Weight(70.0 + dailyLoss * daysAgo, MeasurementSystem.metric),
       );
     }
     return manager;
@@ -93,8 +93,8 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(DateTime(today.year, today.month, today.day - 3), const Weight.kilograms(80.0));
-    await manager.addWeight(today, const Weight.kilograms(72.5));
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 3), Weight(80.0, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -157,8 +157,8 @@ void main() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lowDay = DateTime(today.year, today.month, today.day - 10);
-    await manager.addWeight(lowDay, const Weight.kilograms(72.3));
-    await manager.addWeight(today, const Weight.kilograms(73.7));
+    await manager.addWeight(lowDay, Weight(72.3, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(73.7, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -173,8 +173,8 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), const Weight.kilograms(73.0));
-    await manager.addWeight(today, const Weight.kilograms(72.5));
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), Weight(73.0, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -192,8 +192,8 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), const Weight.kilograms(73.0));
-    await manager.addWeight(today, const Weight.kilograms(72.9995));
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), Weight(73.0, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.9995, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -231,8 +231,8 @@ void main() {
     final recentDay = DateTime(today.year, today.month, today.day - 6);
     final oldDay = DateTime(today.year, today.month, today.day - 7);
 
-    await manager.addWeight(recentDay, const Weight.kilograms(71.0));
-    await manager.addWeight(oldDay, const Weight.kilograms(73.0));
+    await manager.addWeight(recentDay, Weight(71.0, MeasurementSystem.metric));
+    await manager.addWeight(oldDay, Weight(73.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -250,7 +250,7 @@ void main() {
     final today = DateTime(now.year, now.month, now.day);
     final lastMonth = DateTime(today.year, today.month, today.day - 20);
 
-    await manager.addWeight(lastMonth, const Weight.kilograms(73.0));
+    await manager.addWeight(lastMonth, Weight(73.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -287,7 +287,7 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(today, const Weight.kilograms(72.5));
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -309,7 +309,7 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(today, const Weight.kilograms(72.5));
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -329,7 +329,7 @@ void main() {
       final manager = WeightManager(InMemoryWeightRepository());
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      await manager.addWeight(today, const Weight.kilograms(81.0));
+      await manager.addWeight(today, Weight(81.0, MeasurementSystem.metric));
 
       await pumpPage(
         tester,
@@ -346,7 +346,7 @@ void main() {
     testWidgets('prompts for a height rather than guessing one', (tester) async {
       final manager = WeightManager(InMemoryWeightRepository());
       final now = DateTime.now();
-      await manager.addWeight(DateTime(now.year, now.month, now.day), const Weight.kilograms(81.0));
+      await manager.addWeight(DateTime(now.year, now.month, now.day), Weight(81.0, MeasurementSystem.metric));
       final settings = SettingsManager(InMemorySettingsRepository());
 
       await pumpPage(tester, manager, settingsManager: settings);

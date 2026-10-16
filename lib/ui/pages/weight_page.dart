@@ -232,7 +232,7 @@ class WeightPage extends StatelessWidget {
     // A week that reads flat stays flat over the month, so the two lines never
     // disagree in sign.
     final perMonth = rounded == 0
-        ? const WeightChange.kilograms(0)
+        ? WeightChange(0, system)
         : perWeek * (30 / 7);
     return Expanded(
       child: StatTile(
@@ -344,7 +344,10 @@ class _Bmi extends StatelessWidget {
     }
 
     return BmiScale(
-      bmi: bodyMassIndex(kilograms: current.kilograms, heightCm: heightCm),
+      bmi: bodyMassIndex(
+        kilograms: current.weight.value(MeasurementSystem.metric),
+        heightCm: heightCm,
+      ),
     );
   }
 

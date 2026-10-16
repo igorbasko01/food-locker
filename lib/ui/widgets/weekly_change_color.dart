@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 
 /// The heatmap's colour for a week that reported no change.
@@ -24,7 +25,7 @@ class WeeklyChangeScale {
   factory WeeklyChangeScale.forWeeks(Iterable<WeeklyWeightChange> weeks) {
     final magnitudes = [
       for (final week in weeks)
-        if (week.delta != null) week.delta!.kilograms.abs(),
+        if (week.delta != null) week.delta!.value(MeasurementSystem.metric).abs(),
     ]..sort();
     if (magnitudes.isEmpty) return const WeeklyChangeScale._(floor);
 
@@ -44,7 +45,7 @@ class WeeklyChangeScale {
   /// Magnitude bucket, 1 (faintest) to 4 (strongest), or null for a week with
   /// no delta.
   int? levelFor(WeeklyWeightChange week) {
-    final magnitude = week.delta?.kilograms.abs();
+    final magnitude = week.delta?.value(MeasurementSystem.metric).abs();
     if (magnitude == null) return null;
     if (magnitude < 0.25 * reference) return 1;
     if (magnitude < 0.50 * reference) return 2;

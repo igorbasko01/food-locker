@@ -1,4 +1,5 @@
 import 'package:archive/archive.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/core/csv_serializer.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
@@ -42,7 +43,7 @@ class WeightBackupCodec {
     final items = weights
         .map((w) => {
               'date': w.date.toIso8601String(),
-              'value': w.kilograms,
+              'value': w.weight.value(MeasurementSystem.metric),
             })
         .toList();
     return CsvSerializer.toCSV(items);
