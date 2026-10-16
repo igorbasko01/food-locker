@@ -42,7 +42,8 @@ class WeightChangeIndicator extends StatelessWidget {
     } else {
       backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
       textColor = theme.colorScheme.outline;
-      icon = Icons.remove_rounded;
+      // A dash here reads as a minus sign; the grey pill already says flat.
+      icon = null;
       fontWeight = FontWeight.bold;
     }
 

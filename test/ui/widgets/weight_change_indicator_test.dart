@@ -38,10 +38,10 @@ void main() {
     expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });
 
-  testWidgets('shows 0.00 kg and neutral icon when diff is 0', (tester) async {
+  testWidgets('shows 0.00 kg and no icon when diff is 0', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(0.0));
     expect(find.text('0.00 kg'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
+    expect(find.byType(Icon), findsNothing);
   });
 
   testWidgets('shows a change of a few hundredths', (tester) async {
@@ -53,8 +53,7 @@ void main() {
   testWidgets('a change that rounds to zero reads as flat', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(-0.004));
     expect(find.text('0.00 kg'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.arrow_downward_rounded), findsNothing);
+    expect(find.byType(Icon), findsNothing);
   });
 
   testWidgets('converts the kilogram diff under imperial', (tester) async {
