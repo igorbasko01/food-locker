@@ -127,7 +127,7 @@ void main() {
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 40)],
-      weights: [WeightEntry(date: DateTime(2026, 1, 1), kilograms: 72.5748)],
+      weights: [WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(72.5748, MeasurementSystem.metric))],
       weightSystem: MeasurementSystem.imperial,
     );
 
@@ -205,8 +205,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
       ],
       weights: [
-        WeightEntry(date: DateTime(2026, 1, 1), kilograms: 80),
-        WeightEntry(date: DateTime(2026, 1, 2), kilograms: 81),
+        WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(80, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2026, 1, 2), weight: Weight(81, MeasurementSystem.metric)),
       ],
     );
 
@@ -263,8 +263,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
       ],
       weights: [
-        WeightEntry(date: DateTime(2026, 1, 1), kilograms: 80),
-        WeightEntry(date: DateTime(2026, 1, 2), kilograms: 81),
+        WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(80, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2026, 1, 2), weight: Weight(81, MeasurementSystem.metric)),
       ],
     );
 
@@ -291,7 +291,7 @@ void main() {
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 50)],
-      weights: [WeightEntry(date: DateTime(2026, 1, 3), kilograms: 80)],
+      weights: [WeightEntry(date: DateTime(2026, 1, 3), weight: Weight(80, MeasurementSystem.metric))],
     );
 
     expect(data.barGroups, hasLength(3));
@@ -318,8 +318,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 50),
       ],
       weights: [
-        WeightEntry(date: DateTime(2026, 1, 1), kilograms: 72),
-        WeightEntry(date: DateTime(2026, 1, 2), kilograms: 73),
+        WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(72, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2026, 1, 2), weight: Weight(73, MeasurementSystem.metric)),
       ],
     );
 

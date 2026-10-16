@@ -85,11 +85,4 @@ void main() {
       );
     });
   });
-
-  group('WeightEntry', () {
-    test('weight is the stored metric figure as a Weight', () {
-      final entry = WeightEntry(date: DateTime(2026, 10, 14), kilograms: 89.4);
-      expect(entry.weight, Weight(89.4, metric));
-    });
-  });
 }

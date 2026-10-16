@@ -18,7 +18,7 @@ void main() {
   });
 
   Future<void> log(DateTime date, double value) => repository.saveWeight(
-    WeightEntry(date: date, kilograms: value, unit: WeightUnit.kilograms),
+    WeightEntry(date: date, weight: Weight(value, MeasurementSystem.metric)),
   );
 
   /// Logs [values] on consecutive days, one per day, beginning at [start].
@@ -246,7 +246,7 @@ void main() {
       expect(
         () => WeeklyWeightChange(
           weekStart: DateTime(2026, 8, 9),
-          entries: [WeightEntry(date: DateTime(2026, 8, 16), kilograms: 80.0)],
+          entries: [WeightEntry(date: DateTime(2026, 8, 16), weight: Weight(80.0, MeasurementSystem.metric))],
         ),
         throwsA(isA<AssertionError>()),
       );
@@ -256,7 +256,7 @@ void main() {
       expect(
         () => WeeklyWeightChange(
           weekStart: DateTime(2026, 8, 9),
-          previousEntries: [WeightEntry(date: DateTime(2026, 7, 29), kilograms: 80.0)],
+          previousEntries: [WeightEntry(date: DateTime(2026, 7, 29), weight: Weight(80.0, MeasurementSystem.metric))],
         ),
         throwsA(isA<AssertionError>()),
       );

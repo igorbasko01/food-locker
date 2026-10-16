@@ -14,7 +14,7 @@ void main() {
   });
 
   Future<void> log(DateTime date, double value) =>
-      repository.saveWeight(WeightEntry(date: date, kilograms: value));
+      repository.saveWeight(WeightEntry(date: date, weight: Weight(value, MeasurementSystem.metric)));
 
   group('weeklyChange', () {
     // A Wednesday: its week opens Sunday 2024-01-07, so the most recent
@@ -183,7 +183,7 @@ void main() {
       await log(DateTime(2024, 1, 15), 74.0);
 
       expect(analytics.latestEntry?.date, DateTime(2024, 1, 15));
-      expect(analytics.lowestEntry?.kilograms, 72.5);
+      expect(analytics.lowestEntry?.weight.value(MeasurementSystem.metric), 72.5);
       expect(analytics.changeFromLowest?.value(MeasurementSystem.metric), closeTo(1.5, 1e-9));
     });
 
@@ -206,8 +206,8 @@ void main() {
     test('carry a single weigh-in on their own', () async {
       await log(DateTime(2024, 1, 15), 72.0);
 
-      expect(analytics.latestEntry?.kilograms, 72.0);
-      expect(analytics.lowestEntry?.kilograms, 72.0);
+      expect(analytics.latestEntry?.weight.value(MeasurementSystem.metric), 72.0);
+      expect(analytics.lowestEntry?.weight.value(MeasurementSystem.metric), 72.0);
       expect(analytics.changeFromLowest?.value(MeasurementSystem.metric), 0.0);
     });
 
@@ -217,8 +217,8 @@ void main() {
       await log(today, 74.0);
       await log(DateTime(today.year, today.month, today.day + 3), 60.0);
 
-      expect(analytics.latestEntry?.kilograms, 74.0);
-      expect(analytics.lowestEntry?.kilograms, 74.0);
+      expect(analytics.latestEntry?.weight.value(MeasurementSystem.metric), 74.0);
+      expect(analytics.lowestEntry?.weight.value(MeasurementSystem.metric), 74.0);
       expect(analytics.lowestAllTime?.value(MeasurementSystem.metric), 74.0);
       expect(analytics.changeFromLowest?.value(MeasurementSystem.metric), 0.0);
     });
@@ -229,7 +229,7 @@ void main() {
       await log(DateTime(today.year, today.month, today.day - 3), 80.0);
       await log(today, 74.0);
 
-      expect(analytics.latestEntry?.kilograms, 74.0);
+      expect(analytics.latestEntry?.weight.value(MeasurementSystem.metric), 74.0);
     });
   });
 }

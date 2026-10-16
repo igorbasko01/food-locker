@@ -1,36 +1,11 @@
 import 'package:food_locker/core/units.dart';
-import 'package:hive_ce/hive.dart';
 
-part 'weight.g.dart';
-
-@HiveType(typeId: 3)
-enum WeightUnit {
-  @HiveField(0)
-  kilograms,
-  @HiveField(1)
-  pounds,
-}
-
-/// One day's weigh-in, as the store holds it.
-@HiveType(typeId: 4)
+/// One day's weigh-in.
 class WeightEntry {
-  @HiveField(0)
+  const WeightEntry({required this.date, required this.weight});
+
   final DateTime date;
-
-  @HiveField(1)
-  final double kilograms;
-
-  /// Legacy provenance: always written as kilograms and never read.
-  @HiveField(2)
-  final WeightUnit unit;
-
-  WeightEntry({
-    required this.date,
-    required this.kilograms,
-    this.unit = WeightUnit.kilograms,
-  });
-
-  Weight get weight => Weight._(kilograms);
+  final Weight weight;
 }
 
 /// An amount of weight with no date: a weigh-in's reading, a mean, a low.

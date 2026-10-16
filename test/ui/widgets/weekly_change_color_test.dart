@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weekly_change_color.dart';
@@ -14,8 +15,8 @@ void main() {
     if (delta == null) return WeeklyWeightChange(weekStart: weekStart);
     return WeeklyWeightChange(
       weekStart: weekStart,
-      entries: [WeightEntry(date: weekStart, kilograms: 80.0 + delta)],
-      previousEntries: [WeightEntry(date: previousStart, kilograms: 80.0)],
+      entries: [WeightEntry(date: weekStart, weight: Weight(80.0 + delta, MeasurementSystem.metric))],
+      previousEntries: [WeightEntry(date: previousStart, weight: Weight(80.0, MeasurementSystem.metric))],
     );
   }
 

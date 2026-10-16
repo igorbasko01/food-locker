@@ -39,7 +39,7 @@ void main() {
       await manager.addWeight(DateTime(2023, 2, 1), Weight(75.0, MeasurementSystem.metric));
       await manager.addWeight(DateTime(2023, 3, 1), Weight(77.0, MeasurementSystem.metric));
 
-      expect(manager.latestEntry?.kilograms, 77.0);
+      expect(manager.latestEntry?.weight.value(MeasurementSystem.metric), 77.0);
       expect(manager.lowestEntry?.date, DateTime(2023, 2, 1));
       expect(manager.changeFromLowest?.value(MeasurementSystem.metric), closeTo(2.0, 1e-9));
     });
@@ -98,8 +98,8 @@ void main() {
         final history = manager.history;
 
         expect(history.length, 7);
-        expect(history.first.kilograms, 80.0);
-        expect(history.last.kilograms, 86.0);
+        expect(history.first.weight.value(MeasurementSystem.metric), 80.0);
+        expect(history.last.weight.value(MeasurementSystem.metric), 86.0);
         expect(repository.getAllWeights().length, 9);
       });
 
@@ -129,14 +129,14 @@ void main() {
           Weight(78.0, MeasurementSystem.metric),
         );
 
-        expect(manager.history.map((w) => w.kilograms), [75.0]);
+        expect(manager.history.map((w) => w.weight.value(MeasurementSystem.metric)), [75.0]);
 
         var notified = 0;
         manager.addListener(() => notified++);
         manager.selectHistoryRange(const DateRange.lastDays(30));
 
         expect(manager.historyRange, const DateRange.lastDays(30));
-        expect(manager.history.map((w) => w.kilograms), [75.0, 78.0]);
+        expect(manager.history.map((w) => w.weight.value(MeasurementSystem.metric)), [75.0, 78.0]);
         expect(notified, 1);
       });
 
@@ -154,7 +154,7 @@ void main() {
 
         manager.selectHistoryRange(const DateRange.lastDays(7));
 
-        expect(manager.history.map((w) => w.kilograms), [75.0]);
+        expect(manager.history.map((w) => w.weight.value(MeasurementSystem.metric)), [75.0]);
       });
 
       test('re-selecting the current range does not notify', () {
@@ -169,17 +169,17 @@ void main() {
       test('initialize loads the window from the repository', () async {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        await repository.saveWeight(WeightEntry(date: today, kilograms: 75.0));
+        await repository.saveWeight(WeightEntry(date: today, weight: Weight(75.0, MeasurementSystem.metric)));
         await repository.saveWeight(
           WeightEntry(
             date: DateTime(today.year, today.month, today.day - 10),
-            kilograms: 78.0,
+            weight: Weight(78.0, MeasurementSystem.metric),
           ),
         );
 
         await manager.initialize();
 
-        expect(manager.history.map((w) => w.kilograms), [75.0]);
+        expect(manager.history.map((w) => w.weight.value(MeasurementSystem.metric)), [75.0]);
       });
     });
   });
@@ -192,12 +192,12 @@ void main() {
 
       // What a restore does: writes through the repository, never through the
       // manager.
-      await repository.saveWeight(WeightEntry(date: DateTime.now(), kilograms: 71.5));
+      await repository.saveWeight(WeightEntry(date: DateTime.now(), weight: Weight(71.5, MeasurementSystem.metric)));
       expect(manager.history, isEmpty);
 
       await manager.refresh();
 
-      expect(manager.history.single.kilograms, 71.5);
+      expect(manager.history.single.weight.value(MeasurementSystem.metric), 71.5);
     });
 
     test('drops entries the repository no longer holds', () async {

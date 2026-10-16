@@ -62,7 +62,7 @@ class WeightBackupCodec {
       final value = double.tryParse(valueStr);
 
       if (date != null && value != null) {
-        weights.add(WeightEntry(date: date, kilograms: value));
+        weights.add(WeightEntry(date: date, weight: Weight(value, MeasurementSystem.metric)));
       }
     }
     return weights;

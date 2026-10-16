@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:food_locker/core/units.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
@@ -56,10 +55,7 @@ class WeightManager extends ChangeNotifier {
   }
 
   Future<void> addWeight(DateTime date, Weight weight) async {
-    final entry = WeightEntry(
-      date: date,
-      kilograms: weight.value(MeasurementSystem.metric),
-    );
+    final entry = WeightEntry(date: date, weight: weight);
     await _weightRepository.saveWeight(entry);
 
     _reloadHistory();
@@ -77,10 +73,7 @@ class WeightManager extends ChangeNotifier {
       await _weightRepository.deleteWeight(oldDate);
     }
 
-    final entry = WeightEntry(
-      date: newDate,
-      kilograms: weight.value(MeasurementSystem.metric),
-    );
+    final entry = WeightEntry(date: newDate, weight: weight);
     await _weightRepository.saveWeight(entry);
 
     _reloadHistory();
