@@ -21,7 +21,7 @@ FoodLocker is a Flutter (mobile, primarily Android) app with two shipped feature
 
 `flutter analyze` and `flutter test` both gate pushes locally (`.githooks/pre-push`) and PRs to `main` (`.github/workflows/flutter_ci.yml`). Run them before pushing.
 
-In a Claude Code cloud session, Flutter comes from `tool/cloud_setup.sh` (latest stable to match CI, installed to `/opt/flutter` and linked into `/usr/local/bin`); set it as the cloud environment's setup script so every session starts with it. If Flutter is still missing, run `bash tool/cloud_setup.sh` (about 2 minutes) rather than installing it another way. If that fails, push the branch and let the `flutter_ci.yml` workflow run `flutter analyze` and `flutter test` on the PR, then read the CI result to verify.
+In a Claude Code cloud session, Flutter comes from `tool/cloud_setup.sh`, set as the cloud environment's setup script: it installs `/usr/local/bin/flutter-ensure` and a user-level SessionStart hook (`~/.claude/settings.json`) that runs it, installing the project's pinned Flutter (`.fvmrc`, or an exact `environment.flutter` in `pubspec.yaml`; otherwise latest stable, as CI uses) to `/opt/flutter-<version>` and linking it into `/usr/local/bin`. If Flutter is still missing, run `bash tool/cloud_setup.sh && flutter-ensure` (about 2 minutes) rather than installing it another way. If that fails, push the branch and let the `flutter_ci.yml` workflow run `flutter analyze` and `flutter test` on the PR, then read the CI result to verify.
 
 ## Code Generation
 
