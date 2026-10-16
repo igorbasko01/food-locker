@@ -13,7 +13,7 @@ void main() {
   Future<BarChartData> pumpChart(
     WidgetTester tester,
     List<DailyBiteCount> counts, {
-    List<Weight> weights = const [],
+    List<WeightEntry> weights = const [],
     MeasurementSystem weightSystem = MeasurementSystem.metric,
     DateTime? selectedDay,
     ValueChanged<DateTime>? onDaySelected,
@@ -127,7 +127,7 @@ void main() {
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 40)],
-      weights: [Weight(date: DateTime(2026, 1, 1), value: 72.5748)],
+      weights: [WeightEntry(date: DateTime(2026, 1, 1), kilograms: 72.5748)],
       weightSystem: MeasurementSystem.imperial,
     );
 
@@ -205,8 +205,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
       ],
       weights: [
-        Weight(date: DateTime(2026, 1, 1), value: 80),
-        Weight(date: DateTime(2026, 1, 2), value: 81),
+        WeightEntry(date: DateTime(2026, 1, 1), kilograms: 80),
+        WeightEntry(date: DateTime(2026, 1, 2), kilograms: 81),
       ],
     );
 
@@ -263,8 +263,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
       ],
       weights: [
-        Weight(date: DateTime(2026, 1, 1), value: 80),
-        Weight(date: DateTime(2026, 1, 2), value: 81),
+        WeightEntry(date: DateTime(2026, 1, 1), kilograms: 80),
+        WeightEntry(date: DateTime(2026, 1, 2), kilograms: 81),
       ],
     );
 
@@ -291,7 +291,7 @@ void main() {
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 50)],
-      weights: [Weight(date: DateTime(2026, 1, 3), value: 80)],
+      weights: [WeightEntry(date: DateTime(2026, 1, 3), kilograms: 80)],
     );
 
     expect(data.barGroups, hasLength(3));
@@ -318,8 +318,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 50),
       ],
       weights: [
-        Weight(date: DateTime(2026, 1, 1), value: 72),
-        Weight(date: DateTime(2026, 1, 2), value: 73),
+        WeightEntry(date: DateTime(2026, 1, 1), kilograms: 72),
+        WeightEntry(date: DateTime(2026, 1, 2), kilograms: 73),
       ],
     );
 

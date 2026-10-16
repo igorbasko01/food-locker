@@ -4,11 +4,10 @@ import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
-/// One day's row in the weight history. [diff] is kilograms, like [item]'s own
-/// value; [system] is only how the two read.
+/// One day's row in the weight history, read in [system].
 class WeightHistoryTile extends StatelessWidget {
-  final Weight item;
-  final double? diff;
+  final WeightEntry item;
+  final WeightChange? diff;
   final MeasurementSystem system;
 
   const WeightHistoryTile({
@@ -48,7 +47,7 @@ class WeightHistoryTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              system.formatWeight(item.value),
+              item.weight.stringify(system),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

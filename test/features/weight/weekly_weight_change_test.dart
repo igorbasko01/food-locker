@@ -17,7 +17,7 @@ void main() {
   });
 
   Future<void> log(DateTime date, double value) => repository.saveWeight(
-    Weight(date: date, value: value, unit: WeightUnit.kilograms),
+    WeightEntry(date: date, kilograms: value, unit: WeightUnit.kilograms),
   );
 
   /// Logs [values] on consecutive days, one per day, beginning at [start].
@@ -79,7 +79,7 @@ void main() {
       final oldest = analytics.weeklyChanges(asOf: asOf).first;
 
       expect(oldest.weekStart, DateTime(2025, 8, 17));
-      expect(oldest.delta, closeTo(-1.0, 1e-9));
+      expect(oldest.delta?.kilograms, closeTo(-1.0, 1e-9));
     });
   });
 
@@ -106,11 +106,11 @@ void main() {
 
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
-      expect(current.mean, closeTo(80.0, 1e-9));
+      expect(current.mean?.kilograms, closeTo(80.0, 1e-9));
       expect(current.count, 3);
-      expect(current.previousMean, closeTo(81.5, 1e-9));
+      expect(current.previousMean?.kilograms, closeTo(81.5, 1e-9));
       expect(current.previousCount, 4);
-      expect(current.delta, closeTo(-1.5, 1e-9));
+      expect(current.delta?.kilograms, closeTo(-1.5, 1e-9));
       expect(current.isGain, isFalse);
     });
 
@@ -121,7 +121,7 @@ void main() {
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
       expect(current.hasData, isTrue);
-      expect(current.delta, closeTo(0.6, 1e-9));
+      expect(current.delta?.kilograms, closeTo(0.6, 1e-9));
       expect(current.isGain, isTrue);
     });
 
@@ -134,7 +134,7 @@ void main() {
 
       expect(current.weekStart, DateTime(2026, 8, 9));
       expect(current.count, 1);
-      expect(current.delta, closeTo(-0.5, 1e-9));
+      expect(current.delta?.kilograms, closeTo(-0.5, 1e-9));
     });
 
     test('carries the change across the week boundary', () async {
@@ -148,7 +148,7 @@ void main() {
 
       expect(second.weekStart, DateTime(2026, 9, 13));
       expect(second.isGain, isFalse);
-      expect(second.delta, closeTo(84.65 - 86.0, 1e-9));
+      expect(second.delta?.kilograms, closeTo(84.65 - 86.0, 1e-9));
     });
 
     test('a week with no weigh-ins reports nothing', () async {
@@ -167,7 +167,7 @@ void main() {
 
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
-      expect(current.mean, closeTo(79.0, 1e-9));
+      expect(current.mean?.kilograms, closeTo(79.0, 1e-9));
       expect(current.previousMean, isNull);
       expect(current.hasData, isFalse);
     });
@@ -194,8 +194,8 @@ void main() {
 
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
-      expect(current.mean, closeTo(80.0, 1e-9));
-      expect(current.delta, closeTo(0.0, 1e-9));
+      expect(current.mean?.kilograms, closeTo(80.0, 1e-9));
+      expect(current.delta?.kilograms, closeTo(0.0, 1e-9));
       expect(current.isGain, isFalse);
     });
 
@@ -205,7 +205,7 @@ void main() {
 
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
-      expect(current.mean, closeTo(80.0, 1e-9));
+      expect(current.mean?.kilograms, closeTo(80.0, 1e-9));
       expect(current.count, 2);
     });
 
@@ -227,7 +227,7 @@ void main() {
 
       expect(filled, hasLength(1));
       expect(filled.single.weekStart, DateTime(2026, 6, 7));
-      expect(filled.single.delta, closeTo(1.5, 1e-9));
+      expect(filled.single.delta?.kilograms, closeTo(1.5, 1e-9));
     });
 
     test('a flat week is not a gain', () async {
@@ -237,7 +237,7 @@ void main() {
       final current = analytics.weeklyChanges(asOf: asOf).last;
 
       expect(current.hasData, isTrue);
-      expect(current.delta, 0.0);
+      expect(current.delta?.kilograms, 0.0);
       expect(current.isGain, isFalse);
     });
 
@@ -245,7 +245,7 @@ void main() {
       expect(
         () => WeeklyWeightChange(
           weekStart: DateTime(2026, 8, 9),
-          entries: [Weight(date: DateTime(2026, 8, 16), value: 80.0)],
+          entries: [WeightEntry(date: DateTime(2026, 8, 16), kilograms: 80.0)],
         ),
         throwsA(isA<AssertionError>()),
       );
@@ -255,7 +255,7 @@ void main() {
       expect(
         () => WeeklyWeightChange(
           weekStart: DateTime(2026, 8, 9),
-          previousEntries: [Weight(date: DateTime(2026, 7, 29), value: 80.0)],
+          previousEntries: [WeightEntry(date: DateTime(2026, 7, 29), kilograms: 80.0)],
         ),
         throwsA(isA<AssertionError>()),
       );

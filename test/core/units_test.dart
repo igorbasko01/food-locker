@@ -109,46 +109,5 @@ void main() {
         closeTo(72.5748, 1e-4),
       );
     });
-
-    test('formatWeight renders two decimals and the system symbol', () {
-      expect(MeasurementSystem.metric.formatWeight(72.5748), '72.57 kg');
-      expect(MeasurementSystem.metric.formatWeight(72.5), '72.50 kg');
-      expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.00 lbs');
-    });
-
-    test('formatWeightValue takes fewer decimals when asked', () {
-      expect(
-        MeasurementSystem.metric.formatWeightValue(72.34, decimals: 1),
-        '72.3',
-      );
-      expect(
-        MeasurementSystem.imperial.formatWeightValue(72.5748, decimals: 1),
-        '160.0',
-      );
-    });
-
-    test('formatWeightValue is the bare number in the system', () {
-      expect(MeasurementSystem.metric.formatWeightValue(72.3), '72.30');
-      expect(MeasurementSystem.imperial.formatWeightValue(72.5748), '160.00');
-    });
-
-    test('formatWeight keeps the sign of a negative value', () {
-      expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.00 lbs');
-    });
-
-    test('formatWeightChange signs a gain and a loss in the system', () {
-      expect(MeasurementSystem.metric.formatWeightChange(89.40 - 89.45), '-0.05 kg');
-      expect(MeasurementSystem.metric.formatWeightChange(1.4), '+1.40 kg');
-      expect(MeasurementSystem.imperial.formatWeightChange(0.7), '+1.54 lbs');
-    });
-
-    test('a change too small to show is unsigned zero', () {
-      expect(MeasurementSystem.metric.formatWeightChange(-0.004), '0.00 kg');
-      expect(MeasurementSystem.metric.shownWeightChange(-0.004), 0);
-      expect(
-        MeasurementSystem.imperial.shownWeightChange(0.7),
-        closeTo(1.54, 1e-9),
-      );
-    });
   });
 }

@@ -2,20 +2,20 @@ import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 
 class InMemoryWeightRepository with WeightRepositoryHelper implements WeightRepository {
-  final Map<String, Weight> _weights = {};
+  final Map<String, WeightEntry> _weights = {};
 
   @override
-  Weight? getWeightForDay(DateTime date) {
+  WeightEntry? getWeightForDay(DateTime date) {
     return _weights[getKey(date)];
   }
 
   @override
-  List<Weight> getAllWeights() {
+  List<WeightEntry> getAllWeights() {
     return _weights.values.toList();
   }
 
   @override
-  Future<void> saveWeight(Weight weight) async {
+  Future<void> saveWeight(WeightEntry weight) async {
     invalidateCache();
     _weights[getKey(weight.date)] = weight;
   }

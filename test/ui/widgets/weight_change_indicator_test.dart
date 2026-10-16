@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
 void main() {
   Widget createWidgetUnderTest(
-    double? diff, [
+    double? kilograms, [
     MeasurementSystem system = MeasurementSystem.metric,
   ]) {
     return MaterialApp(
       home: Scaffold(
-        body: WeightChangeIndicator(diff: diff, system: system),
+        body: WeightChangeIndicator(
+          diff: kilograms == null ? null : WeightChange.kilograms(kilograms),
+          system: system,
+        ),
       ),
     );
   }

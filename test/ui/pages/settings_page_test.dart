@@ -233,7 +233,7 @@ void main() {
       await weightManager.initialize();
       await biteManager.initialize();
 
-      final restored = Weight(date: DateTime.now(), value: 71.5);
+      final restored = WeightEntry(date: DateTime.now(), kilograms: 71.5);
       final service = _FakeSerializationService(
         // Stands in for the restore: replaces what is stored without going
         // through either manager.
@@ -257,7 +257,7 @@ void main() {
       service.finish();
       await pumpToast(tester);
 
-      expect(weightManager.history.single.value, restored.value);
+      expect(weightManager.history.single.kilograms, restored.kilograms);
       expect(biteManager.b2, const Duration(seconds: 90));
     });
 
@@ -288,7 +288,7 @@ void main() {
 
     testWidgets('asks before deleting anything', (tester) async {
       final weightRepo = InMemoryWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), kilograms: 71.5));
       await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
 
       await tester.ensureVisible(find.text('Clear All Data'));
@@ -302,7 +302,7 @@ void main() {
 
     testWidgets('cancelling leaves the stores untouched', (tester) async {
       final weightRepo = InMemoryWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), kilograms: 71.5));
       await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
 
       await tapClear(tester, confirm: false);
@@ -316,7 +316,7 @@ void main() {
     testWidgets('confirming empties both stores and the managers with them',
         (tester) async {
       final weightRepo = InMemoryWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), kilograms: 71.5));
       final biteRepo = _FakeBiteRepository(
         config: const PacingConfig(id: 1, effectiveMs: 0, b1S: 12, b2S: 25),
       );
@@ -386,7 +386,7 @@ void main() {
     testWidgets('re-reads the managers when the clear fails part way',
         (tester) async {
       final weightRepo = InMemoryWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime.now(), value: 71.5));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), kilograms: 71.5));
       final weightManager = WeightManager(weightRepo);
       await weightManager.initialize();
       final service = _FakeSerializationService(onClear: weightRepo.clear);

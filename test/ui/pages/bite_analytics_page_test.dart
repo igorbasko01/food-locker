@@ -267,9 +267,9 @@ void main() {
 
     await logCluster(today, 8, 12);
     await logCluster(yesterday, 9, 20);
-    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
+    await weightRepo.saveWeight(WeightEntry(date: today, kilograms: 80.4));
     await weightRepo.saveWeight(
-      Weight(date: yesterday, value: 81.2, unit: WeightUnit.pounds),
+      WeightEntry(date: yesterday, kilograms: 81.2, unit: WeightUnit.pounds),
     );
 
     await pumpPage(tester);

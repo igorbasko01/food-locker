@@ -27,7 +27,7 @@ class _RecordingWeightRepository extends InMemoryWeightRepository {
   }
 
   @override
-  Future<void> saveWeight(Weight weight) async {
+  Future<void> saveWeight(WeightEntry weight) async {
     operations.add('save');
     await super.saveWeight(weight);
   }
@@ -121,7 +121,7 @@ void main() {
 
     test('packs all three datasets into one zip, one file each', () {
       final zip = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         [const Bite(id: 1, atMs: 1000)],
         [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
       );
@@ -139,13 +139,13 @@ void main() {
       // Backward compatibility: adding the bite CSV must not disturb the
       // weight restore path, which reads weight.csv out of the same zip.
       final zip = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         [const Bite(id: 1, atMs: 1000)],
         const [],
       );
 
       final weights = const WeightBackupCodec().decode(zip);
-      expect(weights.single.value, 75.5);
+      expect(weights.single.kilograms, 75.5);
     });
 
     test('the bite entry holds the exported at_ms values', () {
@@ -190,30 +190,30 @@ void main() {
 
     test('replaces existing weights with the backup contents', () async {
       final repo = InMemoryWeightRepository();
-      await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      await repo.saveWeight(WeightEntry(date: DateTime(2020, 1, 1), kilograms: 99.9));
 
       final backup = codec.encode([
-        Weight(date: DateTime(2023, 10, 27), value: 75.5),
-        Weight(date: DateTime(2023, 10, 28), value: 75.0),
+        WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5),
+        WeightEntry(date: DateTime(2023, 10, 28), kilograms: 75.0),
       ]);
 
       await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
 
       final restored = repo.getAllWeights();
-      expect(restored.map((w) => w.value), containsAll([75.5, 75.0]));
+      expect(restored.map((w) => w.kilograms), containsAll([75.5, 75.0]));
       // The pre-existing weight is gone: the restore is a replace, not a merge.
-      expect(restored.any((w) => w.value == 99.9), isFalse);
+      expect(restored.any((w) => w.kilograms == 99.9), isFalse);
       expect(restored, hasLength(2));
     });
 
     test('clears before restoring any weight', () async {
       final repo = _RecordingWeightRepository();
-      await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      await repo.saveWeight(WeightEntry(date: DateTime(2020, 1, 1), kilograms: 99.9));
       repo.operations.clear(); // ignore the setup save
 
       final backup = codec.encode([
-        Weight(date: DateTime(2023, 10, 27), value: 75.5),
-        Weight(date: DateTime(2023, 10, 28), value: 75.0),
+        WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5),
+        WeightEntry(date: DateTime(2023, 10, 28), kilograms: 75.0),
       ]);
 
       await service.restoreFromBackup(repo, _RecordingBiteRepository(), backup, settingsRepo: InMemorySettingsRepository());
@@ -224,7 +224,7 @@ void main() {
 
     test('an empty backup clears all existing weights', () async {
       final repo = InMemoryWeightRepository();
-      await repo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      await repo.saveWeight(WeightEntry(date: DateTime(2020, 1, 1), kilograms: 99.9));
 
       await service.restoreFromBackup(
         repo,
@@ -239,7 +239,7 @@ void main() {
     test('restores bites from a two-store backup, clearing first', () async {
       final biteRepo = _RecordingBiteRepository();
       final backup = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 31000)],
         const [],
       );
@@ -278,7 +278,7 @@ void main() {
     test('a present-but-empty bite entry clears existing bites', () async {
       final biteRepo = _RecordingBiteRepository();
       final backup = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         const [],
         const [],
       );
@@ -298,7 +298,7 @@ void main() {
       final biteRepo = _RecordingBiteRepository();
       // A legacy zip with no bites.csv must not wipe the existing bite log.
       final backup = codec.encode([
-        Weight(date: DateTime(2023, 10, 27), value: 75.5),
+        WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5),
       ]);
 
       await service.restoreFromBackup(
@@ -370,7 +370,7 @@ void main() {
       final archive = Archive()
         ..addFile(
           const WeightBackupCodec().toArchiveFile([
-            Weight(date: DateTime(2023, 10, 27), value: 75.5),
+            WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5),
           ]),
         )
         ..addFile(const BiteBackupCodec().toArchiveFile([]));
@@ -391,7 +391,7 @@ void main() {
     final service = SerializationService();
 
     List<int> backup(BackupFormat format) => service.encodeBackup(
-          [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+          [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
           [const Bite(id: 1, atMs: 1000), const Bite(id: 2, atMs: 2000)],
           [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
           heightCm: 180,
@@ -416,7 +416,7 @@ void main() {
           settingsRepo: settingsRepo,
         );
 
-        expect(weightRepo.getAllWeights().single.value, 75.5);
+        expect(weightRepo.getAllWeights().single.kilograms, 75.5);
         expect(biteRepo.loggedMs, [1000, 2000]);
         expect(biteRepo.savedConfigs.single.b2S, 30);
         expect(settingsRepo.heightCm, 180);
@@ -429,7 +429,7 @@ void main() {
       final textOnlyWeights = BackupFormat.text.encode(
         Archive()
           ..addFile(const WeightBackupCodec().toArchiveFile(
-            [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+            [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
           )),
       );
 
@@ -468,7 +468,7 @@ void main() {
     /// A full backup, so a decline can be shown to spare every store, not just
     /// weights.
     List<int> fullBackup() => service.encodeBackup(
-          [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+          [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
           [const Bite(id: 1, atMs: 1000)],
           [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
         );
@@ -476,7 +476,7 @@ void main() {
     test('leaves every store untouched when the confirmation is declined',
         () async {
       final weightRepo = _RecordingWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime(2020, 1, 1), kilograms: 99.9));
       weightRepo.operations.clear(); // ignore the setup save
       final biteRepo = _RecordingBiteRepository();
       var restoreStarted = false;
@@ -496,12 +496,12 @@ void main() {
       expect(weightRepo.operations, isEmpty);
       expect(biteRepo.operations, isEmpty);
       expect(biteRepo.configOperations, isEmpty);
-      expect(weightRepo.getAllWeights().single.value, 99.9);
+      expect(weightRepo.getAllWeights().single.kilograms, 99.9);
     });
 
     test('restores when the confirmation is accepted', () async {
       final weightRepo = InMemoryWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime(2020, 1, 1), kilograms: 99.9));
       final biteRepo = _RecordingBiteRepository();
       var restoreStarted = false;
 
@@ -517,7 +517,7 @@ void main() {
 
       expect(restored, isTrue);
       expect(restoreStarted, isTrue);
-      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(weightRepo.getAllWeights().single.kilograms, 75.5);
       expect(biteRepo.loggedMs, [1000]);
       expect(biteRepo.savedConfigs, hasLength(1));
     });
@@ -525,7 +525,7 @@ void main() {
     test('asks before touching a store, and names the file it would replace',
         () async {
       final weightRepo = _RecordingWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime(2020, 1, 1), value: 99.9));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime(2020, 1, 1), kilograms: 99.9));
       weightRepo.operations.clear();
       final asked = <String>[];
 
@@ -558,7 +558,7 @@ void main() {
       );
 
       expect(restored, isTrue);
-      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(weightRepo.getAllWeights().single.kilograms, 75.5);
     });
   });
 
@@ -567,7 +567,7 @@ void main() {
 
     test('empties every dataset and reseeds the default thresholds', () async {
       final weightRepo = _RecordingWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime(2026, 1, 1), value: 80));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime(2026, 1, 1), kilograms: 80));
       final biteRepo = _RecordingBiteRepository();
       await biteRepo.logBite(DateTime(2026, 1, 1, 12));
       await biteRepo.setPacingConfig(
@@ -595,7 +595,7 @@ void main() {
       addTearDown(db.close);
       final biteRepo = DriftBiteRepository(db);
       final weightRepo = InMemoryWeightRepository();
-      await weightRepo.saveWeight(Weight(date: DateTime(2026, 1, 1), value: 80));
+      await weightRepo.saveWeight(WeightEntry(date: DateTime(2026, 1, 1), kilograms: 80));
       await biteRepo.logBite(DateTime(2026, 1, 1, 12));
       await biteRepo.setPacingConfig(
         const PacingConfig(id: 0, effectiveMs: 1, b1S: 40, b2S: 90),
@@ -621,7 +621,7 @@ void main() {
     final service = SerializationService();
 
     List<int> backupWithHeight(double? heightCm) => service.encodeBackup(
-          [Weight(date: DateTime(2026, 1, 1), value: 75.5)],
+          [WeightEntry(date: DateTime(2026, 1, 1), kilograms: 75.5)],
           const [],
           const [],
           heightCm: heightCm,
@@ -667,7 +667,7 @@ void main() {
       final settingsRepo = InMemorySettingsRepository(heightCm: 165);
       // An older backup: weights only, no profile entry to speak of.
       final backup = const WeightBackupCodec()
-          .encode([Weight(date: DateTime(2026, 1, 1), value: 75.5)]);
+          .encode([WeightEntry(date: DateTime(2026, 1, 1), kilograms: 75.5)]);
 
       await service.restoreFromBackup(
         InMemoryWeightRepository(),

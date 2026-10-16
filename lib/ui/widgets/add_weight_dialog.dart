@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 
 /// Logs or edits one day's weigh-in, in [system].
 ///
-/// [initialWeight] and the `value` this pops are both kilograms — the system is
-/// a display-and-input concern, converted at this boundary and nowhere else.
+/// Pops the `date` and the `weight` typed, read in [system].
 class AddWeightDialog extends StatefulWidget {
   final DateTime initialDate;
-  final double? initialWeight;
+  final Weight? initialWeight;
   final MeasurementSystem system;
 
   const AddWeightDialog({
@@ -27,7 +27,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
   final TextEditingController _weightController = TextEditingController();
 
   /// What [initState] prefilled the field with. Converting that back on save
-  /// would quantise the stored kilograms — up to ~2 g per save in pounds — so
+  /// would quantise the stored weight — up to ~2 g per save in pounds — so
   /// an untouched field returns the stored value instead of a round trip.
   String _prefilled = '';
 
@@ -37,7 +37,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     _selectedDate = widget.initialDate;
     final initialWeight = widget.initialWeight;
     if (initialWeight != null) {
-      _prefilled = widget.system.formatWeightValue(initialWeight);
+      _prefilled = initialWeight.stringify(widget.system, withSymbol: false);
       _weightController.text = _prefilled;
     }
   }
@@ -54,7 +54,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     if (initialWeight != null && typed == _prefilled) {
       Navigator.of(context).pop({
         'date': _selectedDate,
-        'value': initialWeight,
+        'weight': initialWeight,
       });
       return;
     }
@@ -64,7 +64,7 @@ class _AddWeightDialogState extends State<AddWeightDialog> {
     if (weight != null && weight > 0) {
       Navigator.of(context).pop({
         'date': _selectedDate,
-        'value': widget.system.weightToKilograms(weight),
+        'weight': Weight.inSystem(weight, widget.system),
       });
     }
   }

@@ -101,7 +101,7 @@ class _DailyBitesCard extends StatelessWidget {
   });
 
   final List<DailyBiteCount> counts;
-  final List<Weight> weights;
+  final List<WeightEntry> weights;
   final DateTime selectedDay;
   final ValueChanged<DateTime> onDaySelected;
 
@@ -277,7 +277,7 @@ class _MealBreakdownCard extends StatelessWidget {
   });
 
   final DayMealBreakdown breakdown;
-  final Weight? weight;
+  final WeightEntry? weight;
   final bool isToday;
   final bool isLoading;
   final VoidCallback onBackToToday;
@@ -331,7 +331,7 @@ class _MealBreakdownCard extends StatelessWidget {
 class _WeightLine extends StatelessWidget {
   const _WeightLine({required this.weight});
 
-  final Weight? weight;
+  final WeightEntry? weight;
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +340,7 @@ class _WeightLine extends StatelessWidget {
     final system = context.watch<SettingsManager>().measurementSystem;
     final text = value == null
         ? 'No weigh-in'
-        : system.formatWeight(value.value);
+        : value.weight.stringify(system);
     return Semantics(
       label: value == null ? 'No weigh-in' : 'Weight $text',
       excludeSemantics: true,

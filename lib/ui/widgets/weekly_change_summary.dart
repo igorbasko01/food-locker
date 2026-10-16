@@ -10,7 +10,7 @@ import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 /// signed delta. A grey cell names which side is missing, so grey never reads
 /// as "nothing happened".
 ///
-/// Weights read in [system]; the values themselves are kilograms.
+/// Weights read in [system].
 ///
 /// [week] is null for a cell past the end of the grid.
 List<String> weeklyChangeSummary(
@@ -32,10 +32,10 @@ List<String> weeklyChangeSummary(
 
   return [
     period,
-    'avg ${system.formatWeight(mean)} (${_weighIns(week.count)}) vs '
-        '${system.formatWeight(previousMean)} the week before '
+    'avg ${mean.stringify(system)} (${_weighIns(week.count)}) vs '
+        '${previousMean.stringify(system)} the week before '
         '(${week.previousCount})',
-    system.formatWeightChange(week.delta!),
+    week.delta!.stringify(system),
   ];
 }
 

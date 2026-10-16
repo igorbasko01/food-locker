@@ -124,12 +124,12 @@ class HomePage extends StatelessWidget {
     );
 
     if (result != null) {
-      manager.addWeight(result['date'] as DateTime, result['value'] as double);
+      manager.addWeight(result['date'] as DateTime, result['weight'] as Weight);
     }
   }
 
   Widget _buildHistorySection(
-    List<Weight> history, {
+    List<WeightEntry> history, {
     required DateRange range,
     required bool storeIsEmpty,
     required MeasurementSystem system,
@@ -157,9 +157,9 @@ class HomePage extends StatelessWidget {
         (context, index) {
           final item = history[index];
           // Compute difference with previous day (which is at index + 1 in sorted descending list)
-          double? diff;
+          WeightChange? diff;
           if (index + 1 < history.length) {
-            diff = item.value - history[index + 1].value;
+            diff = item.weight.diff(history[index + 1].weight);
           }
 
           return WeightHistoryTile(

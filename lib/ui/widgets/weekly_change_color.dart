@@ -24,7 +24,7 @@ class WeeklyChangeScale {
   factory WeeklyChangeScale.forWeeks(Iterable<WeeklyWeightChange> weeks) {
     final magnitudes = [
       for (final week in weeks)
-        if (week.delta != null) week.delta!.abs(),
+        if (week.delta != null) week.delta!.kilograms.abs(),
     ]..sort();
     if (magnitudes.isEmpty) return const WeeklyChangeScale._(floor);
 
@@ -44,7 +44,7 @@ class WeeklyChangeScale {
   /// Magnitude bucket, 1 (faintest) to 4 (strongest), or null for a week with
   /// no delta.
   int? levelFor(WeeklyWeightChange week) {
-    final magnitude = week.delta?.abs();
+    final magnitude = week.delta?.kilograms.abs();
     if (magnitude == null) return null;
     if (magnitude < 0.25 * reference) return 1;
     if (magnitude < 0.50 * reference) return 2;

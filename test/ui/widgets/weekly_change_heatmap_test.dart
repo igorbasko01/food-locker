@@ -16,11 +16,11 @@ void main() {
     if (delta == null) return WeeklyWeightChange(weekStart: start);
     return WeeklyWeightChange(
       weekStart: start,
-      entries: [Weight(date: start, value: 80.0 + delta)],
+      entries: [WeightEntry(date: start, kilograms: 80.0 + delta)],
       previousEntries: [
-        Weight(
+        WeightEntry(
           date: DateTime(start.year, start.month, start.day - 7),
-          value: 80.0,
+          kilograms: 80.0,
         ),
       ],
     );
@@ -162,13 +162,13 @@ void main() {
     // A week that gained on the one before it.
     final gainingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 8),
-      entries: [Weight(date: DateTime(2026, 3, 10), value: 83.0)],
-      previousEntries: [Weight(date: DateTime(2026, 3, 3), value: 82.4)],
+      entries: [WeightEntry(date: DateTime(2026, 3, 10), kilograms: 83.0)],
+      previousEntries: [WeightEntry(date: DateTime(2026, 3, 3), kilograms: 82.4)],
     );
     final losingWeek = WeeklyWeightChange(
       weekStart: DateTime(2026, 3, 15),
-      entries: [Weight(date: DateTime(2026, 3, 16), value: 81.8)],
-      previousEntries: [Weight(date: DateTime(2026, 3, 9), value: 83.0)],
+      entries: [WeightEntry(date: DateTime(2026, 3, 16), kilograms: 81.8)],
+      previousEntries: [WeightEntry(date: DateTime(2026, 3, 9), kilograms: 83.0)],
     );
 
     List<WeeklyWeightChange> yearOpeningWith(List<WeeklyWeightChange> first) =>

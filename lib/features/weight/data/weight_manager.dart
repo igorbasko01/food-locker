@@ -10,7 +10,7 @@ class WeightManager extends ChangeNotifier {
   final WeightAnalytics _analytics;
 
   // TODO: Add pagination for weight history loading to handle large datasets efficiently.
-  List<Weight> _weights = [];
+  List<WeightEntry> _weights = [];
   DateRange _historyRange = const DateRange.lastDays(7);
 
   WeightManager(this._weightRepository)
@@ -35,7 +35,7 @@ class WeightManager extends ChangeNotifier {
   /// loaded unbounded at the top, so it stays a superset as the clock moves on,
   /// and an app left open across midnight would keep listing the day that fell
   /// out of range.
-  List<Weight> get history => _weights
+  List<WeightEntry> get history => _weights
       .where((weight) => _historyRange.contains(weight.date))
       .toList(growable: false);
 
@@ -54,12 +54,8 @@ class WeightManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addWeight(
-    DateTime date,
-    double value, {
-    WeightUnit unit = WeightUnit.kilograms,
-  }) async {
-    final entry = Weight(date: date, value: value, unit: unit);
+  Future<void> addWeight(DateTime date, Weight weight) async {
+    final entry = WeightEntry(date: date, kilograms: weight.kilograms);
     await _weightRepository.saveWeight(entry);
 
     _reloadHistory();
@@ -68,9 +64,8 @@ class WeightManager extends ChangeNotifier {
   Future<void> updateWeight(
     DateTime oldDate,
     DateTime newDate,
-    double newValue, {
-    WeightUnit unit = WeightUnit.kilograms,
-  }) async {
+    Weight weight,
+  ) async {
     final oldDateOnly = DateTime(oldDate.year, oldDate.month, oldDate.day);
     final newDateOnly = DateTime(newDate.year, newDate.month, newDate.day);
 
@@ -78,7 +73,7 @@ class WeightManager extends ChangeNotifier {
       await _weightRepository.deleteWeight(oldDate);
     }
 
-    final entry = Weight(date: newDate, value: newValue, unit: unit);
+    final entry = WeightEntry(date: newDate, kilograms: weight.kilograms);
     await _weightRepository.saveWeight(entry);
 
     _reloadHistory();
@@ -90,26 +85,26 @@ class WeightManager extends ChangeNotifier {
     _reloadHistory();
   }
 
-  Weight? getWeightForDate(DateTime date) =>
+  WeightEntry? getWeightForDate(DateTime date) =>
       _weightRepository.getWeightForDay(date);
 
-  double? get lowestAllTime => _analytics.lowestAllTime;
+  Weight? get lowestAllTime => _analytics.lowestAllTime;
 
   /// The most recent weigh-in, the Weight tab's headline figure.
-  Weight? get latestEntry => _analytics.latestEntry;
+  WeightEntry? get latestEntry => _analytics.latestEntry;
 
   /// The weigh-in holding [lowestAllTime], for dating the low.
-  Weight? get lowestEntry => _analytics.lowestEntry;
+  WeightEntry? get lowestEntry => _analytics.lowestEntry;
 
   /// How far the latest weigh-in sits above the all-time low; never negative.
-  double? get changeFromLowest => _analytics.changeFromLowest;
+  WeightChange? get changeFromLowest => _analytics.changeFromLowest;
 
   /// Last complete week's mean weight against the week before it, carrying the
   /// periods and weigh-in counts the tile labels the figure with.
   WeeklyWeightChange get weeklyChange => _analytics.weeklyChange();
 
   /// The 30-day least-squares trend, as weight per week.
-  double? get trendPerWeek => _analytics.trendPerWeek();
+  WeightChange? get trendPerWeek => _analytics.trendPerWeek();
 
   /// The last year of weekly weight change, oldest first, for the Home heatmap.
   List<WeeklyWeightChange> get weeklyChanges => _analytics.weeklyChanges();

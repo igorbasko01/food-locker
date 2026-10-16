@@ -26,7 +26,7 @@ void main() async {
   initializeDateFormatting();
   await Hive.initFlutter();
   Hive.registerAdapters();
-  final weightBox = await Hive.openBox<Weight>('weights');
+  final weightBox = await Hive.openBox<WeightEntry>('weights');
 
   final weightRepository = PersistentWeightRepository(weightBox);
 

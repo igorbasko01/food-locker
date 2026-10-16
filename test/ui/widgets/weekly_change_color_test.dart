@@ -14,8 +14,8 @@ void main() {
     if (delta == null) return WeeklyWeightChange(weekStart: weekStart);
     return WeeklyWeightChange(
       weekStart: weekStart,
-      entries: [Weight(date: weekStart, value: 80.0 + delta)],
-      previousEntries: [Weight(date: previousStart, value: 80.0)],
+      entries: [WeightEntry(date: weekStart, kilograms: 80.0 + delta)],
+      previousEntries: [WeightEntry(date: previousStart, kilograms: 80.0)],
     );
   }
 

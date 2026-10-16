@@ -145,7 +145,7 @@ void main() {
 
   Future<InMemoryWeightRepository> weightRepoWith(double value) async {
     final repo = InMemoryWeightRepository();
-    await repo.saveWeight(Weight(date: DateTime(2023, 10, 27), value: value));
+    await repo.saveWeight(WeightEntry(date: DateTime(2023, 10, 27), kilograms: value));
     return repo;
   }
 
@@ -167,7 +167,7 @@ void main() {
       expect(exported, isTrue);
       expect(sink.savedNames.single, matches(r'^food_locker_\d{14}\.zip$'));
       final weights = const WeightBackupCodec().decode(sink.savedBytes.single);
-      expect(weights.single.value, 75.5);
+      expect(weights.single.kilograms, 75.5);
     });
 
     testWidgets('a text export hands the sink a timestamped txt', (
@@ -195,7 +195,7 @@ void main() {
         sink.savedBytes.single,
         settingsRepo: InMemorySettingsRepository(),
       );
-      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(weightRepo.getAllWeights().single.kilograms, 75.5);
     });
 
     testWidgets('fires onShareReady once the bytes are handed over', (
@@ -296,7 +296,7 @@ void main() {
         fileSink: _RecordingBackupFileSink(),
       );
       final zip = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         [const Bite(id: 1, atMs: 1000)],
         [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
         heightCm: 180,
@@ -317,7 +317,7 @@ void main() {
       );
 
       expect(restored, isTrue);
-      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(weightRepo.getAllWeights().single.kilograms, 75.5);
       expect(biteRepo.bites.single.millisecondsSinceEpoch, 1000);
       expect(biteRepo.configs.single.b2S, 30);
       expect(settingsRepo.heightCm, 180);
@@ -328,7 +328,7 @@ void main() {
         fileSink: _RecordingBackupFileSink(),
       );
       final text = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         [const Bite(id: 1, atMs: 1000)],
         [const PacingConfig(id: 1, effectiveMs: 0, b1S: 15, b2S: 30)],
         heightCm: 180,
@@ -356,7 +356,7 @@ void main() {
       );
 
       expect(restored, isTrue);
-      expect(weightRepo.getAllWeights().single.value, 75.5);
+      expect(weightRepo.getAllWeights().single.kilograms, 75.5);
       expect(biteRepo.bites.single.millisecondsSinceEpoch, 1000);
       expect(biteRepo.configs.single.b2S, 30);
       expect(settingsRepo.heightCm, 180);
@@ -367,7 +367,7 @@ void main() {
         fileSink: _RecordingBackupFileSink(),
       );
       final zip = service.encodeBackup(
-        [Weight(date: DateTime(2023, 10, 27), value: 75.5)],
+        [WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5)],
         const [],
         const [],
       );
@@ -375,7 +375,7 @@ void main() {
 
       final weightRepo = InMemoryWeightRepository();
       await weightRepo.saveWeight(
-        Weight(date: DateTime(2024, 1, 1), value: 80),
+        WeightEntry(date: DateTime(2024, 1, 1), kilograms: 80),
       );
       final settingsRepo = InMemorySettingsRepository(heightCm: 170);
 
@@ -389,7 +389,7 @@ void main() {
       );
 
       expect(restored, isFalse);
-      expect(weightRepo.getAllWeights().single.value, 80);
+      expect(weightRepo.getAllWeights().single.kilograms, 80);
       expect(settingsRepo.heightCm, 170);
     });
   });

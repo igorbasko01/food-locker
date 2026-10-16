@@ -23,20 +23,20 @@ void main() {
     weekStart: weekStart,
     entries: [
       for (var day = 0; day < count; day++)
-        Weight(
+        WeightEntry(
           date: DateTime(weekStart.year, weekStart.month, weekStart.day + day),
-          value: 82.4 + delta,
+          kilograms: 82.4 + delta,
         ),
     ],
     previousEntries: [
       for (var day = 0; day < previousCount; day++)
-        Weight(
+        WeightEntry(
           date: DateTime(
             previousStart.year,
             previousStart.month,
             previousStart.day + day,
           ),
-          value: 82.4,
+          kilograms: 82.4,
         ),
     ],
   );
@@ -109,7 +109,7 @@ void main() {
       weeklyChangeSummary(
         WeeklyWeightChange(
           weekStart: weekStart,
-          entries: [Weight(date: DateTime(2026, 3, 9), value: 82.4)],
+          entries: [WeightEntry(date: DateTime(2026, 3, 9), kilograms: 82.4)],
         ),
         locale: 'en_US',
       ),

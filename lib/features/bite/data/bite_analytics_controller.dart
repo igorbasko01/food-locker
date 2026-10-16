@@ -48,12 +48,12 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// that had bites — the daily-bites chart's data.
   List<DailyBiteCount> get dailyCounts => _dailyCounts;
 
-  List<Weight> _dailyWeights = const [];
+  List<WeightEntry> _dailyWeights = const [];
 
   /// Raw daily weigh-ins over the last [dailyBitesWindow] days, one per day that
   /// was weighed — the weight bars overlaid on the daily-bites chart. Days
   /// without a weigh-in are simply absent (no gap-filling).
-  List<Weight> get dailyWeights => _dailyWeights;
+  List<WeightEntry> get dailyWeights => _dailyWeights;
 
   double _averageLast30 = 0;
 
@@ -117,7 +117,7 @@ class BiteAnalyticsController extends ChangeNotifier {
   /// rendering, which lags [selectedDay] while a [selectDay] is in flight.
   /// Resolves against [dailyWeights], so a selection outside that window — one
   /// a day picker could reach — would read null until the load widens.
-  Weight? get selectedWeight => _dailyWeights.firstWhereOrNull(
+  WeightEntry? get selectedWeight => _dailyWeights.firstWhereOrNull(
     (w) =>
         DateTime(w.date.year, w.date.month, w.date.day) ==
         _selectedBreakdown.day,

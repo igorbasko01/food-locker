@@ -7,7 +7,7 @@ void main() {
 
   group('WeightBackupCodec CSV Logic', () {
     test('generateWeightCsv drops the unit column', () {
-      final weight = Weight(date: DateTime(2023, 10, 27), value: 75.5);
+      final weight = WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5);
 
       final csv = codec.generateWeightCsv([weight]);
 
@@ -23,7 +23,7 @@ void main() {
 
       expect(weights.length, 1);
       expect(weights.first.date, DateTime(2023, 10, 27));
-      expect(weights.first.value, 75.5);
+      expect(weights.first.kilograms, 75.5);
       expect(weights.first.unit, WeightUnit.kilograms);
     });
   });
@@ -56,14 +56,14 @@ void main() {
           '2023-10-29T00:00:00.000,74.0';
       final weights = codec.parseWeightCsv(csv);
 
-      expect(weights.map((w) => w.value), [75.5, 74.0]);
+      expect(weights.map((w) => w.kilograms), [75.5, 74.0]);
     });
 
     test('an archive still carrying a unit column imports unchanged', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,kilograms';
       final weights = codec.parseWeightCsv(csv);
 
-      expect(weights.single.value, 75.5);
+      expect(weights.single.kilograms, 75.5);
       expect(weights.single.unit, WeightUnit.kilograms);
     });
 
@@ -71,7 +71,7 @@ void main() {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,166.0,pounds';
       final weights = codec.parseWeightCsv(csv);
 
-      expect(weights.single.value, 166.0);
+      expect(weights.single.kilograms, 166.0);
       expect(weights.single.unit, WeightUnit.kilograms);
     });
 
@@ -80,15 +80,15 @@ void main() {
       final weights = codec.parseWeightCsv(csv);
 
       expect(weights.single.unit, WeightUnit.kilograms);
-      expect(weights.single.value, 75.5);
+      expect(weights.single.kilograms, 75.5);
     });
   });
 
   group('WeightBackupCodec Zip Encode/Decode Round-Trip', () {
     test('encode and decode preserves exact data', () {
       final weights = [
-        Weight(date: DateTime(2023, 10, 27), value: 75.5),
-        Weight(date: DateTime(2023, 10, 28), value: 75.0),
+        WeightEntry(date: DateTime(2023, 10, 27), kilograms: 75.5),
+        WeightEntry(date: DateTime(2023, 10, 28), kilograms: 75.0),
       ];
 
       final zipBytes = codec.encode(weights);
@@ -103,12 +103,12 @@ void main() {
       final weight1 = decodedWeights.firstWhere(
         (w) => w.date == DateTime(2023, 10, 27),
       );
-      expect(weight1.value, 75.5);
+      expect(weight1.kilograms, 75.5);
 
       final weight2 = decodedWeights.firstWhere(
         (w) => w.date == DateTime(2023, 10, 28),
       );
-      expect(weight2.value, 75.0);
+      expect(weight2.kilograms, 75.0);
     });
   });
 }

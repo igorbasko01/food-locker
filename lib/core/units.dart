@@ -35,29 +35,10 @@ double feetInchesToCentimetres(int feet, double inches) =>
 /// `5' 12"`.
 FeetInches roundedFeetInches(double centimetres, int decimals) {
   final split = centimetresToFeetInches(centimetres);
-  final inches = _roundTo(split.inches, decimals);
+  final inches = double.parse(split.inches.toStringAsFixed(decimals));
   return inches >= inchesPerFoot
       ? FeetInches(split.feet + 1, 0)
       : FeetInches(split.feet, inches);
-}
-
-/// [value] rounded to the [decimals] it prints with, so a sign, colour or arrow
-/// taken from it agrees with the digits — `-0.004` at two places is zero.
-///
-/// Parsed back from [double.toStringAsFixed] rather than computed as
-/// `(value * 100).round() / 100`, whose binary error can round the other way
-/// from the printed text.
-double _roundTo(double value, int decimals) =>
-    double.parse(value.toStringAsFixed(decimals));
-
-/// [value] at [decimals] places with an explicit `+` on a gain, and no sign
-/// once it rounds to zero: `+0.05`, `-1.5`, `0.00`.
-String _formatSigned(double value, int decimals) {
-  final rounded = _roundTo(value, decimals);
-  final magnitude = rounded.abs().toStringAsFixed(decimals);
-  if (rounded > 0) return '+$magnitude';
-  if (rounded < 0) return '-$magnitude';
-  return magnitude;
 }
 
 /// A bare number with at most one decimal and no trailing `.0`, so a whole
@@ -80,9 +61,6 @@ String formatHeight(double centimetres, MeasurementSystem system) {
 /// Exact by definition, and the only place the pound is spelled out.
 const double kilogramsPerPound = 0.45359237;
 
-/// The places every weight and change in weight is shown to.
-const int _weightDecimals = 2;
-
 double poundsToKilograms(double pounds) => pounds * kilogramsPerPound;
 
 double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
@@ -90,8 +68,8 @@ double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
 extension WeightDisplay on MeasurementSystem {
   String get weightSymbol => this == MeasurementSystem.imperial ? 'lbs' : 'kg';
 
-  /// A stored weight as this system reads it. Everything is stored and computed
-  /// in kilograms, so this is the only step between the store and the screen.
+  /// Kilograms in this system's unit: the conversion behind `Weight` and
+  /// `WeightChange`, which screens read weights through.
   double weightFromKilograms(double kilograms) =>
       this == MeasurementSystem.imperial
       ? kilogramsToPounds(kilograms)
@@ -100,26 +78,4 @@ extension WeightDisplay on MeasurementSystem {
   /// A figure typed in this system, back in kilograms for storage.
   double weightToKilograms(double value) =>
       this == MeasurementSystem.imperial ? poundsToKilograms(value) : value;
-
-  /// [kilograms] as a bare number in this system, for a field, label or axis
-  /// that names the unit elsewhere: `72.57`, `160.00`.
-  String formatWeightValue(
-    double kilograms, {
-    int decimals = _weightDecimals,
-  }) => weightFromKilograms(kilograms).toStringAsFixed(decimals);
-
-  /// [kilograms] as it appears on screen: `72.57 kg`, `160.00 lbs`.
-  String formatWeight(double kilograms) =>
-      '${formatWeightValue(kilograms)} $weightSymbol';
-
-  /// A stored change of [kilograms], in this system's unit (pounds under
-  /// imperial) and rounded to what [formatWeightChange] prints.
-  double shownWeightChange(double kilograms) =>
-      _roundTo(weightFromKilograms(kilograms), _weightDecimals);
-
-  /// A change of [kilograms] as it appears on screen: `+0.05 kg`, `-1.54 lbs`,
-  /// `0.00 kg`.
-  String formatWeightChange(double kilograms) =>
-      '${_formatSigned(weightFromKilograms(kilograms), _weightDecimals)} '
-      '$weightSymbol';
 }

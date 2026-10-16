@@ -28,8 +28,7 @@ class WeeklyChangeHeatmap extends StatefulWidget {
   /// as no-data.
   final List<WeeklyWeightChange> weeks;
 
-  /// The system the readouts state weights in; the weeks themselves hold
-  /// kilograms.
+  /// The system the readouts state weights in.
   final MeasurementSystem system;
 
   @override

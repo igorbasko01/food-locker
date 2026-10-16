@@ -13,7 +13,7 @@ void main() {
   });
 
   Future<void> log(DateTime date, double value) =>
-      repository.saveWeight(Weight(date: date, value: value));
+      repository.saveWeight(WeightEntry(date: date, kilograms: value));
 
   group('weeklyChange', () {
     // A Wednesday: its week opens Sunday 2024-01-07, so the most recent
@@ -42,7 +42,7 @@ void main() {
 
       final week = analytics.weeklyChange(asOf: asOf);
 
-      expect(week.delta, closeTo(-1.0, 1e-9));
+      expect(week.delta?.kilograms, closeTo(-1.0, 1e-9));
       expect(week.count, 3);
       expect(week.previousCount, 3);
     });
@@ -55,7 +55,7 @@ void main() {
       await log(DateTime(2024, 1, 6), 77.0);
 
       // Endpoint-to-endpoint would read 77.0 - 79.0; the means read 78.0 - 80.0.
-      expect(analytics.weeklyChange(asOf: asOf).delta, closeTo(-2.0, 1e-9));
+      expect(analytics.weeklyChange(asOf: asOf).delta?.kilograms, closeTo(-2.0, 1e-9));
     });
 
     test('reports a week that spans only a day or two', () async {
@@ -64,7 +64,7 @@ void main() {
       await log(DateTime(2023, 12, 31), 79.0);
       await log(DateTime(2024, 1, 1), 79.0);
 
-      expect(analytics.weeklyChange(asOf: asOf).delta, closeTo(-1.0, 1e-9));
+      expect(analytics.weeklyChange(asOf: asOf).delta?.kilograms, closeTo(-1.0, 1e-9));
     });
 
     test('counts the weigh-ins behind a one-a-side figure', () async {
@@ -73,7 +73,7 @@ void main() {
 
       final week = analytics.weeklyChange(asOf: asOf);
 
-      expect(week.delta, closeTo(-1.0, 1e-9));
+      expect(week.delta?.kilograms, closeTo(-1.0, 1e-9));
       expect(week.count, 1);
       expect(week.previousCount, 1);
     });
@@ -101,7 +101,7 @@ void main() {
       await log(DateTime(2024, 1, 7), 60.0);
       await log(DateTime(2024, 1, 10), 60.0);
 
-      expect(analytics.weeklyChange(asOf: asOf).delta, closeTo(-1.0, 1e-9));
+      expect(analytics.weeklyChange(asOf: asOf).delta?.kilograms, closeTo(-1.0, 1e-9));
     });
 
     test('is the same week the heatmap draws second from the end', () async {
@@ -131,7 +131,7 @@ void main() {
       await log(DateTime(2024, 1, 15), 78.0);
       await log(DateTime(2024, 1, 22), 77.0);
 
-      expect(analytics.trendPerWeek(asOf: asOf), closeTo(-1.0, 1e-9));
+      expect(analytics.trendPerWeek(asOf: asOf)?.kilograms, closeTo(-1.0, 1e-9));
     });
 
     test('is unmoved by irregular spacing on the same line', () async {
@@ -140,7 +140,7 @@ void main() {
       await log(DateTime(2024, 1, 21), 60.0);
 
       // A kilogram a day, whatever the gaps between weigh-ins.
-      expect(analytics.trendPerWeek(asOf: asOf), closeTo(-7.0, 1e-9));
+      expect(analytics.trendPerWeek(asOf: asOf)?.kilograms, closeTo(-7.0, 1e-9));
     });
 
     test('fits a line through two weigh-ins a day apart', () async {
@@ -148,7 +148,7 @@ void main() {
       await log(DateTime(2024, 1, 29), 79.0);
 
       // A kilogram a day, read off the only two points there are.
-      expect(analytics.trendPerWeek(asOf: asOf), closeTo(-7.0, 1e-9));
+      expect(analytics.trendPerWeek(asOf: asOf)?.kilograms, closeTo(-7.0, 1e-9));
     });
 
     test('is null for a lone weigh-in, which has no slope to fit', () async {
@@ -165,7 +165,7 @@ void main() {
       await log(DateTime(2023, 12, 31), 20.0);
       await log(DateTime(2024, 2, 5), 200.0);
 
-      expect(analytics.trendPerWeek(asOf: asOf), closeTo(-1.0, 1e-9));
+      expect(analytics.trendPerWeek(asOf: asOf)?.kilograms, closeTo(-1.0, 1e-9));
     });
   });
 
@@ -182,8 +182,8 @@ void main() {
       await log(DateTime(2024, 1, 15), 74.0);
 
       expect(analytics.latestEntry?.date, DateTime(2024, 1, 15));
-      expect(analytics.lowestEntry?.value, 72.5);
-      expect(analytics.changeFromLowest, closeTo(1.5, 1e-9));
+      expect(analytics.lowestEntry?.kilograms, 72.5);
+      expect(analytics.changeFromLowest?.kilograms, closeTo(1.5, 1e-9));
     });
 
     test('date the low at the last time it was reached', () async {
@@ -192,22 +192,22 @@ void main() {
       await log(DateTime(2024, 1, 15), 72.5);
 
       expect(analytics.lowestEntry?.date, DateTime(2024, 1, 15));
-      expect(analytics.changeFromLowest, 0.0);
+      expect(analytics.changeFromLowest?.kilograms, 0.0);
     });
 
     test('read zero when the latest weigh-in is the low', () async {
       await log(DateTime(2024, 1, 1), 80.0);
       await log(DateTime(2024, 1, 15), 72.0);
 
-      expect(analytics.changeFromLowest, 0.0);
+      expect(analytics.changeFromLowest?.kilograms, 0.0);
     });
 
     test('carry a single weigh-in on their own', () async {
       await log(DateTime(2024, 1, 15), 72.0);
 
-      expect(analytics.latestEntry?.value, 72.0);
-      expect(analytics.lowestEntry?.value, 72.0);
-      expect(analytics.changeFromLowest, 0.0);
+      expect(analytics.latestEntry?.kilograms, 72.0);
+      expect(analytics.lowestEntry?.kilograms, 72.0);
+      expect(analytics.changeFromLowest?.kilograms, 0.0);
     });
 
     test('leave out a weigh-in dated ahead of today', () async {
@@ -216,10 +216,10 @@ void main() {
       await log(today, 74.0);
       await log(DateTime(today.year, today.month, today.day + 3), 60.0);
 
-      expect(analytics.latestEntry?.value, 74.0);
-      expect(analytics.lowestEntry?.value, 74.0);
-      expect(analytics.lowestAllTime, 74.0);
-      expect(analytics.changeFromLowest, 0.0);
+      expect(analytics.latestEntry?.kilograms, 74.0);
+      expect(analytics.lowestEntry?.kilograms, 74.0);
+      expect(analytics.lowestAllTime?.kilograms, 74.0);
+      expect(analytics.changeFromLowest?.kilograms, 0.0);
     });
 
     test('take a weigh-in dated today', () async {
@@ -228,7 +228,7 @@ void main() {
       await log(DateTime(today.year, today.month, today.day - 3), 80.0);
       await log(today, 74.0);
 
-      expect(analytics.latestEntry?.value, 74.0);
+      expect(analytics.latestEntry?.kilograms, 74.0);
     });
   });
 }

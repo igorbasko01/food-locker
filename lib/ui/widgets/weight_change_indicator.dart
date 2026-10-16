@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 
-/// A day-on-day change, as a signed pill.
-///
-/// [diff] is kilograms, like everything the store holds; [system] is only how
-/// it reads.
+/// A day-on-day change, as a signed pill read in [system].
 class WeightChangeIndicator extends StatelessWidget {
-  final double? diff;
+  final WeightChange? diff;
   final MeasurementSystem system;
 
   const WeightChangeIndicator({
@@ -18,8 +16,8 @@ class WeightChangeIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentDiff = diff == null ? null : system.shownWeightChange(diff!);
-    final text = diff == null ? 'Baseline' : system.formatWeightChange(diff!);
+    final currentDiff = diff?.value(system);
+    final text = diff?.stringify(system) ?? 'Baseline';
 
     final Color backgroundColor;
     final Color textColor;
