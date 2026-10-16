@@ -186,6 +186,22 @@ void main() {
     expect(find.widgetWithText(StatTile, '0.00 kg'), findsOneWidget);
   });
 
+  testWidgets('a trend that reads flat per week reads flat per month', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), const Weight.kilograms(73.0));
+    await manager.addWeight(today, const Weight.kilograms(72.9995));
+
+    await pumpPage(tester, manager);
+
+    // -0.0035 kg/wk prints as 0.00; projected unrounded it would be -0.02.
+    expect(find.widgetWithText(StatTile, '0.00 kg/wk'), findsOneWidget);
+    expect(find.text('≈ 0.00 kg/month'), findsOneWidget);
+  });
+
   testWidgets('an imperial preference converts every figure on the tab', (
     tester,
   ) async {
