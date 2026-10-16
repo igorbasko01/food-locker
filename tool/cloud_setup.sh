@@ -19,8 +19,6 @@ FLUTTER_HOME="${FLUTTER_HOME:-/opt/flutter}"
 WORKSPACE="${WORKSPACE:-/home/user}"
 RELEASES_BASE="https://storage.googleapis.com/flutter_infra_release/releases"
 
-log() { echo "==> $*"; }
-
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
 missing=()
@@ -28,7 +26,7 @@ for bin in curl git unzip xz python3; do
   command -v "$bin" >/dev/null 2>&1 || missing+=("$bin")
 done
 if [ ${#missing[@]} -gt 0 ]; then
-  log "Installing system packages: ${missing[*]}"
+  echo "==> Installing system packages: ${missing[*]}"
   $SUDO apt-get update -qq
   $SUDO apt-get install -y -qq curl git unzip xz-utils python3 ca-certificates >/dev/null
 fi
@@ -53,9 +51,9 @@ marker="$FLUTTER_HOME/.cloud_setup_version"
 installed="$(cat "$marker" 2>/dev/null || true)"
 
 if [ "$installed" = "$version" ]; then
-  log "Flutter $version already installed at $FLUTTER_HOME"
+  echo "==> Flutter $version already installed at $FLUTTER_HOME"
 else
-  log "Installing Flutter $version to $FLUTTER_HOME"
+  echo "==> Installing Flutter $version to $FLUTTER_HOME"
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
   curl -fSL --retry 4 --retry-delay 2 -o "$tmp/flutter.tar.xz" "$RELEASES_BASE/$archive"
@@ -91,8 +89,8 @@ if [ -z "${PROJECT_DIRS:-}" ] && [ -d "$WORKSPACE" ]; then
     | xargs -r -n1 dirname | tr '\n' ' ')"
 fi
 for dir in ${PROJECT_DIRS:-}; do
-  log "Running flutter pub get in $dir"
-  (cd "$dir" && flutter pub get) || log "flutter pub get failed in $dir; continuing"
+  echo "==> Running flutter pub get in $dir"
+  (cd "$dir" && flutter pub get) || echo "==> flutter pub get failed in $dir; continuing"
 done
 
-log "Flutter is ready: run 'flutter analyze' and 'flutter test'"
+echo "==> Flutter is ready: run 'flutter analyze' and 'flutter test'"
