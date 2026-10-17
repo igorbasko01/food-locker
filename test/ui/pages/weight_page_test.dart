@@ -6,6 +6,7 @@ import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -63,7 +64,7 @@ void main() {
     for (var daysAgo = 0; daysAgo < 28; daysAgo++) {
       await manager.addWeight(
         DateTime(today.year, today.month, today.day - daysAgo),
-        70.0 + dailyLoss * daysAgo,
+        Weight(70.0 + dailyLoss * daysAgo, MeasurementSystem.metric),
       );
     }
     return manager;
@@ -92,13 +93,13 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(DateTime(today.year, today.month, today.day - 3), 80.0);
-    await manager.addWeight(today, 72.5);
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 3), Weight(80.0, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
     // The hero figure, plus today's row in the history list below it.
-    expect(find.text('72.5 kg'), findsNWidgets(2));
+    expect(find.text('72.50 kg'), findsNWidgets(2));
     expect(find.text('as of ${fullDateWithWeekday(today)}'), findsOneWidget);
   });
 
@@ -114,11 +115,11 @@ void main() {
     expect(find.text('Vs. low'), findsOneWidget);
 
     // A tenth of a kilogram a day: -0.7 a week, and -3.0 projected over a month.
-    expect(find.widgetWithText(StatTile, '-0.7 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '-0.70 kg'), findsOneWidget);
     // The two complete weeks behind the figure, so its lag is visible.
     expect(find.text(expectedWeeks()), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-0.70 kg/wk'), findsOneWidget);
-    expect(find.text('≈ -3.0 kg/month'), findsOneWidget);
+    expect(find.text('≈ -3.00 kg/month'), findsOneWidget);
 
     expect(find.byIcon(Icons.arrow_downward_rounded), findsNWidgets(2));
   });
@@ -130,9 +131,9 @@ void main() {
 
     await pumpPage(tester, manager);
 
-    expect(find.widgetWithText(StatTile, '+0.7 kg'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '+0.70 kg'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '+0.70 kg/wk'), findsOneWidget);
-    expect(find.text('≈ +3.0 kg/month'), findsOneWidget);
+    expect(find.text('≈ +3.00 kg/month'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsNWidgets(2));
   });
 
@@ -144,8 +145,8 @@ void main() {
     await pumpPage(tester, manager);
 
     // The ramp bottoms out today, so the distance from the low is zero.
-    expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
-    expect(find.text('low 70.0 on ${shortDate(today)}'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '0.00 kg'), findsOneWidget);
+    expect(find.text('low 70.00 on ${shortDate(today)}'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events), findsOneWidget);
   });
 
@@ -156,13 +157,13 @@ void main() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lowDay = DateTime(today.year, today.month, today.day - 10);
-    await manager.addWeight(lowDay, 72.3);
-    await manager.addWeight(today, 73.7);
+    await manager.addWeight(lowDay, Weight(72.3, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(73.7, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
-    expect(find.widgetWithText(StatTile, '+1.4 kg'), findsOneWidget);
-    expect(find.text('low 72.3 on ${shortDate(lowDay)}'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '+1.40 kg'), findsOneWidget);
+    expect(find.text('low 72.30 on ${shortDate(lowDay)}'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events), findsNothing);
   });
 
@@ -172,8 +173,8 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), 73.0);
-    await manager.addWeight(today, 72.5);
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), Weight(73.0, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -181,8 +182,24 @@ void main() {
     // complete week to read.
     expect(find.widgetWithText(StatTile, '-3.50 kg/wk'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '--'), findsOneWidget);
-    expect(find.text('72.5 kg'), findsNWidgets(2));
-    expect(find.widgetWithText(StatTile, '0.0 kg'), findsOneWidget);
+    expect(find.text('72.50 kg'), findsNWidgets(2));
+    expect(find.widgetWithText(StatTile, '0.00 kg'), findsOneWidget);
+  });
+
+  testWidgets('a trend that reads flat per week reads flat per month', (
+    tester,
+  ) async {
+    final manager = WeightManager(InMemoryWeightRepository());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await manager.addWeight(DateTime(today.year, today.month, today.day - 1), Weight(73.0, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.9995, MeasurementSystem.metric));
+
+    await pumpPage(tester, manager);
+
+    // -0.0035 kg/wk prints as 0.00; projected unrounded it would be -0.02.
+    expect(find.widgetWithText(StatTile, '0.00 kg/wk'), findsOneWidget);
+    expect(find.text('≈ 0.00 kg/month'), findsOneWidget);
   });
 
   testWidgets('an imperial preference converts every figure on the tab', (
@@ -194,15 +211,15 @@ void main() {
 
     await pumpPage(tester, manager, system: MeasurementSystem.imperial);
 
-    // The hero figure and today's history row, both 70.0 kg.
-    expect(find.text('154.3 lbs'), findsNWidgets(2));
-    expect(find.text('70.0 kg'), findsNothing);
+    // The hero figure and today's history row, both 70 kg.
+    expect(find.text('154.32 lbs'), findsNWidgets(2));
+    expect(find.text('70.00 kg'), findsNothing);
 
     // Each tile converts before rounding, so its digits, sign and arrow agree.
-    expect(find.widgetWithText(StatTile, '-1.5 lbs'), findsOneWidget);
+    expect(find.widgetWithText(StatTile, '-1.54 lbs'), findsOneWidget);
     expect(find.widgetWithText(StatTile, '-1.54 lbs/wk'), findsOneWidget);
-    expect(find.text('≈ -6.6 lbs/month'), findsOneWidget);
-    expect(find.text('low 154.3 on ${shortDate(today)}'), findsOneWidget);
+    expect(find.text('≈ -6.61 lbs/month'), findsOneWidget);
+    expect(find.text('low 154.32 on ${shortDate(today)}'), findsOneWidget);
   });
 
   testWidgets('history list only lists the last 7 days of entries', (
@@ -214,17 +231,17 @@ void main() {
     final recentDay = DateTime(today.year, today.month, today.day - 6);
     final oldDay = DateTime(today.year, today.month, today.day - 7);
 
-    await manager.addWeight(recentDay, 71.0);
-    await manager.addWeight(oldDay, 73.0);
+    await manager.addWeight(recentDay, Weight(71.0, MeasurementSystem.metric));
+    await manager.addWeight(oldDay, Weight(73.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
     expect(find.text(fullDateWithWeekday(recentDay)), findsOneWidget);
     // Scoped to the row: the current-weight figure above the chart carries the
     // latest weigh-in's value too, whatever the history range holds.
-    expect(find.widgetWithText(ListTile, '71.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '71.00 kg'), findsOneWidget);
     expect(find.text(fullDateWithWeekday(oldDay)), findsNothing);
-    expect(find.text('73.0 kg'), findsNothing);
+    expect(find.text('73.00 kg'), findsNothing);
   });
 
   testWidgets('picking a wider range reveals older entries', (tester) async {
@@ -233,7 +250,7 @@ void main() {
     final today = DateTime(now.year, now.month, now.day);
     final lastMonth = DateTime(today.year, today.month, today.day - 20);
 
-    await manager.addWeight(lastMonth, 73.0);
+    await manager.addWeight(lastMonth, Weight(73.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -249,7 +266,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(fullDateWithWeekday(lastMonth)), findsOneWidget);
-    expect(find.widgetWithText(ListTile, '73.0 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '73.00 kg'), findsOneWidget);
     expect(manager.historyRange, const DateRange.lastDays(30));
   });
 
@@ -270,19 +287,19 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(today, 72.5);
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
     await tester.drag(
-      find.widgetWithText(ListTile, '72.5 kg'),
+      find.widgetWithText(ListTile, '72.50 kg'),
       const Offset(-500, 0),
     );
     await tester.pumpAndSettle();
 
     expect(find.byType(Dismissible), findsNothing);
     expect(find.text(fullDateWithWeekday(today)), findsOneWidget);
-    expect(find.widgetWithText(ListTile, '72.5 kg'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, '72.50 kg'), findsOneWidget);
     expect(manager.history, hasLength(1));
   });
 
@@ -292,7 +309,7 @@ void main() {
     final manager = WeightManager(InMemoryWeightRepository());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    await manager.addWeight(today, 72.5);
+    await manager.addWeight(today, Weight(72.5, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -312,7 +329,7 @@ void main() {
       final manager = WeightManager(InMemoryWeightRepository());
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      await manager.addWeight(today, 81.0);
+      await manager.addWeight(today, Weight(81.0, MeasurementSystem.metric));
 
       await pumpPage(
         tester,
@@ -329,7 +346,7 @@ void main() {
     testWidgets('prompts for a height rather than guessing one', (tester) async {
       final manager = WeightManager(InMemoryWeightRepository());
       final now = DateTime.now();
-      await manager.addWeight(DateTime(now.year, now.month, now.day), 81.0);
+      await manager.addWeight(DateTime(now.year, now.month, now.day), Weight(81.0, MeasurementSystem.metric));
       final settings = SettingsManager(InMemorySettingsRepository());
 
       await pumpPage(tester, manager, settingsManager: settings);

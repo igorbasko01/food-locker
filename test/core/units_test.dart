@@ -109,14 +109,5 @@ void main() {
         closeTo(72.5748, 1e-4),
       );
     });
-
-    test('formatWeight renders one decimal and the system symbol', () {
-      expect(MeasurementSystem.metric.formatWeight(72.5748), '72.6 kg');
-      expect(MeasurementSystem.imperial.formatWeight(72.5748), '160.0 lbs');
-    });
-
-    test('formatWeight keeps the sign of a change', () {
-      expect(MeasurementSystem.imperial.formatWeight(-0.9071847), '-2.0 lbs');
-    });
   });
 }

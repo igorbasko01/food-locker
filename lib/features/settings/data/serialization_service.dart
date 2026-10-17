@@ -89,7 +89,7 @@ class SerializationService {
   /// single export call spans every store.
   @visibleForTesting
   List<int> encodeBackup(
-    List<Weight> weights,
+    List<WeightEntry> weights,
     List<Bite> bites,
     List<PacingConfig> configs, {
     double? heightCm,

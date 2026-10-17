@@ -1,3 +1,4 @@
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weekly_weight_change.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
@@ -14,10 +15,10 @@ class WeightAnalytics {
   /// included.
   static const int trendWindowDays = 30;
 
-  double? get lowestAllTime => lowestEntry?.value;
+  Weight? get lowestAllTime => lowestEntry?.weight;
 
   /// The most recent weigh-in, or null when the store holds none.
-  Weight? get latestEntry {
+  WeightEntry? get latestEntry {
     final entries = _loggedEntries;
     if (entries.isEmpty) return null;
     return entries.reduce(_newer);
@@ -25,7 +26,7 @@ class WeightAnalytics {
 
   /// The weigh-in holding [lowestAllTime]; the later one when the low was hit
   /// more than once, so the date reads as the last time it was reached.
-  Weight? get lowestEntry {
+  WeightEntry? get lowestEntry {
     final entries = _loggedEntries;
     if (entries.isEmpty) return null;
     return entries.reduce(_lower);
@@ -33,16 +34,16 @@ class WeightAnalytics {
 
   /// How far the latest weigh-in sits above the all-time low. Never negative —
   /// the low is computed over the same entries, the latest one included.
-  double? get changeFromLowest {
+  WeightChange? get changeFromLowest {
     final entries = _loggedEntries;
     if (entries.isEmpty) return null;
-    return entries.reduce(_newer).value - entries.reduce(_lower).value;
+    return entries.reduce(_newer).weight.diff(entries.reduce(_lower).weight);
   }
 
   /// Weigh-ins on or before today. A weigh-in dated ahead of today is not the
   /// weight anyone is at, so it is left out here as it is from the windows
   /// [weeklyChange], [trendPerWeek], and [weeklyChanges] measure over.
-  List<Weight> get _loggedEntries {
+  List<WeightEntry> get _loggedEntries {
     final today = _dayOf(DateTime.now());
     return _weightRepository
         .getAllWeights()
@@ -50,11 +51,11 @@ class WeightAnalytics {
         .toList(growable: false);
   }
 
-  static Weight _newer(Weight a, Weight b) => b.date.isAfter(a.date) ? b : a;
+  static WeightEntry _newer(WeightEntry a, WeightEntry b) => b.date.isAfter(a.date) ? b : a;
 
-  static Weight _lower(Weight a, Weight b) {
-    if (b.value < a.value) return b;
-    if (b.value == a.value && b.date.isAfter(a.date)) return b;
+  static WeightEntry _lower(WeightEntry a, WeightEntry b) {
+    if (b.weight < a.weight) return b;
+    if (b.weight == a.weight && b.date.isAfter(a.date)) return b;
     return a;
   }
 
@@ -77,7 +78,7 @@ class WeightAnalytics {
   ///
   /// Null when the window holds nothing, or when everything in it lands on one
   /// day and leaves no x axis to regress against.
-  double? trendPerWeek({DateTime? asOf}) {
+  WeightChange? trendPerWeek({DateTime? asOf}) {
     final today = _dayOf(asOf ?? DateTime.now());
     final from = DateTime(
       today.year,
@@ -93,7 +94,7 @@ class WeightAnalytics {
     final days = [
       for (final entry in entries) _daysBetween(from, entry.date).toDouble(),
     ];
-    final values = [for (final entry in entries) entry.value];
+    final values = [for (final entry in entries) entry.weight.value(MeasurementSystem.metric)];
     final meanDay = days.reduce((a, b) => a + b) / days.length;
     final meanValue = values.reduce((a, b) => a + b) / values.length;
 
@@ -106,7 +107,7 @@ class WeightAnalytics {
     }
     if (variance == 0) return null;
 
-    return covariance / variance * 7;
+    return WeightChange(covariance / variance * 7, MeasurementSystem.metric);
   }
 
   /// The last [weeks] Sunday-to-Saturday weeks of weight change, oldest first
@@ -124,7 +125,7 @@ class WeightAnalytics {
   }) {
     assert(weeks > 0);
     final weekStarts = _weekStartsEndingAt(asOf ?? DateTime.now(), weeks + 1);
-    final entriesByWeek = <DateTime, List<Weight>>{};
+    final entriesByWeek = <DateTime, List<WeightEntry>>{};
 
     for (final weight in _weightRepository.getWeightsSince(weekStarts.first)) {
       final start = _weekStart(weight.date);

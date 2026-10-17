@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
@@ -267,24 +268,20 @@ void main() {
 
     await logCluster(today, 8, 12);
     await logCluster(yesterday, 9, 20);
-    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
-    await weightRepo.saveWeight(
-      Weight(date: yesterday, value: 81.2, unit: WeightUnit.pounds),
-    );
+    await weightRepo.saveWeight(WeightEntry(date: today, weight: Weight(80.4, MeasurementSystem.metric)));
+    await weightRepo.saveWeight(WeightEntry(date: yesterday, weight: Weight(81.2, MeasurementSystem.metric)));
 
     await pumpPage(tester);
 
-    expect(find.text('80.4 kg'), findsOneWidget);
+    expect(find.text('80.40 kg'), findsOneWidget);
 
-    // Bar 0 is yesterday: the line follows the selection. Its stored value is
-    // read as kilograms and shown in the preferred unit, whatever the legacy
-    // Weight.unit on the row says.
+    // Bar 0 is yesterday: the line follows the selection.
     tapBar(tester, 0);
     await tester.pumpAndSettle();
 
-    expect(find.text('81.2 kg'), findsOneWidget);
-    expect(find.text('81.2 lbs'), findsNothing);
-    expect(find.text('80.4 kg'), findsNothing);
+    expect(find.text('81.20 kg'), findsOneWidget);
+    expect(find.text('81.20 lbs'), findsNothing);
+    expect(find.text('80.40 kg'), findsNothing);
   });
 
   testWidgets('meal breakdown card marks a day with no weigh-in', (

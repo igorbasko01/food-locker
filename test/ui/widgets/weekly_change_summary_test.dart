@@ -23,20 +23,20 @@ void main() {
     weekStart: weekStart,
     entries: [
       for (var day = 0; day < count; day++)
-        Weight(
+        WeightEntry(
           date: DateTime(weekStart.year, weekStart.month, weekStart.day + day),
-          value: 82.4 + delta,
+          weight: Weight(82.4 + delta, MeasurementSystem.metric),
         ),
     ],
     previousEntries: [
       for (var day = 0; day < previousCount; day++)
-        Weight(
+        WeightEntry(
           date: DateTime(
             previousStart.year,
             previousStart.month,
             previousStart.day + day,
           ),
-          value: 82.4,
+          weight: Weight(82.4, MeasurementSystem.metric),
         ),
     ],
   );
@@ -44,22 +44,29 @@ void main() {
   test('a gaining week names its period, its means and its change', () {
     expect(weeklyChangeSummary(week(delta: 0.6), locale: 'en_US'), [
       'Sun, 3/8 – Sat, 3/14',
-      'avg 83.0 kg (2 weigh-ins) vs 82.4 kg the week before (2)',
-      '+0.6 kg',
+      'avg 83.00 kg (2 weigh-ins) vs 82.40 kg the week before (2)',
+      '+0.60 kg',
     ]);
   });
 
   test('a losing week signs its change with a minus', () {
     expect(
       weeklyChangeSummary(week(delta: -1.2), locale: 'en_US').last,
-      '-1.2 kg',
+      '-1.20 kg',
     );
   });
 
   test('a flat week states zero rather than a sign', () {
     expect(
       weeklyChangeSummary(week(delta: 0.0), locale: 'en_US').last,
-      '0.0 kg',
+      '0.00 kg',
+    );
+  });
+
+  test('a change that rounds to zero carries no sign', () {
+    expect(
+      weeklyChangeSummary(week(delta: -0.004), locale: 'en_US').last,
+      '0.00 kg',
     );
   });
 
@@ -69,7 +76,7 @@ void main() {
         week(delta: 0.6, count: 1, previousCount: 1),
         locale: 'en_US',
       )[1],
-      'avg 83.0 kg (1 weigh-in) vs 82.4 kg the week before (1)',
+      'avg 83.00 kg (1 weigh-in) vs 82.40 kg the week before (1)',
     );
   });
 
@@ -82,9 +89,9 @@ void main() {
 
     expect(
       summary[1],
-      'avg 183.7 lbs (2 weigh-ins) vs 181.7 lbs the week before (2)',
+      'avg 183.66 lbs (2 weigh-ins) vs 181.66 lbs the week before (2)',
     );
-    expect(summary.last, '+2.0 lbs');
+    expect(summary.last, '+2.00 lbs');
   });
 
   test('a week nothing was logged in says so', () {
@@ -102,7 +109,7 @@ void main() {
       weeklyChangeSummary(
         WeeklyWeightChange(
           weekStart: weekStart,
-          entries: [Weight(date: DateTime(2026, 3, 9), value: 82.4)],
+          entries: [WeightEntry(date: DateTime(2026, 3, 9), weight: Weight(82.4, MeasurementSystem.metric))],
         ),
         locale: 'en_US',
       ),

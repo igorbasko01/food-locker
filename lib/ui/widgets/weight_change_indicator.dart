@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 
-/// A day-on-day change, as a signed pill.
-///
-/// [diff] is kilograms, like everything the store holds; [system] is only how
-/// it reads.
+/// A day-on-day change, as a signed pill read in [system].
 class WeightChangeIndicator extends StatelessWidget {
-  final double? diff;
+  final WeightChange? diff;
   final MeasurementSystem system;
 
   const WeightChangeIndicator({
@@ -18,39 +16,34 @@ class WeightChangeIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentDiff = diff == null
-        ? null
-        : system.weightFromKilograms(diff!);
+    final currentDiff = diff?.value(system);
+    final text = diff?.stringify(system) ?? 'Baseline';
 
     final Color backgroundColor;
     final Color textColor;
     final IconData? icon;
-    final String text;
     final FontWeight fontWeight;
 
     if (currentDiff == null) {
       backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
       textColor = theme.colorScheme.onSurfaceVariant;
       icon = null;
-      text = 'Baseline';
       fontWeight = FontWeight.normal;
     } else if (currentDiff > 0) {
       backgroundColor = theme.colorScheme.errorContainer.withValues(alpha: 0.5);
       textColor = theme.colorScheme.error;
       icon = Icons.arrow_upward_rounded;
-      text = '+${currentDiff.toStringAsFixed(1)} ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     } else if (currentDiff < 0) {
       backgroundColor = Colors.green.withValues(alpha: 0.15);
       textColor = Colors.green;
       icon = Icons.arrow_downward_rounded;
-      text = '${currentDiff.toStringAsFixed(1)} ${system.weightSymbol}';
       fontWeight = FontWeight.bold;
     } else {
       backgroundColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
       textColor = theme.colorScheme.outline;
-      icon = Icons.remove_rounded;
-      text = '0.0 ${system.weightSymbol}';
+      // A dash here reads as a minus sign; the grey pill already says flat.
+      icon = null;
       fontWeight = FontWeight.bold;
     }
 

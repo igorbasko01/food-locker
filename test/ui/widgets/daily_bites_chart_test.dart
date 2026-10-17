@@ -13,7 +13,7 @@ void main() {
   Future<BarChartData> pumpChart(
     WidgetTester tester,
     List<DailyBiteCount> counts, {
-    List<Weight> weights = const [],
+    List<WeightEntry> weights = const [],
     MeasurementSystem weightSystem = MeasurementSystem.metric,
     DateTime? selectedDay,
     ValueChanged<DateTime>? onDaySelected,
@@ -127,13 +127,13 @@ void main() {
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 40)],
-      weights: [Weight(date: DateTime(2026, 1, 1), value: 72.5748)],
+      weights: [WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(72.5748, MeasurementSystem.metric))],
       weightSystem: MeasurementSystem.imperial,
     );
 
     expect(find.text('Weight (lbs)'), findsOneWidget);
     expect(
-      find.bySemanticsLabel(RegExp(r'Weight overlaid, 160\.0 to 160\.0 lbs\.')),
+      find.bySemanticsLabel(RegExp(r'Weight overlaid, 160\.00 to 160\.00 lbs\.')),
       findsOneWidget,
     );
     // The bars are unaffected: only the weight overlay reads in pounds.
@@ -205,14 +205,14 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
       ],
       weights: [
-        Weight(date: DateTime(2026, 1, 1), value: 80),
-        Weight(date: DateTime(2026, 1, 2), value: 81),
+        WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(80, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2026, 1, 2), weight: Weight(81, MeasurementSystem.metric)),
       ],
     );
 
     expect(
       find.bySemanticsLabel(
-        RegExp(r'Weight overlaid, 80\.0 to 81\.0 kg\.'),
+        RegExp(r'Weight overlaid, 80\.00 to 81\.00 kg\.'),
       ),
       findsOneWidget,
     );
@@ -263,8 +263,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 20),
       ],
       weights: [
-        Weight(date: DateTime(2026, 1, 1), value: 80),
-        Weight(date: DateTime(2026, 1, 2), value: 81),
+        WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(80, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2026, 1, 2), weight: Weight(81, MeasurementSystem.metric)),
       ],
     );
 
@@ -291,7 +291,7 @@ void main() {
     final data = await pumpChart(
       tester,
       [DailyBiteCount(day: DateTime(2026, 1, 1), count: 50)],
-      weights: [Weight(date: DateTime(2026, 1, 3), value: 80)],
+      weights: [WeightEntry(date: DateTime(2026, 1, 3), weight: Weight(80, MeasurementSystem.metric))],
     );
 
     expect(data.barGroups, hasLength(3));
@@ -318,8 +318,8 @@ void main() {
         DailyBiteCount(day: DateTime(2026, 1, 2), count: 50),
       ],
       weights: [
-        Weight(date: DateTime(2026, 1, 1), value: 72),
-        Weight(date: DateTime(2026, 1, 2), value: 73),
+        WeightEntry(date: DateTime(2026, 1, 1), weight: Weight(72, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2026, 1, 2), weight: Weight(73, MeasurementSystem.metric)),
       ],
     );
 

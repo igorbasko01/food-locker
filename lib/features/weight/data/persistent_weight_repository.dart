@@ -1,26 +1,27 @@
+import 'package:food_locker/features/weight/data/hive_weight_entry.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:hive_ce/hive.dart';
 
 class PersistentWeightRepository with WeightRepositoryHelper implements WeightRepository {
-  final Box<Weight> _box;
+  final Box<HiveWeightEntry> _box;
 
   PersistentWeightRepository(this._box);
 
   @override
-  Weight? getWeightForDay(DateTime date) {
-    return _box.get(getKey(date));
+  WeightEntry? getWeightForDay(DateTime date) {
+    return _box.get(getKey(date))?.toEntry();
   }
 
   @override
-  List<Weight> getAllWeights() {
-    return _box.values.toList();
+  List<WeightEntry> getAllWeights() {
+    return _box.values.map((stored) => stored.toEntry()).toList();
   }
 
   @override
-  Future<void> saveWeight(Weight weight) async {
+  Future<void> saveWeight(WeightEntry weight) async {
     invalidateCache();
-    await _box.put(getKey(weight.date), weight);
+    await _box.put(getKey(weight.date), HiveWeightEntry.fromEntry(weight));
   }
 
   @override

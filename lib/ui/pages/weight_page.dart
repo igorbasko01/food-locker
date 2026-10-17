@@ -137,7 +137,7 @@ class WeightPage extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              system.formatWeight(item.value),
+                              item.weight.stringify(system),
                               style: const TextStyle(fontSize: 16.0),
                             ),
                             const SizedBox(width: 8),
@@ -173,13 +173,13 @@ class WeightPage extends StatelessWidget {
     BuildContext context,
     WeightManager manager,
     MeasurementSystem system, {
-    Weight? weight,
+    WeightEntry? weight,
   }) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AddWeightDialog(
         initialDate: weight?.date ?? DateTime.now(),
-        initialWeight: weight?.value,
+        initialWeight: weight?.weight,
         system: system,
       ),
     );
@@ -191,12 +191,12 @@ class WeightPage extends StatelessWidget {
       }
 
       final date = result['date'] as DateTime;
-      final value = result['value'] as double;
+      final typed = result['weight'] as Weight;
 
       if (weight != null) {
-        manager.updateWeight(weight.date, date, value);
+        manager.updateWeight(weight.date, date, typed);
       } else {
-        manager.addWeight(date, value);
+        manager.addWeight(date, typed);
       }
     }
   }
@@ -209,11 +209,11 @@ class WeightPage extends StatelessWidget {
     final change = week.delta;
     if (change == null) return _missingStatTile('Weekly change');
 
-    final rounded = _roundTo(system.weightFromKilograms(change), 1);
+    final rounded = change.value(system);
     return Expanded(
       child: StatTile(
         label: 'Weekly change',
-        value: '${_signed(rounded, 1)} ${system.weightSymbol}',
+        value: change.stringify(system),
         subLabel: _weeklyChangeWeeks(week),
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
@@ -223,19 +223,22 @@ class WeightPage extends StatelessWidget {
 
   Widget _buildTrendTile(
     BuildContext context,
-    double? perWeek,
+    WeightChange? perWeek,
     MeasurementSystem system,
   ) {
     if (perWeek == null) return _missingStatTile('30-day trend');
 
-    final shown = system.weightFromKilograms(perWeek);
-    final rounded = _roundTo(shown, 2);
-    final perMonth = _roundTo(shown * 30 / 7, 1);
+    final rounded = perWeek.value(system);
+    // A week that reads flat stays flat over the month, so the two lines never
+    // disagree in sign.
+    final perMonth = rounded == 0
+        ? WeightChange(0, system)
+        : perWeek * (30 / 7);
     return Expanded(
       child: StatTile(
         label: '30-day trend',
-        value: '${_signed(rounded, 2)} ${system.weightSymbol}/wk',
-        subLabel: '≈ ${_signed(perMonth, 1)} ${system.weightSymbol}/month',
+        value: '${perWeek.stringify(system)}/wk',
+        subLabel: '≈ ${perMonth.stringify(system)}/month',
         valueColor: _directionColor(context, rounded),
         icon: _directionIcon(rounded),
       ),
@@ -244,25 +247,24 @@ class WeightPage extends StatelessWidget {
 
   Widget _buildVsLowTile(
     BuildContext context,
-    double? change,
-    Weight? lowest,
+    WeightChange? change,
+    WeightEntry? lowest,
     MeasurementSystem system,
   ) {
     if (change == null || lowest == null) {
       return _missingStatTile('Vs. low');
     }
 
-    final rounded = _roundTo(system.weightFromKilograms(change), 1);
-    final low = system.weightFromKilograms(lowest.value).toStringAsFixed(1);
+    final low = lowest.weight.stringify(system, withSymbol: false);
     return Expanded(
       child: StatTile(
         label: 'Vs. low',
-        value: '${_signed(rounded, 1)} ${system.weightSymbol}',
+        value: change.stringify(system),
         subLabel: 'low $low on ${shortDate(lowest.date)}',
         // Never negative, so signed green/red would leave this tile
         // permanently red. Standing on the low earns the trophy instead.
         valueColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        icon: rounded == 0 ? Icons.emoji_events : null,
+        icon: change.value(system) == 0 ? Icons.emoji_events : null,
       ),
     );
   }
@@ -272,7 +274,7 @@ class WeightPage extends StatelessWidget {
 class _CurrentWeight extends StatelessWidget {
   const _CurrentWeight({required this.entry, required this.system});
 
-  final Weight? entry;
+  final WeightEntry? entry;
   final MeasurementSystem system;
 
   @override
@@ -281,7 +283,7 @@ class _CurrentWeight extends StatelessWidget {
     final current = entry;
     final value = current == null
         ? '--'
-        : system.formatWeight(current.value);
+        : current.weight.stringify(system);
     final caption = current == null
         ? 'No weigh-ins yet'
         : 'as of ${fullDateWithWeekday(current.date)}';
@@ -316,7 +318,7 @@ class _CurrentWeight extends StatelessWidget {
 class _Bmi extends StatelessWidget {
   const _Bmi({required this.entry});
 
-  final Weight? entry;
+  final WeightEntry? entry;
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +344,10 @@ class _Bmi extends StatelessWidget {
     }
 
     return BmiScale(
-      bmi: bodyMassIndex(kilograms: current.value, heightCm: heightCm),
+      bmi: bodyMassIndex(
+        kilograms: current.weight.value(MeasurementSystem.metric),
+        heightCm: heightCm,
+      ),
     );
   }
 
@@ -386,18 +391,6 @@ String _weeklyChangeWeeks(WeeklyWeightChange week) =>
 /// The tile a statistic the store has too little for falls back to.
 Widget _missingStatTile(String label) =>
     Expanded(child: StatTile(label: label, value: '--'));
-
-/// [value] rounded to what the tile will print, so its sign, colour, and arrow
-/// agree with the digits — a -0.04 kg week reads as flat, not as a loss.
-double _roundTo(double value, int decimals) =>
-    double.parse(value.toStringAsFixed(decimals));
-
-String _signed(double value, int decimals) {
-  final magnitude = value.abs().toStringAsFixed(decimals);
-  if (value > 0) return '+$magnitude';
-  if (value < 0) return '-$magnitude';
-  return magnitude;
-}
 
 /// Down is green and up is the error colour, matching the history rows'
 /// change indicator so the whole tab reads the same way.

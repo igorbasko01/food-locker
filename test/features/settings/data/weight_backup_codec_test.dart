@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/weight_backup_codec.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
@@ -7,7 +8,7 @@ void main() {
 
   group('WeightBackupCodec CSV Logic', () {
     test('generateWeightCsv drops the unit column', () {
-      final weight = Weight(date: DateTime(2023, 10, 27), value: 75.5);
+      final weight = WeightEntry(date: DateTime(2023, 10, 27), weight: Weight(75.5, MeasurementSystem.metric));
 
       final csv = codec.generateWeightCsv([weight]);
 
@@ -23,8 +24,7 @@ void main() {
 
       expect(weights.length, 1);
       expect(weights.first.date, DateTime(2023, 10, 27));
-      expect(weights.first.value, 75.5);
-      expect(weights.first.unit, WeightUnit.kilograms);
+      expect(weights.first.weight.value(MeasurementSystem.metric), 75.5);
     });
   });
 
@@ -56,39 +56,35 @@ void main() {
           '2023-10-29T00:00:00.000,74.0';
       final weights = codec.parseWeightCsv(csv);
 
-      expect(weights.map((w) => w.value), [75.5, 74.0]);
+      expect(weights.map((w) => w.weight.value(MeasurementSystem.metric)), [75.5, 74.0]);
     });
 
     test('an archive still carrying a unit column imports unchanged', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,kilograms';
       final weights = codec.parseWeightCsv(csv);
 
-      expect(weights.single.value, 75.5);
-      expect(weights.single.unit, WeightUnit.kilograms);
+      expect(weights.single.weight.value(MeasurementSystem.metric), 75.5);
     });
 
     test('a pounds row restores as that same number in kilograms', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,166.0,pounds';
       final weights = codec.parseWeightCsv(csv);
 
-      expect(weights.single.value, 166.0);
-      expect(weights.single.unit, WeightUnit.kilograms);
+      expect(weights.single.weight.value(MeasurementSystem.metric), 166.0);
     });
 
     test('parseWeightCsv ignores a unit column it cannot name', () {
       const csv = 'date,value,unit\r\n2023-10-27T00:00:00.000,75.5,stones';
       final weights = codec.parseWeightCsv(csv);
-
-      expect(weights.single.unit, WeightUnit.kilograms);
-      expect(weights.single.value, 75.5);
+      expect(weights.single.weight.value(MeasurementSystem.metric), 75.5);
     });
   });
 
   group('WeightBackupCodec Zip Encode/Decode Round-Trip', () {
     test('encode and decode preserves exact data', () {
       final weights = [
-        Weight(date: DateTime(2023, 10, 27), value: 75.5),
-        Weight(date: DateTime(2023, 10, 28), value: 75.0),
+        WeightEntry(date: DateTime(2023, 10, 27), weight: Weight(75.5, MeasurementSystem.metric)),
+        WeightEntry(date: DateTime(2023, 10, 28), weight: Weight(75.0, MeasurementSystem.metric)),
       ];
 
       final zipBytes = codec.encode(weights);
@@ -103,12 +99,12 @@ void main() {
       final weight1 = decodedWeights.firstWhere(
         (w) => w.date == DateTime(2023, 10, 27),
       );
-      expect(weight1.value, 75.5);
+      expect(weight1.weight.value(MeasurementSystem.metric), 75.5);
 
       final weight2 = decodedWeights.firstWhere(
         (w) => w.date == DateTime(2023, 10, 28),
       );
-      expect(weight2.value, 75.0);
+      expect(weight2.weight.value(MeasurementSystem.metric), 75.0);
     });
   });
 }

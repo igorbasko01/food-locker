@@ -1,36 +1,36 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'weight.dart';
+part of 'hive_weight_entry.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class WeightAdapter extends TypeAdapter<Weight> {
+class HiveWeightEntryAdapter extends TypeAdapter<HiveWeightEntry> {
   @override
   final typeId = 4;
 
   @override
-  Weight read(BinaryReader reader) {
+  HiveWeightEntry read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Weight(
+    return HiveWeightEntry(
       date: fields[0] as DateTime,
-      value: (fields[1] as num).toDouble(),
+      kilograms: (fields[1] as num).toDouble(),
       unit: fields[2] == null ? WeightUnit.kilograms : fields[2] as WeightUnit,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Weight obj) {
+  void write(BinaryWriter writer, HiveWeightEntry obj) {
     writer
       ..writeByte(3)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
-      ..write(obj.value)
+      ..write(obj.kilograms)
       ..writeByte(2)
       ..write(obj.unit);
   }
@@ -41,7 +41,7 @@ class WeightAdapter extends TypeAdapter<Weight> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WeightAdapter &&
+      other is HiveWeightEntryAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

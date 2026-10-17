@@ -504,19 +504,19 @@ abstract class _$BiteDatabase extends GeneratedDatabase {
   _$BiteDatabase(QueryExecutor e) : super(e);
   $BiteDatabaseManager get managers => $BiteDatabaseManager(this);
   late final $BitesTable bites = $BitesTable(this);
+  late final $PacingConfigsTable pacingConfigs = $PacingConfigsTable(this);
   late final Index idxBitesAtMs = Index(
     'idx_bites_at_ms',
     'CREATE INDEX idx_bites_at_ms ON bites (at_ms)',
   );
-  late final $PacingConfigsTable pacingConfigs = $PacingConfigsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     bites,
-    idxBitesAtMs,
     pacingConfigs,
+    idxBitesAtMs,
   ];
 }
 
@@ -636,7 +636,6 @@ typedef $$BitesTableProcessedTableManager =
       Bite,
       PrefetchHooks Function()
     >;
-
 typedef $$PacingConfigsTableCreateCompanionBuilder =
     PacingConfigsCompanion Function({
       Value<int> id,
@@ -749,11 +748,7 @@ class $$PacingConfigsTableTableManager
           $$PacingConfigsTableUpdateCompanionBuilder,
           (
             PacingConfig,
-            BaseReferences<
-              _$BiteDatabase,
-              $PacingConfigsTable,
-              PacingConfig
-            >,
+            BaseReferences<_$BiteDatabase, $PacingConfigsTable, PacingConfig>,
           ),
           PacingConfig,
           PrefetchHooks Function()

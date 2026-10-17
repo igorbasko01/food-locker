@@ -3,18 +3,18 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/hive_weight_entry.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
-    registerAdapter(WeightAdapter());
+    registerAdapter(HiveWeightEntryAdapter());
     registerAdapter(WeightUnitAdapter());
   }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
-    registerAdapter(WeightAdapter());
+    registerAdapter(HiveWeightEntryAdapter());
     registerAdapter(WeightUnitAdapter());
   }
 }

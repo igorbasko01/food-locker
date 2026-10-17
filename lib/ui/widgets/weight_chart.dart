@@ -4,10 +4,10 @@ import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
-/// The weight trend line. Plotted in kilograms, the unit everything is stored
-/// in; [system] only decides how the axis and tooltip read.
+/// The weight trend line. Plotted in kilograms so the axis padding is the same
+/// in either system; [system] only decides how the axis and tooltip read.
 class WeightChart extends StatelessWidget {
-  final List<Weight> weights;
+  final List<WeightEntry> weights;
   final MeasurementSystem system;
 
   const WeightChart({
@@ -23,17 +23,17 @@ class WeightChart extends StatelessWidget {
     }
 
     // Sort ascending for chart (earliest to latest)
-    final sortedWeights = List<Weight>.from(weights);
+    final sortedWeights = List<WeightEntry>.from(weights);
     sortedWeights.sort((a, b) => a.date.compareTo(b.date));
 
     final spots = sortedWeights.map((w) {
       // Use time relative to first entry for X-axis to keep values smaller
       final ms = w.date.millisecondsSinceEpoch.toDouble();
-      return FlSpot(ms, w.value);
+      return FlSpot(ms, w.weight.value(MeasurementSystem.metric));
     }).toList();
 
-    double minY = sortedWeights.map((e) => e.value).reduce((a, b) => a < b ? a : b);
-    double maxY = sortedWeights.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    double minY = sortedWeights.map((e) => e.weight.value(MeasurementSystem.metric)).reduce((a, b) => a < b ? a : b);
+    double maxY = sortedWeights.map((e) => e.weight.value(MeasurementSystem.metric)).reduce((a, b) => a > b ? a : b);
 
     // Padding for Y axis
     minY = (minY - 2).clamp(0, double.infinity);
@@ -68,7 +68,11 @@ class WeightChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Text(
-                      system.weightFromKilograms(value).toStringAsFixed(1),
+                      Weight(value, MeasurementSystem.metric).stringify(
+                        system,
+                        decimals: 1,
+                        withSymbol: false,
+                      ),
                       style: const TextStyle(fontSize: 10),
                     ),
                   );
@@ -101,7 +105,7 @@ class WeightChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final date = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
                   return LineTooltipItem(
-                    '${fullDateWithWeekday(date)}\n${system.formatWeight(spot.y)}',
+                    '${fullDateWithWeekday(date)}\n${Weight(spot.y, MeasurementSystem.metric).stringify(system)}',
                     const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   );
                 }).toList();

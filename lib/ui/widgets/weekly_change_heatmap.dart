@@ -28,8 +28,7 @@ class WeeklyChangeHeatmap extends StatefulWidget {
   /// as no-data.
   final List<WeeklyWeightChange> weeks;
 
-  /// The system the readouts state weights in; the weeks themselves hold
-  /// kilograms.
+  /// The system the readouts state weights in.
   final MeasurementSystem system;
 
   @override
@@ -243,7 +242,7 @@ class _Cell extends StatelessWidget {
             decoration: BoxDecoration(
               color: week == null
                   ? weeklyChangeNoDataColor
-                  : weeklyChangeColor(week!, scale),
+                  : weeklyChangeColor(week!, scale, system),
               borderRadius: BorderRadius.circular(3),
             ),
           ),

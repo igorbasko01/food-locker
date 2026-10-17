@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/units.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/weight_change_indicator.dart';
 
 void main() {
   Widget createWidgetUnderTest(
-    double? diff, [
+    double? kilograms, [
     MeasurementSystem system = MeasurementSystem.metric,
   ]) {
     return MaterialApp(
       home: Scaffold(
-        body: WeightChangeIndicator(diff: diff, system: system),
+        body: WeightChangeIndicator(
+          diff: kilograms == null ? null : WeightChange(kilograms, MeasurementSystem.metric),
+          system: system,
+        ),
       ),
     );
   }
@@ -24,27 +28,39 @@ void main() {
 
   testWidgets('shows positive difference with + sign and up arrow', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(1.5));
-    expect(find.text('+1.5 kg'), findsOneWidget);
+    expect(find.text('+1.50 kg'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
   });
 
   testWidgets('shows negative difference with - sign and down arrow', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(-0.8));
-    expect(find.text('-0.8 kg'), findsOneWidget);
+    expect(find.text('-0.80 kg'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });
 
-  testWidgets('shows 0.0 kg and neutral icon when diff is 0', (tester) async {
+  testWidgets('shows 0.00 kg and no icon when diff is 0', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(0.0));
-    expect(find.text('0.0 kg'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
+    expect(find.text('0.00 kg'), findsOneWidget);
+    expect(find.byType(Icon), findsNothing);
+  });
+
+  testWidgets('shows a change of a few hundredths', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest(89.40 - 89.45));
+    expect(find.text('-0.05 kg'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
+  });
+
+  testWidgets('a change that rounds to zero reads as flat', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest(-0.004));
+    expect(find.text('0.00 kg'), findsOneWidget);
+    expect(find.byType(Icon), findsNothing);
   });
 
   testWidgets('converts the kilogram diff under imperial', (tester) async {
     await tester.pumpWidget(
       createWidgetUnderTest(2.4, MeasurementSystem.imperial),
     );
-    expect(find.text('+5.3 lbs'), findsOneWidget);
+    expect(find.text('+5.29 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
   });
 
@@ -52,7 +68,7 @@ void main() {
     await tester.pumpWidget(
       createWidgetUnderTest(-0.9071847, MeasurementSystem.imperial),
     );
-    expect(find.text('-2.0 lbs'), findsOneWidget);
+    expect(find.text('-2.00 lbs'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
   });
 }

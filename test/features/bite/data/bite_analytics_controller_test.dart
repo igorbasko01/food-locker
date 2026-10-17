@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/bite/data/bite_analytics_controller.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
@@ -91,9 +92,9 @@ void main() {
     final inWindow = DateTime(now.year, now.month, now.day - 5);
     final outOfWindow = DateTime(now.year, now.month, now.day - 40);
     await logCluster(today, 8, 12);
-    await weightRepo.saveWeight(Weight(date: today, value: 80));
-    await weightRepo.saveWeight(Weight(date: inWindow, value: 81));
-    await weightRepo.saveWeight(Weight(date: outOfWindow, value: 90));
+    await weightRepo.saveWeight(WeightEntry(date: today, weight: Weight(80, MeasurementSystem.metric)));
+    await weightRepo.saveWeight(WeightEntry(date: inWindow, weight: Weight(81, MeasurementSystem.metric)));
+    await weightRepo.saveWeight(WeightEntry(date: outOfWindow, weight: Weight(90, MeasurementSystem.metric)));
 
     await controller.load();
 
@@ -121,14 +122,14 @@ void main() {
     await logCluster(today, 8, 12);
     await logCluster(yesterday, 9, 20);
     await logCluster(dayBefore, 9, 20);
-    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
-    await weightRepo.saveWeight(Weight(date: yesterday, value: 81.2));
+    await weightRepo.saveWeight(WeightEntry(date: today, weight: Weight(80.4, MeasurementSystem.metric)));
+    await weightRepo.saveWeight(WeightEntry(date: yesterday, weight: Weight(81.2, MeasurementSystem.metric)));
 
     await controller.load();
-    expect(controller.selectedWeight?.value, 80.4);
+    expect(controller.selectedWeight?.weight.value(MeasurementSystem.metric), 80.4);
 
     await controller.selectDay(yesterday);
-    expect(controller.selectedWeight?.value, 81.2);
+    expect(controller.selectedWeight?.weight.value(MeasurementSystem.metric), 81.2);
 
     // A day that was never weighed leaves the line empty rather than stale.
     await controller.selectDay(dayBefore);
@@ -142,19 +143,19 @@ void main() {
     final yesterday = DateTime(now.year, now.month, now.day - 1);
     await logCluster(today, 8, 12);
     await logCluster(yesterday, 9, 20);
-    await weightRepo.saveWeight(Weight(date: today, value: 80.4));
-    await weightRepo.saveWeight(Weight(date: yesterday, value: 81.2));
+    await weightRepo.saveWeight(WeightEntry(date: today, weight: Weight(80.4, MeasurementSystem.metric)));
+    await weightRepo.saveWeight(WeightEntry(date: yesterday, weight: Weight(81.2, MeasurementSystem.metric)));
 
     await controller.load();
 
     final pending = controller.selectDay(yesterday);
     // The breakdown card is still showing today, so the weight is today's.
     expect(controller.selectedBreakdown.day, today);
-    expect(controller.selectedWeight?.value, 80.4);
+    expect(controller.selectedWeight?.weight.value(MeasurementSystem.metric), 80.4);
 
     await pending;
 
-    expect(controller.selectedWeight?.value, 81.2);
+    expect(controller.selectedWeight?.weight.value(MeasurementSystem.metric), 81.2);
   });
 
   test('selectedWeight is null when today was not weighed', () async {

@@ -6,6 +6,7 @@ import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/theme.dart';
@@ -52,20 +53,20 @@ void main() {
 
   testWidgets('history rows read in the preferred system', (tester) async {
     final manager = WeightManager(InMemoryWeightRepository());
-    await manager.addWeight(daysAgo(1), 71.6677);
-    await manager.addWeight(today, 72.5748);
+    await manager.addWeight(daysAgo(1), Weight(71.6677, MeasurementSystem.metric));
+    await manager.addWeight(today, Weight(72.5748, MeasurementSystem.metric));
 
     await pumpPage(tester, manager, system: MeasurementSystem.imperial);
 
-    expect(find.text('160.0 lbs'), findsOneWidget);
-    expect(find.text('158.0 lbs'), findsOneWidget);
+    expect(find.text('160.00 lbs'), findsOneWidget);
+    expect(find.text('158.00 lbs'), findsOneWidget);
     // The day-on-day change is converted from kilograms too.
-    expect(find.text('+2.0 lbs'), findsOneWidget);
+    expect(find.text('+2.00 lbs'), findsOneWidget);
   });
 
   testWidgets('the heading names the selected range', (tester) async {
     final manager = WeightManager(InMemoryWeightRepository());
-    await manager.addWeight(today, 72.0);
+    await manager.addWeight(today, Weight(72.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -111,7 +112,7 @@ void main() {
     tester,
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
-    await manager.addWeight(daysAgo(20), 73.0);
+    await manager.addWeight(daysAgo(20), Weight(73.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 
@@ -140,7 +141,7 @@ void main() {
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
     for (var day = 0; day < 10; day++) {
-      await manager.addWeight(daysAgo(day), 70.0 + day);
+      await manager.addWeight(daysAgo(day), Weight(70.0 + day, MeasurementSystem.metric));
     }
 
     await pumpPage(tester, manager);
@@ -161,7 +162,7 @@ void main() {
     // Four weeks of daily weigh-ins, so a week and its predecessor are both
     // logged whatever weekday the test runs on.
     for (var day = 0; day < 28; day++) {
-      await manager.addWeight(daysAgo(day), 70.0 + day);
+      await manager.addWeight(daysAgo(day), Weight(70.0 + day, MeasurementSystem.metric));
     }
 
     await pumpPage(tester, manager);
@@ -182,7 +183,7 @@ void main() {
     tester,
   ) async {
     final manager = WeightManager(InMemoryWeightRepository());
-    await manager.addWeight(today, 72.0);
+    await manager.addWeight(today, Weight(72.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
 

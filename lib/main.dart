@@ -9,7 +9,7 @@ import 'package:food_locker/features/settings/data/preferences_settings_reposito
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
-import 'package:food_locker/features/weight/data/weight.dart';
+import 'package:food_locker/features/weight/data/hive_weight_entry.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/features/weight/data/persistent_weight_repository.dart';
@@ -26,7 +26,7 @@ void main() async {
   initializeDateFormatting();
   await Hive.initFlutter();
   Hive.registerAdapters();
-  final weightBox = await Hive.openBox<Weight>('weights');
+  final weightBox = await Hive.openBox<HiveWeightEntry>('weights');
 
   final weightRepository = PersistentWeightRepository(weightBox);
 

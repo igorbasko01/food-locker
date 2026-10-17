@@ -68,8 +68,8 @@ double kilogramsToPounds(double kilograms) => kilograms / kilogramsPerPound;
 extension WeightDisplay on MeasurementSystem {
   String get weightSymbol => this == MeasurementSystem.imperial ? 'lbs' : 'kg';
 
-  /// A stored weight as this system reads it. Everything is stored and computed
-  /// in kilograms, so this is the only step between the store and the screen.
+  /// Kilograms in this system's unit: the conversion behind `Weight` and
+  /// `WeightChange`, which screens read weights through.
   double weightFromKilograms(double kilograms) =>
       this == MeasurementSystem.imperial
       ? kilogramsToPounds(kilograms)
@@ -78,8 +78,4 @@ extension WeightDisplay on MeasurementSystem {
   /// A figure typed in this system, back in kilograms for storage.
   double weightToKilograms(double value) =>
       this == MeasurementSystem.imperial ? poundsToKilograms(value) : value;
-
-  /// [kilograms] as it appears on screen: `72.6 kg`, `160.0 lbs`.
-  String formatWeight(double kilograms) =>
-      '${weightFromKilograms(kilograms).toStringAsFixed(1)} $weightSymbol';
 }

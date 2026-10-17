@@ -1,3 +1,4 @@
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 
 /// One calendar week's weight change, as the Home heatmap reads it.
@@ -20,8 +21,8 @@ class WeeklyWeightChange {
   /// logged in.
   factory WeeklyWeightChange({
     required DateTime weekStart,
-    List<Weight> entries = const [],
-    List<Weight> previousEntries = const [],
+    List<WeightEntry> entries = const [],
+    List<WeightEntry> previousEntries = const [],
   }) {
     assert(
       entries.every((entry) => _fallsInWeek(entry, weekStart)),
@@ -60,13 +61,13 @@ class WeeklyWeightChange {
   /// The mean of the week's weigh-ins, null exactly when [count] is zero. One
   /// weigh-in is enough to average: a thin week is a reading, not a blank, and
   /// [count] is there so the thinness can be shown rather than hidden.
-  final double? mean;
+  final Weight? mean;
 
   /// How many weigh-ins [mean] covers.
   final int count;
 
   /// The same pair for the immediately preceding calendar week.
-  final double? previousMean;
+  final Weight? previousMean;
   final int previousCount;
 
   /// The Saturday closing the week.
@@ -77,17 +78,18 @@ class WeeklyWeightChange {
 
   /// This week's mean minus the previous week's, or null when either week
   /// holds no weigh-ins.
-  double? get delta {
+  WeightChange? get delta {
     final current = mean;
     final previous = previousMean;
     if (current == null || previous == null) return null;
-    return current - previous;
+    return current.diff(previous);
   }
 
   bool get hasData => delta != null;
 
-  /// Whether the week ended heavier. A flat week counts as not gained.
-  bool get isGain => (delta ?? 0) > 0;
+  /// Whether the week ended heavier, as [system] prints its change: a week
+  /// that reads `0.00` counts as not gained.
+  bool isGain(MeasurementSystem system) => (delta?.value(system) ?? 0) > 0;
 
   /// The Sunday opening the week before the one [weekStart] opens.
   static DateTime _weekBefore(DateTime weekStart) =>
@@ -97,14 +99,11 @@ class WeeklyWeightChange {
   static DateTime _weekEnd(DateTime weekStart) =>
       DateTime(weekStart.year, weekStart.month, weekStart.day + 6);
 
-  static double? _meanOf(List<Weight> entries) {
-    if (entries.isEmpty) return null;
-    return entries.map((entry) => entry.value).reduce((a, b) => a + b) /
-        entries.length;
-  }
+  static Weight? _meanOf(List<WeightEntry> entries) =>
+      Weight.mean(entries.map((entry) => entry.weight));
 
   /// Whether [entry] falls in the seven days [weekStart] opens.
-  static bool _fallsInWeek(Weight entry, DateTime weekStart) {
+  static bool _fallsInWeek(WeightEntry entry, DateTime weekStart) {
     final day = DateTime(entry.date.year, entry.date.month, entry.date.day);
     final weekAfter = DateTime(
       weekStart.year,

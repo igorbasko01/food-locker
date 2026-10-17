@@ -35,7 +35,7 @@ class DailyBitesChart extends StatelessWidget {
 
   /// Raw daily weigh-ins, one per weighed day, overlaid as a trend line. Empty
   /// leaves the chart bites-only with no right-hand axis.
-  final List<Weight> weights;
+  final List<WeightEntry> weights;
 
   /// The system the weight axis and tooltips read in. The overlay is plotted
   /// in kilograms whatever this says.
@@ -80,7 +80,7 @@ class DailyBitesChart extends StatelessWidget {
     };
     final weightByDay = {
       for (final w in weights)
-        DateTime(w.date.year, w.date.month, w.date.day): w.value,
+        DateTime(w.date.year, w.date.month, w.date.day): w.weight.value(MeasurementSystem.metric),
     };
     final hasWeight = weightByDay.isNotEmpty;
     final selected = selectedDay == null
@@ -170,8 +170,8 @@ class DailyBitesChart extends StatelessWidget {
       final weighedMax = weightByDay.values.reduce((a, b) => a > b ? a : b);
       summary.write(
         ' Weight overlaid, '
-        '${weightSystem.weightFromKilograms(weighedMin).toStringAsFixed(1)} '
-        'to ${weightSystem.formatWeight(weighedMax)}.',
+        '${Weight(weighedMin, MeasurementSystem.metric).stringify(weightSystem, withSymbol: false)} '
+        'to ${Weight(weighedMax, MeasurementSystem.metric).stringify(weightSystem)}.',
       );
     }
     if (selected != null) {
@@ -198,9 +198,11 @@ class DailyBitesChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          weightSystem
-                              .weightFromKilograms(yToWeight(value))
-                              .toStringAsFixed(1),
+                          Weight(yToWeight(value), MeasurementSystem.metric).stringify(
+                            weightSystem,
+                            decimals: 1,
+                            withSymbol: false,
+                          ),
                           style: TextStyle(fontSize: 10, color: weightColor),
                         ),
                       );
@@ -294,7 +296,7 @@ class DailyBitesChart extends StatelessWidget {
               final weightLine =
                   weight == null
                   ? ''
-                  : '\n${weightSystem.formatWeight(weight)}';
+                  : '\n${Weight(weight, MeasurementSystem.metric).stringify(weightSystem)}';
               return BarTooltipItem(
                 '${fullDateWithWeekday(day)}\n${rod.toY.toInt()} bites$weightLine',
                 const TextStyle(
