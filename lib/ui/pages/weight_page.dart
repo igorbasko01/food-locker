@@ -348,6 +348,8 @@ class _Bmi extends StatelessWidget {
         kilograms: current.weight.value(MeasurementSystem.metric),
         heightCm: heightCm,
       ),
+      heightCm: heightCm,
+      system: settings.measurementSystem,
     );
   }
 

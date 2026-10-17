@@ -13,6 +13,13 @@ double bodyMassIndex({required double kilograms, required double heightCm}) {
   return kilograms / (metres * metres);
 }
 
+/// The weight that puts someone [heightCm] tall at [bmi]: the inverse of
+/// [bodyMassIndex].
+double kilogramsAtBmi({required double bmi, required double heightCm}) {
+  final metres = heightCm / 100;
+  return bmi * metres * metres;
+}
+
 BmiCategory bmiCategory(double bmi) {
   if (bmi < healthyBmiFrom) return BmiCategory.underweight;
   if (bmi < overweightBmiFrom) return BmiCategory.healthy;
