@@ -190,6 +190,14 @@ void main() {
       expect(find.text('264.6 lbs'), findsOneWidget);
     });
 
+    testWidgets('sit between the marker and the bar', (tester) async {
+      await pumpWithHeight(tester, heightCm: 200.0);
+
+      final marker = tester.getCenter(find.byIcon(Icons.arrow_drop_down));
+      final label = tester.getRect(find.text('100.0 kg'));
+      expect(marker.dy, lessThan(label.top));
+    });
+
     testWidgets('sit above the bar, over the seam they belong to', (
       tester,
     ) async {
@@ -209,5 +217,20 @@ void main() {
         );
       }
     });
+  });
+
+  testWidgets('draws a line down the bar where the marker points', (
+    tester,
+  ) async {
+    await pumpScale(tester, 20.0);
+
+    final bar = tester.getRect(find.byKey(BmiScale.barKey));
+    final x = 0.25 * bar.width;
+    expect(
+      find.byKey(BmiScale.readingLineKey),
+      paints
+        ..line(p1: Offset(x, 0), p2: Offset(x, 3))
+        ..line(p1: Offset(x, 3), p2: Offset(x, 6)),
+    );
   });
 }

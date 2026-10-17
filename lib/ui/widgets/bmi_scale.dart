@@ -36,6 +36,10 @@ class BmiScale extends StatelessWidget {
   static const double _barHeight = 26.0;
   static const double _markerSize = 28.0;
 
+  /// The row the marker takes up: the drop-down glyph fills only the middle
+  /// of its icon box, so the box overhangs this above and below.
+  static const double _markerRowHeight = 14.0;
+
   /// The box each boundary figure is centred in, wide enough for `18.5`.
   static const double _tickWidth = 36.0;
 
@@ -43,6 +47,7 @@ class BmiScale extends StatelessWidget {
   static const double _weightTickWidth = 64.0;
 
   static const Key barKey = Key('bmi-scale-bar');
+  static const Key readingLineKey = Key('bmi-scale-reading-line');
 
   /// Where along the bar [bmi] sits, 0 at the left edge and 1 at the right.
   static double markerFraction(double bmi) {
@@ -77,21 +82,14 @@ class BmiScale extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          if (heightCm case final heightCm?)
-            _ticks(
-              theme,
-              width: _weightTickWidth,
-              label: (bmi) => Weight(
-                kilogramsAtBmi(bmi: bmi, heightCm: heightCm),
-                MeasurementSystem.metric,
-              ).stringify(system, decimals: 1),
-            ),
           LayoutBuilder(
             builder: (context, constraints) => SizedBox(
-              height: _markerSize,
+              height: _markerRowHeight,
               child: Stack(
+                clipBehavior: Clip.none,
                 children: [
                   Positioned(
+                    top: (_markerRowHeight - _markerSize) / 2,
                     left: _centredAt(
                       markerFraction(bmi),
                       constraints.maxWidth,
@@ -107,10 +105,23 @@ class BmiScale extends StatelessWidget {
               ),
             ),
           ),
+          if (heightCm case final heightCm?)
+            _ticks(
+              theme,
+              width: _weightTickWidth,
+              label: (bmi) => Weight(
+                kilogramsAtBmi(bmi: bmi, heightCm: heightCm),
+                MeasurementSystem.metric,
+              ).stringify(system, decimals: 1),
+            ),
           ClipRRect(
             key: barKey,
             borderRadius: BorderRadius.circular(6),
-            child: Row(children: BmiBand.all.map(_segment).toList()),
+            child: CustomPaint(
+              key: readingLineKey,
+              foregroundPainter: _ReadingLinePainter(markerFraction(bmi)),
+              child: Row(children: BmiBand.all.map(_segment).toList()),
+            ),
           ),
           _ticks(theme, width: _tickWidth, label: _boundaryLabel),
           const SizedBox(height: 6),
@@ -163,10 +174,9 @@ class BmiScale extends StatelessWidget {
                 ),
                 child: SizedBox(
                   width: width,
-                  child: Text(
-                    label(band.from),
-                    textAlign: TextAlign.center,
-                    style: style,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(label(band.from), maxLines: 1, style: style),
                   ),
                 ),
               ),
@@ -208,4 +218,43 @@ class BmiScale extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A dashed line down the bar at [fraction] of its width, where the marker
+/// points. The dashes alternate dark and light so the line shows on every band.
+class _ReadingLinePainter extends CustomPainter {
+  const _ReadingLinePainter(this.fraction);
+
+  final double fraction;
+
+  static const double _dash = 3.0;
+  static const double _width = 2.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final x = (fraction * size.width).clamp(
+      _width / 2,
+      size.width - _width / 2,
+    );
+    final dark = Paint()
+      ..color = const Color(0xFF212121)
+      ..strokeWidth = _width;
+    final light = Paint()
+      ..color = const Color(0xFFFFFFFF)
+      ..strokeWidth = _width;
+
+    var dashIndex = 0;
+    for (var y = 0.0; y < size.height; y += _dash, dashIndex++) {
+      final end = y + _dash > size.height ? size.height : y + _dash;
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x, end),
+        dashIndex.isEven ? dark : light,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ReadingLinePainter oldDelegate) =>
+      oldDelegate.fraction != fraction;
 }
