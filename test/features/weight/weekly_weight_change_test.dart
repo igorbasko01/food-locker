@@ -112,7 +112,7 @@ void main() {
       expect(current.previousMean?.value(MeasurementSystem.metric), closeTo(81.5, 1e-9));
       expect(current.previousCount, 4);
       expect(current.delta?.value(MeasurementSystem.metric), closeTo(-1.5, 1e-9));
-      expect(current.isGain, isFalse);
+      expect(current.isGain(MeasurementSystem.metric), isFalse);
     });
 
     test('one weigh-in a side is enough', () async {
@@ -123,7 +123,7 @@ void main() {
 
       expect(current.hasData, isTrue);
       expect(current.delta?.value(MeasurementSystem.metric), closeTo(0.6, 1e-9));
-      expect(current.isGain, isTrue);
+      expect(current.isGain(MeasurementSystem.metric), isTrue);
     });
 
     test('the week in progress is measured like any other', () async {
@@ -148,7 +148,7 @@ void main() {
       final second = weeks.last;
 
       expect(second.weekStart, DateTime(2026, 9, 13));
-      expect(second.isGain, isFalse);
+      expect(second.isGain(MeasurementSystem.metric), isFalse);
       expect(second.delta?.value(MeasurementSystem.metric), closeTo(84.65 - 86.0, 1e-9));
     });
 
@@ -197,7 +197,7 @@ void main() {
 
       expect(current.mean?.value(MeasurementSystem.metric), closeTo(80.0, 1e-9));
       expect(current.delta?.value(MeasurementSystem.metric), closeTo(0.0, 1e-9));
-      expect(current.isGain, isFalse);
+      expect(current.isGain(MeasurementSystem.metric), isFalse);
     });
 
     test('ignores weigh-ins dated past the current week', () async {
@@ -239,7 +239,7 @@ void main() {
 
       expect(current.hasData, isTrue);
       expect(current.delta?.value(MeasurementSystem.metric), 0.0);
-      expect(current.isGain, isFalse);
+      expect(current.isGain(MeasurementSystem.metric), isFalse);
     });
 
     test('rejects a weigh-in from outside the week', () {

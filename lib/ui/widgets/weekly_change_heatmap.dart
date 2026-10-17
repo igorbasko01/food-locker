@@ -242,7 +242,7 @@ class _Cell extends StatelessWidget {
             decoration: BoxDecoration(
               color: week == null
                   ? weeklyChangeNoDataColor
-                  : weeklyChangeColor(week!, scale),
+                  : weeklyChangeColor(week!, scale, system),
               borderRadius: BorderRadius.circular(3),
             ),
           ),

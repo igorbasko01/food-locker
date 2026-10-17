@@ -98,7 +98,7 @@ void main() {
 
     test('an exact zero is the faintest level, never a gain', () {
       expect(scale.levelFor(week(0.0)), 1);
-      expect(week(0.0).isGain, isFalse);
+      expect(week(0.0).isGain(MeasurementSystem.metric), isFalse);
     });
 
     test('a week with no delta has no level', () {
@@ -122,20 +122,35 @@ void main() {
     final scale = WeeklyChangeScale.forWeeks([week(4.0)]);
 
     test('a week with no delta is drawn as no data', () {
-      expect(weeklyChangeColor(week(null), scale), weeklyChangeNoDataColor);
+      expect(weeklyChangeColor(week(null), scale, MeasurementSystem.metric), weeklyChangeNoDataColor);
     });
 
     test('a gain and a loss of equal size differ', () {
       expect(
-        weeklyChangeColor(week(2.0), scale),
-        isNot(weeklyChangeColor(week(-2.0), scale)),
+        weeklyChangeColor(week(2.0), scale, MeasurementSystem.metric),
+        isNot(weeklyChangeColor(week(-2.0), scale, MeasurementSystem.metric)),
+      );
+    });
+
+    test('gain or loss is read in the system the label prints in', () {
+      // +0.003 kg prints as 0.00 kg but as +0.01 lbs.
+      final tiny = week(0.003);
+      expect(tiny.isGain(MeasurementSystem.metric), isFalse);
+      expect(tiny.isGain(MeasurementSystem.imperial), isTrue);
+      expect(
+        weeklyChangeColor(tiny, scale, MeasurementSystem.imperial),
+        weeklyChangeColor(week(0.5), scale, MeasurementSystem.imperial),
+      );
+      expect(
+        weeklyChangeColor(tiny, scale, MeasurementSystem.metric),
+        weeklyChangeColor(week(-0.5), scale, MeasurementSystem.metric),
       );
     });
 
     test('a bigger change is drawn darker', () {
       expect(
-        weeklyChangeColor(week(-3.0), scale).computeLuminance(),
-        lessThan(weeklyChangeColor(week(-0.5), scale).computeLuminance()),
+        weeklyChangeColor(week(-3.0), scale, MeasurementSystem.metric).computeLuminance(),
+        lessThan(weeklyChangeColor(week(-0.5), scale, MeasurementSystem.metric).computeLuminance()),
       );
     });
   });

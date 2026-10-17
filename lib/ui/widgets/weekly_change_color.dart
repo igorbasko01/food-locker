@@ -60,10 +60,14 @@ class WeeklyChangeScale {
 /// later "goal direction" setting swaps the two ramps here, leaving the grid
 /// untouched. The shades are fixed rather than theme-derived, so a cell keeps
 /// its meaning whatever the palette does.
-Color weeklyChangeColor(WeeklyWeightChange week, WeeklyChangeScale scale) {
+Color weeklyChangeColor(
+  WeeklyWeightChange week,
+  WeeklyChangeScale scale,
+  MeasurementSystem system,
+) {
   final level = scale.levelFor(week);
   if (level == null) return weeklyChangeNoDataColor;
-  return (week.isGain ? _gainRamp : _lossRamp)[level - 1];
+  return (week.isGain(system) ? _gainRamp : _lossRamp)[level - 1];
 }
 
 const List<Color> _lossRamp = [

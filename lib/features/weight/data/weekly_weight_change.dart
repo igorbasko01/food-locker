@@ -87,8 +87,9 @@ class WeeklyWeightChange {
 
   bool get hasData => delta != null;
 
-  /// Whether the week ended heavier. A flat week counts as not gained.
-  bool get isGain => (delta?.value(MeasurementSystem.metric) ?? 0) > 0;
+  /// Whether the week ended heavier, as [system] prints its change: a week
+  /// that reads `0.00` counts as not gained.
+  bool isGain(MeasurementSystem system) => (delta?.value(system) ?? 0) > 0;
 
   /// The Sunday opening the week before the one [weekStart] opens.
   static DateTime _weekBefore(DateTime weekStart) =>
