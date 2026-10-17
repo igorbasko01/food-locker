@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/igorbasko01/food-locker/compare/v1.24.0...v1.25.0) (2026-10-17)
+
+
+### Features
+
+* show boundary weights above the BMI scale ([#166](https://github.com/igorbasko01/food-locker/issues/166)) ([b554007](https://github.com/igorbasko01/food-locker/commit/b554007235c9f7cfb2572bd389cbc75baeb0d803))
+
 ## [1.24.0](https://github.com/igorbasko01/food-locker/compare/v1.23.0...v1.24.0) (2026-10-17)
 
 
