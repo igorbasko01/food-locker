@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/igorbasko01/food-locker/compare/v1.23.0...v1.24.0) (2026-10-17)
+
+
+### Features
+
+* show weights with two decimals ([#162](https://github.com/igorbasko01/food-locker/issues/162)) ([6f9c014](https://github.com/igorbasko01/food-locker/commit/6f9c01445a6076ae6f567532095f4e21b413968a))
+
 ## [1.23.0](https://github.com/igorbasko01/food-locker/compare/v1.22.0...v1.23.0) (2026-10-13)
 
 
