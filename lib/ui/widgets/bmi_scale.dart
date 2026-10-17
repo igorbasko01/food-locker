@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/features/weight/data/bmi.dart';
+import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/ui/widgets/bmi_band_style.dart';
 
 /// The current BMI on the four WHO bands, as a marker over a bar whose
 /// segments are sized in proportion to the ranges they cover.
+///
+/// Given a [heightCm], each cut-off is also printed above the bar as the weight
+/// it falls at for that height, in [system].
 class BmiScale extends StatelessWidget {
-  const BmiScale({super.key, required this.bmi});
+  const BmiScale({
+    super.key,
+    required this.bmi,
+    this.heightCm,
+    this.system = MeasurementSystem.metric,
+  });
 
   final double bmi;
+  final double? heightCm;
+  final MeasurementSystem system;
 
   /// The drawn domain. The obese band runs to infinity and the underweight one
   /// to zero, so both are cut off here — otherwise the bar has no right edge
@@ -26,6 +38,9 @@ class BmiScale extends StatelessWidget {
 
   /// The box each boundary figure is centred in, wide enough for `18.5`.
   static const double _tickWidth = 36.0;
+
+  /// The same box for a boundary weight, wide enough for `132.3 lbs`.
+  static const double _weightTickWidth = 64.0;
 
   static const Key barKey = Key('bmi-scale-bar');
 
@@ -62,6 +77,15 @@ class BmiScale extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
+          if (heightCm case final heightCm?)
+            _ticks(
+              theme,
+              width: _weightTickWidth,
+              label: (bmi) => Weight(
+                kilogramsAtBmi(bmi: bmi, heightCm: heightCm),
+                MeasurementSystem.metric,
+              ).stringify(system, decimals: 1),
+            ),
           LayoutBuilder(
             builder: (context, constraints) => SizedBox(
               height: _markerSize,
@@ -88,7 +112,7 @@ class BmiScale extends StatelessWidget {
             borderRadius: BorderRadius.circular(6),
             child: Row(children: BmiBand.all.map(_segment).toList()),
           ),
-          _boundaries(theme),
+          _ticks(theme, width: _tickWidth, label: _boundaryLabel),
           const SizedBox(height: 6),
           Text(
             'BMI is a rough screening figure for adults. It ignores body '
@@ -114,9 +138,13 @@ class BmiScale extends StatelessWidget {
     return left > furthest ? furthest : left;
   }
 
-  /// The cut-off under each seam in the bar, read off the bands themselves so
-  /// the figures cannot drift out of step with the segments above them.
-  Widget _boundaries(ThemeData theme) {
+  /// A [label] for the cut-off at each seam in the bar, read off the bands
+  /// themselves so the figures cannot drift out of step with the segments.
+  Widget _ticks(
+    ThemeData theme, {
+    required double width,
+    required String Function(double bmi) label,
+  }) {
     final style = theme.textTheme.labelSmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -131,12 +159,12 @@ class BmiScale extends StatelessWidget {
                 left: _centredAt(
                   markerFraction(band.from),
                   constraints.maxWidth,
-                  _tickWidth,
+                  width,
                 ),
                 child: SizedBox(
-                  width: _tickWidth,
+                  width: width,
                   child: Text(
-                    _boundaryLabel(band.from),
+                    label(band.from),
                     textAlign: TextAlign.center,
                     style: style,
                   ),

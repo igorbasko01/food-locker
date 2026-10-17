@@ -343,6 +343,33 @@ void main() {
       expect(find.text('25.0 · Overweight'), findsOneWidget);
     });
 
+    testWidgets('weighs each cut-off in the chosen system', (tester) async {
+      final manager = WeightManager(InMemoryWeightRepository());
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await manager.addWeight(today, Weight(81.0, MeasurementSystem.metric));
+
+      await pumpPage(
+        tester,
+        manager,
+        settingsManager: SettingsManager(
+          InMemorySettingsRepository(
+            heightCm: 180.0,
+            measurementSystem: MeasurementSystem.imperial,
+          ),
+        ),
+      );
+
+      // At 1.8 m the cut-offs fall at 59.94, 81 and 97.2 kg.
+      Finder inScale(String text) => find.descendant(
+            of: find.byType(BmiScale),
+            matching: find.text(text),
+          );
+      expect(inScale('132.1 lbs'), findsOneWidget);
+      expect(inScale('178.6 lbs'), findsOneWidget);
+      expect(inScale('214.3 lbs'), findsOneWidget);
+    });
+
     testWidgets('prompts for a height rather than guessing one', (tester) async {
       final manager = WeightManager(InMemoryWeightRepository());
       final now = DateTime.now();

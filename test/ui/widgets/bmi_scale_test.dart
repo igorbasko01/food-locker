@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_locker/core/units.dart';
 import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/bmi_scale.dart';
 
@@ -143,5 +144,70 @@ void main() {
     expect(find.text('18.4 · Underweight'), findsOneWidget);
     expect(marker, greaterThanOrEqualTo(underweight.left));
     expect(marker, lessThan(underweight.right));
+  });
+
+  group('boundary weights', () {
+    Future<void> pumpWithHeight(
+      WidgetTester tester, {
+      double? heightCm,
+      MeasurementSystem system = MeasurementSystem.metric,
+    }) => tester.pumpWidget(
+          MaterialApp(
+            theme: appTheme,
+            home: Scaffold(
+              body: BmiScale(bmi: 22.0, heightCm: heightCm, system: system),
+            ),
+          ),
+        );
+
+    testWidgets('are left out without a height', (tester) async {
+      await pumpWithHeight(tester);
+
+      expect(find.textContaining('kg'), findsNothing);
+      expect(find.textContaining('lbs'), findsNothing);
+    });
+
+    testWidgets('print the weight at each cut-off for the height', (
+      tester,
+    ) async {
+      // 2 m tall: the cut-offs fall at four times their BMI.
+      await pumpWithHeight(tester, heightCm: 200.0);
+
+      expect(find.text('74.0 kg'), findsOneWidget);
+      expect(find.text('100.0 kg'), findsOneWidget);
+      expect(find.text('120.0 kg'), findsOneWidget);
+    });
+
+    testWidgets('read in the chosen system', (tester) async {
+      await pumpWithHeight(
+        tester,
+        heightCm: 200.0,
+        system: MeasurementSystem.imperial,
+      );
+
+      expect(find.text('163.1 lbs'), findsOneWidget);
+      expect(find.text('220.5 lbs'), findsOneWidget);
+      expect(find.text('264.6 lbs'), findsOneWidget);
+    });
+
+    testWidgets('sit above the bar, over the seam they belong to', (
+      tester,
+    ) async {
+      await pumpWithHeight(tester, heightCm: 200.0);
+
+      final bar = tester.getRect(find.byKey(BmiScale.barKey));
+      for (final (weight, bmi) in [
+        ('74.0 kg', '18.5'),
+        ('100.0 kg', '25'),
+        ('120.0 kg', '30'),
+      ]) {
+        final label = tester.getRect(find.text(weight));
+        expect(label.bottom, lessThanOrEqualTo(bar.top));
+        expect(
+          label.center.dx,
+          closeTo(tester.getCenter(find.text(bmi)).dx, 1.0),
+        );
+      }
+    });
   });
 }
