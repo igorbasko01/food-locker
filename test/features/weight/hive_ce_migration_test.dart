@@ -7,8 +7,8 @@ import 'package:hive_ce/hive.dart';
 
 /// Runtime verification of the Hive → Hive CE migration.
 ///
-/// The rest of the suite exercises the in-memory repository, so it never
-/// touches the real Hive runtime or the generated [HiveWeightEntryAdapter]'s binary
+/// The rest of the suite runs on in-memory Hive boxes, so it never reads a box
+/// back from disk through the generated [HiveWeightEntryAdapter]'s binary
 /// serialization. These tests open a real box on disk to prove the migrated
 /// adapters register and round-trip correctly.
 void main() {
