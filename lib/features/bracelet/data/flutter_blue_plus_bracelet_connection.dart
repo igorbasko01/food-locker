@@ -230,6 +230,9 @@ class FlutterBluePlusBraceletConnection implements BraceletConnection {
     if (text.contains('Permission')) {
       return BraceletException(BraceletError.permissionDenied, text);
     }
+    if (text.contains('Location services')) {
+      return BraceletException(BraceletError.locationOff, text);
+    }
     if (text.contains('must be turned on') || text.contains('adapterIsOff')) {
       return BraceletException(BraceletError.bluetoothOff, text);
     }

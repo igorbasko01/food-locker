@@ -78,13 +78,20 @@ void main() {
       connection.scanError =
           const BraceletException(BraceletError.permissionDenied);
       await pumpPage(tester);
-      expect(find.textContaining('Nearby devices permission'), findsOneWidget);
+      expect(find.textContaining('needs Bluetooth permission'), findsOneWidget);
     });
 
     testWidgets('asks for Bluetooth to be turned on', (tester) async {
       connection.scanError = const BraceletException(BraceletError.bluetoothOff);
       await pumpPage(tester);
       expect(find.textContaining('Bluetooth is off'), findsOneWidget);
+    });
+
+    testWidgets('asks for Location on phones that need it to scan',
+        (tester) async {
+      connection.scanError = const BraceletException(BraceletError.locationOff);
+      await pumpPage(tester);
+      expect(find.textContaining('needs Location turned on'), findsOneWidget);
     });
 
     testWidgets('explains a failed connection', (tester) async {

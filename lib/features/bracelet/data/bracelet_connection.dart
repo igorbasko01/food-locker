@@ -31,6 +31,9 @@ class BraceletDeviceInfo {
 enum BraceletError {
   permissionDenied,
   bluetoothOff,
+
+  /// Android 11 and older only scan with system Location on.
+  locationOff,
   bluetoothUnavailable,
   scanFailed,
   connectionFailed,

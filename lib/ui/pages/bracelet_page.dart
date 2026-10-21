@@ -241,10 +241,14 @@ class _ErrorMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final message = switch (error) {
       BraceletError.permissionDenied =>
-        'FoodLocker needs the Nearby devices permission to find the bracelet. '
-            'Allow it in Android settings, then scan again.',
+        'FoodLocker needs Bluetooth permission (Nearby devices, or Location '
+            'on older Android) to find the bracelet. Allow it in Android '
+            'settings, then scan again.',
       BraceletError.bluetoothOff =>
         'Bluetooth is off. Turn it on, then scan again.',
+      BraceletError.locationOff =>
+        'This phone needs Location turned on to scan for Bluetooth devices. '
+            'Turn it on, then scan again.',
       BraceletError.bluetoothUnavailable =>
         'This phone has no Bluetooth the app can use.',
       BraceletError.scanFailed => 'Scanning failed. Try again.',
