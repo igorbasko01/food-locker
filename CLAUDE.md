@@ -36,13 +36,13 @@ Key layering for the weight feature:
 - **`WeightEntry`** (`weight.dart`) — one weigh-in: a `date` and a `weight`. Plain and public; it carries no stored kilograms or unit.
 - **`HiveWeightEntry` / `WeightUnit`** (`hive_weight_entry.dart`) — the Hive record behind it (`date`, `kilograms`, legacy `unit`); `HiveWeightEntry` is Hive type 4, `WeightUnit` type 3. Only `PersistentWeightRepository` (which maps to and from `WeightEntry`) and the box setup in `main.dart` use it.
 - **`Weight` / `WeightChange`** (`weight.dart`) — an undated amount (a reading, a mean, a low) and a signed difference (`weight.diff(other)`, a weekly change, a trend). Never stored. The amount is private: both are built with `Weight(value, system)` / `WeightChange(value, system)` and read only through a `MeasurementSystem` — `stringify(system, {decimals = 2})` and `value(system)` — with `MeasurementSystem.metric` wherever storage, backups or analytics need the figure; `WeightChange.value` is rounded to what `stringify` prints, so a colour or arrow picked from it agrees with the digits.
-- **`WeightRepository`** — abstract persistence interface. `WeightRepositoryHelper` is a mixin providing shared lowest-weight logic + caching. Three implementations exist: `PersistentWeightRepository` (Hive-backed, production), `InMemoryWeightRepository` (tests), and it is injected as a `Provider<WeightRepository>` so callers depend on the interface, not the box.
+- **`WeightRepository`** — abstract persistence interface. `WeightRepositoryHelper` is a mixin providing shared lowest-weight logic + caching. `PersistentWeightRepository` (Hive-backed) is the one implementation, injected as a `Provider<WeightRepository>` so callers depend on the interface, not the box.
 - **`WeightManager extends ChangeNotifier`** — the UI-facing state holder (`ChangeNotifierProvider`). It owns the in-memory `_weights` list and, after every mutation, re-reads from the repository and `notifyListeners()` to stay consistent. Wraps `WeightAnalytics`.
 - **`WeightAnalytics`** — pure computation over the repository (lowest all-time / last 30 / last 7 days).
 
 Dates are treated as day-granular throughout: repository keys and equality normalize to `(year, month, day)`, so "one entry per day" is the invariant. When adding mutation paths, follow the existing pattern (write through the repository, then refresh `_weights` from it).
 
-Settings preferences are a third store, on `shared_preferences` rather than Hive or Drift: `SettingsRepository` (interface, with `PreferencesSettingsRepository` and `InMemorySettingsRepository`) holds the single current values that are not a dated series — the height in centimetres, and the `MeasurementSystem` weights and heights are displayed in — and `SettingsManager` exposes them to the UI (see Preferences below). An unset height is `null`, never a default.
+Settings preferences are a third store, on `shared_preferences` rather than Hive or Drift: `SettingsRepository` (interface, implemented by `PreferencesSettingsRepository`) holds the single current values that are not a dated series — the height in centimetres, and the `MeasurementSystem` weights and heights are displayed in — and `SettingsManager` exposes them to the UI (see Preferences below). An unset height is `null`, never a default.
 
 The bite feature mirrors this shape (interface + manager) on Drift instead of Hive:
 
@@ -60,7 +60,7 @@ Flutter's generated `flutter_service_worker.js` is a self-unregistering stub, so
 
 ### Preferences
 
-Weights are **kilograms everywhere** and heights **centimetres everywhere** — stored and computed. Weights travel between widgets as `Weight` / `WeightChange` rather than raw doubles. `HiveWeightEntry.unit` is legacy provenance only: it is always written as `kilograms` and no computation reads it. One `MeasurementSystem` preference (metric / imperial) governs how both are shown and typed, so nobody can pick pounds and centimetres; it lives on `shared_preferences` (`SettingsRepository` / `PreferencesSettingsRepository` / `InMemorySettingsRepository`, surfaced by `SettingsManager`), and conversion happens at the display and input boundary: weights through `Weight` / `WeightChange` (`stringify`, `value`, and `Weight(typed, system)` for input), heights through `lib/core/units.dart`, which also holds the `MeasurementSystem` enum and the pound conversion those types use. A widget that renders or accepts a weight or height takes the system as a parameter; pages read it from `SettingsManager`.
+Weights are **kilograms everywhere** and heights **centimetres everywhere** — stored and computed. Weights travel between widgets as `Weight` / `WeightChange` rather than raw doubles. `HiveWeightEntry.unit` is legacy provenance only: it is always written as `kilograms` and no computation reads it. One `MeasurementSystem` preference (metric / imperial) governs how both are shown and typed, so nobody can pick pounds and centimetres; it lives on `shared_preferences` (`SettingsRepository` / `PreferencesSettingsRepository`, surfaced by `SettingsManager`), and conversion happens at the display and input boundary: weights through `Weight` / `WeightChange` (`stringify`, `value`, and `Weight(typed, system)` for input), heights through `lib/core/units.dart`, which also holds the `MeasurementSystem` enum and the pound conversion those types use. A widget that renders or accepts a weight or height takes the system as a parameter; pages read it from `SettingsManager`.
 
 ### Backup / restore
 
@@ -68,7 +68,7 @@ Weights are **kilograms everywhere** and heights **centimetres everywhere** — 
 
 ## Testing
 
-Tests mirror `lib/` under `test/`. Prefer `InMemoryWeightRepository` over Hive in unit tests; for bite tests use `BiteDatabase.forTesting(NativeDatabase.memory())` or a fake `BiteRepository`. `test/features/weight/hive_ce_migration_test.dart` guards persistence/migration behavior — treat it as a compatibility contract when touching models or `typeId`s.
+Tests mirror `lib/` under `test/`. Tests run against the production repositories over in-memory storage, through the helpers in `test/helpers/test_repositories.dart`: `openTestWeightRepository()` (a `PersistentWeightRepository` on an in-memory Hive box) and `createTestSettingsRepository(...)` (a `PreferencesSettingsRepository` on mocked `shared_preferences`); for bite tests use `BiteDatabase.forTesting(NativeDatabase.memory())` or a fake `BiteRepository`. `test/features/weight/hive_ce_migration_test.dart` guards persistence/migration behavior — treat it as a compatibility contract when touching models or `typeId`s.
 
 ## Commit Messages & Releases
 

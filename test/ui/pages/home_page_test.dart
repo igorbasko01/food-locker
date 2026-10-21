@@ -3,9 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/date_format.dart';
 import 'package:food_locker/core/date_range.dart';
 import 'package:food_locker/core/units.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
@@ -13,6 +11,7 @@ import 'package:food_locker/ui/theme.dart';
 import 'package:food_locker/ui/widgets/weekly_change_heatmap.dart';
 import 'package:food_locker/ui/widgets/weight_history_tile.dart';
 import 'package:provider/provider.dart';
+import '../../helpers/test_repositories.dart';
 
 void main() {
   final now = DateTime.now();
@@ -31,6 +30,8 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final settingsRepository =
+        await createTestSettingsRepository(measurementSystem: system);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -39,9 +40,7 @@ void main() {
           providers: [
             ChangeNotifierProvider<WeightManager>.value(value: manager),
             ChangeNotifierProvider<SettingsManager>(
-              create: (_) => SettingsManager(
-                InMemorySettingsRepository(measurementSystem: system),
-              ),
+              create: (_) => SettingsManager(settingsRepository),
             ),
           ],
           child: const HomePage(),
@@ -52,7 +51,7 @@ void main() {
   }
 
   testWidgets('history rows read in the preferred system', (tester) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     await manager.addWeight(daysAgo(1), Weight(71.6677, MeasurementSystem.metric));
     await manager.addWeight(today, Weight(72.5748, MeasurementSystem.metric));
 
@@ -65,7 +64,7 @@ void main() {
   });
 
   testWidgets('the heading names the selected range', (tester) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     await manager.addWeight(today, Weight(72.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
@@ -96,7 +95,7 @@ void main() {
   });
 
   testWidgets('an empty store keeps the onboarding prompt', (tester) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
 
     await pumpPage(tester, manager);
 
@@ -111,7 +110,7 @@ void main() {
   testWidgets('an empty range names the range instead of claiming no entries', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     await manager.addWeight(daysAgo(20), Weight(73.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);
@@ -139,7 +138,7 @@ void main() {
   testWidgets('the history lists every entry in the selected range', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     for (var day = 0; day < 10; day++) {
       await manager.addWeight(daysAgo(day), Weight(70.0 + day, MeasurementSystem.metric));
     }
@@ -158,7 +157,7 @@ void main() {
   testWidgets('the heatmap sits under the title block once a week has data', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     // Four weeks of daily weigh-ins, so a week and its predecessor are both
     // logged whatever weekday the test runs on.
     for (var day = 0; day < 28; day++) {
@@ -182,7 +181,7 @@ void main() {
   testWidgets('a grid with nothing coloured yet says what fills it', (
     tester,
   ) async {
-    final manager = WeightManager(InMemoryWeightRepository());
+    final manager = WeightManager(await openTestWeightRepository());
     await manager.addWeight(today, Weight(72.0, MeasurementSystem.metric));
 
     await pumpPage(tester, manager);

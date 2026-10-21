@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_locker/core/units.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/storage_persistence.dart';
 import 'package:food_locker/features/settings/data/storage_persistence_io.dart'
     show NativeStoragePersistence;
+
+import '../../../helpers/test_repositories.dart';
 
 /// Answers every request with [granted] and counts how often it was asked.
 class _FakeStoragePersistence implements StoragePersistence {
@@ -29,15 +30,15 @@ class _FakeStoragePersistence implements StoragePersistence {
 
 void main() {
   test('an unanswered height reads as null, with no default standing in for it',
-      () {
-    final manager = SettingsManager(InMemorySettingsRepository());
+      () async {
+    final manager = SettingsManager(await createTestSettingsRepository());
 
     expect(manager.heightCm, isNull);
     expect(manager.measurementSystem, MeasurementSystem.metric);
   });
 
   test('a stored height is written through and announced', () async {
-    final repository = InMemorySettingsRepository();
+    final repository = await createTestSettingsRepository();
     final manager = SettingsManager(repository);
     var notifications = 0;
     manager.addListener(() => notifications++);
@@ -50,7 +51,7 @@ void main() {
   });
 
   test('null clears the height back to unanswered', () async {
-    final repository = InMemorySettingsRepository(heightCm: 178.5);
+    final repository = await createTestSettingsRepository(heightCm: 178.5);
     final manager = SettingsManager(repository);
 
     await manager.setHeightCm(null);
@@ -60,7 +61,7 @@ void main() {
   });
 
   test('the measurement system is written through and announced', () async {
-    final repository = InMemorySettingsRepository();
+    final repository = await createTestSettingsRepository();
     final manager = SettingsManager(repository);
     var notifications = 0;
     manager.addListener(() => notifications++);
@@ -73,7 +74,7 @@ void main() {
   });
 
   test('refresh announces a height written behind the manager', () async {
-    final repository = InMemorySettingsRepository();
+    final repository = await createTestSettingsRepository();
     final manager = SettingsManager(repository);
     var notifications = 0;
     manager.addListener(() => notifications++);
@@ -88,7 +89,7 @@ void main() {
 
   group('storage persistence', () {
     test('the first run asks the browser and records the answer', () async {
-      final repository = InMemorySettingsRepository();
+      final repository = await createTestSettingsRepository();
       final persistence = _FakeStoragePersistence(granted: false);
       final manager = SettingsManager(
         repository,
@@ -108,7 +109,7 @@ void main() {
     test('a later run reads the grant back without asking again', () async {
       final persistence = _FakeStoragePersistence(granted: false);
       final manager = SettingsManager(
-        InMemorySettingsRepository(storagePersistenceGranted: false),
+        await createTestSettingsRepository(storagePersistenceGranted: false),
         storagePersistence: persistence,
       );
 
@@ -120,7 +121,7 @@ void main() {
 
     test('a grant given since the last run is picked up and recorded',
         () async {
-      final repository = InMemorySettingsRepository(
+      final repository = await createTestSettingsRepository(
         storagePersistenceGranted: false,
       );
       final manager = SettingsManager(
@@ -135,7 +136,7 @@ void main() {
     });
 
     test('asking again records the new answer', () async {
-      final repository = InMemorySettingsRepository(
+      final repository = await createTestSettingsRepository(
         storagePersistenceGranted: false,
       );
       final persistence = _FakeStoragePersistence(granted: true);
@@ -152,7 +153,7 @@ void main() {
     });
 
     test('a native build records nothing and stays not applicable', () async {
-      final repository = InMemorySettingsRepository();
+      final repository = await createTestSettingsRepository();
       final manager = SettingsManager(
         repository,
         storagePersistence: const NativeStoragePersistence(),

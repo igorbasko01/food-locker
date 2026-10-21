@@ -7,18 +7,17 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
-import 'package:food_locker/features/settings/data/in_memory_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
 import 'package:food_locker/features/settings/data/storage_persistence.dart';
-import 'package:food_locker/features/weight/data/in_memory_weight_repository.dart';
 import 'package:food_locker/features/weight/data/weight.dart';
 import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
 import 'package:food_locker/ui/widgets/height_dialog.dart';
 import 'package:provider/provider.dart';
+import '../../helpers/test_repositories.dart';
 
 /// Backup feedback on [SettingsPage]: work in flight says so, only work
 /// that actually moved data reports success, and neither a restore nor a clear
@@ -33,11 +32,11 @@ void main() {
     BiteRepository? biteRepo,
     SettingsRepository? settingsRepo,
     SettingsManager? settingsManager,
-  }) {
-    final weights = weightRepo ?? InMemoryWeightRepository();
+  }) async {
+    final weights = weightRepo ?? await openTestWeightRepository();
     final bites = biteRepo ?? _FakeBiteRepository();
-    final settings = settingsRepo ?? InMemorySettingsRepository();
-    return tester.pumpWidget(
+    final settings = settingsRepo ?? await createTestSettingsRepository();
+    await tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
           providers: [
@@ -99,7 +98,7 @@ void main() {
       await pumpPage(
         tester,
         SerializationService(),
-        settingsRepo: InMemorySettingsRepository(heightCm: 177.8),
+        settingsRepo: await createTestSettingsRepository(heightCm: 177.8),
       );
 
       expect(find.text('177.8 cm'), findsOneWidget);
@@ -111,7 +110,7 @@ void main() {
     });
 
     testWidgets('the height dialog stores what it returns', (tester) async {
-      final settingsRepo = InMemorySettingsRepository();
+      final settingsRepo = await createTestSettingsRepository();
       await pumpPage(
         tester,
         SerializationService(),
@@ -132,7 +131,7 @@ void main() {
     });
 
     testWidgets('the chosen measurement system is stored', (tester) async {
-      final settingsRepo = InMemorySettingsRepository();
+      final settingsRepo = await createTestSettingsRepository();
       await pumpPage(
         tester,
         SerializationService(),
@@ -146,7 +145,7 @@ void main() {
     });
 
     testWidgets('a clear leaves no height on the page', (tester) async {
-      final settingsRepo = InMemorySettingsRepository(heightCm: 177.8);
+      final settingsRepo = await createTestSettingsRepository(heightCm: 177.8);
       await pumpPage(
         tester,
         SerializationService(),
@@ -224,7 +223,7 @@ void main() {
     });
 
     testWidgets('leaves no manager holding pre-import data', (tester) async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       final biteRepo = _FakeBiteRepository(
         config: const PacingConfig(id: 1, effectiveMs: 0, b1S: 12, b2S: 25),
       );
@@ -287,7 +286,7 @@ void main() {
     }
 
     testWidgets('asks before deleting anything', (tester) async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), weight: Weight(71.5, MeasurementSystem.metric)));
       await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
 
@@ -301,7 +300,7 @@ void main() {
     });
 
     testWidgets('cancelling leaves the stores untouched', (tester) async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), weight: Weight(71.5, MeasurementSystem.metric)));
       await pumpPage(tester, SerializationService(), weightRepo: weightRepo);
 
@@ -315,7 +314,7 @@ void main() {
 
     testWidgets('confirming empties both stores and the managers with them',
         (tester) async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), weight: Weight(71.5, MeasurementSystem.metric)));
       final biteRepo = _FakeBiteRepository(
         config: const PacingConfig(id: 1, effectiveMs: 0, b1S: 12, b2S: 25),
@@ -385,7 +384,7 @@ void main() {
 
     testWidgets('re-reads the managers when the clear fails part way',
         (tester) async {
-      final weightRepo = InMemoryWeightRepository();
+      final weightRepo = await openTestWeightRepository();
       await weightRepo.saveWeight(WeightEntry(date: DateTime.now(), weight: Weight(71.5, MeasurementSystem.metric)));
       final weightManager = WeightManager(weightRepo);
       await weightManager.initialize();
@@ -449,7 +448,7 @@ void main() {
       SerializationService? service,
     }) async {
       final persistence = _FakeStoragePersistence(granted: granted);
-      final settingsRepo = InMemorySettingsRepository();
+      final settingsRepo = await createTestSettingsRepository();
       final settingsManager = SettingsManager(
         settingsRepo,
         storagePersistence: persistence,
