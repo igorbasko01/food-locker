@@ -7,6 +7,8 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/bracelet/data/bracelet_connection.dart';
+import 'package:food_locker/features/bracelet/data/bracelet_manager.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
@@ -14,6 +16,7 @@ import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/ui/app_shell.dart';
 import 'package:provider/provider.dart';
+import '../helpers/fake_bracelet_connection.dart';
 import '../helpers/test_repositories.dart';
 
 void main() {
@@ -21,6 +24,7 @@ void main() {
     WidgetTester tester,
     BiteRepository biteRepository, {
     AppUpdates? appUpdates,
+    BraceletConnection? braceletConnection,
   }) async {
     final weightRepository = await openTestWeightRepository();
     final weightManager = WeightManager(weightRepository);
@@ -39,6 +43,11 @@ void main() {
           ChangeNotifierProvider<BiteManager>.value(value: biteManager),
           ChangeNotifierProvider<SettingsManager>.value(
             value: SettingsManager(settingsRepository),
+          ),
+          ChangeNotifierProvider<BraceletManager>(
+            create: (_) => BraceletManager(
+              braceletConnection ?? FakeBraceletConnection(),
+            ),
           ),
         ],
         child: MaterialApp(home: AppShell(appUpdates: appUpdates)),
@@ -90,6 +99,69 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Bite Analytics'), findsNothing);
     expect(analyticsButton(), findsOneWidget);
+  });
+
+  group('bracelet button', () {
+    Finder braceletIcon() => find.descendant(
+          of: find.byTooltip('Bracelet'),
+          matching: find.byType(Icon),
+        );
+    Color? iconColor(WidgetTester tester) =>
+        tester.widget<Icon>(braceletIcon()).color;
+
+    testWidgets('shows only on the Bite tab, beside analytics', (tester) async {
+      await pumpShell(tester, _FakeBiteRepository());
+      expect(find.byTooltip('Bracelet'), findsNothing);
+
+      await tester.tap(find.text('Bite'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Bracelet'), findsOneWidget);
+      expect(analyticsButton(), findsOneWidget);
+    });
+
+    testWidgets('is absent where bracelets are unsupported', (tester) async {
+      await pumpShell(tester, _FakeBiteRepository(),
+          braceletConnection: const UnsupportedBraceletConnection());
+      await tester.tap(find.text('Bite'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Bracelet'), findsNothing);
+      expect(find.byIcon(Icons.bluetooth), findsNothing);
+      expect(analyticsButton(), findsOneWidget);
+    });
+
+    testWidgets('is gray while disconnected and blue while connected',
+        (tester) async {
+      final connection = FakeBraceletConnection();
+      await pumpShell(tester, _FakeBiteRepository(),
+          braceletConnection: connection);
+      await tester.tap(find.text('Bite'));
+      await tester.pumpAndSettle();
+      expect(iconColor(tester), isNull);
+
+      final manager = tester
+          .element(find.byType(AppShell))
+          .read<BraceletManager>();
+      await tester.runAsync(() => manager.connect(const BraceletScanResult(
+          id: 'AA:BB', name: 'BaskoBiteTracker', rssi: -60)));
+      await tester.pumpAndSettle();
+      expect(iconColor(tester), Colors.blue);
+
+      // The band dropping the link on its own turns it gray again.
+      connection.dropLink();
+      await tester.pumpAndSettle();
+      expect(iconColor(tester), isNull);
+    });
+
+    testWidgets('opens the bracelet page', (tester) async {
+      await pumpShell(tester, _FakeBiteRepository());
+      await tester.tap(find.text('Bite'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Bracelet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bracelet'), findsOneWidget);
+      expect(find.text('Disconnected'), findsOneWidget);
+    });
   });
 
   group('new version', () {

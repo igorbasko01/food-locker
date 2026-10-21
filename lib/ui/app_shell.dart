@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:food_locker/core/app_updates.dart';
+import 'package:food_locker/features/bracelet/data/bracelet_manager.dart';
 import 'package:food_locker/ui/pages/bite_analytics_page.dart';
 import 'package:food_locker/ui/pages/bite_page.dart';
+import 'package:food_locker/ui/pages/bracelet_page.dart';
 import 'package:food_locker/ui/pages/home_page.dart';
 import 'package:food_locker/ui/pages/settings_page.dart';
 import 'package:food_locker/ui/pages/weight_page.dart';
+import 'package:provider/provider.dart';
 
 /// The shell's four tabs, in bottom-navigation order. Names the single source
 /// of truth for that order so tab-specific behaviour (the Bite analytics
@@ -60,6 +63,7 @@ class _AppShellState extends State<AppShell> {
       appBar: AppBar(
         title: Text(_titles[_currentIndex]),
         actions: [
+          if (_currentIndex == AppTab.bite.index) const _BraceletButton(),
           if (_currentIndex == AppTab.bite.index)
             IconButton(
               icon: const Icon(Icons.bar_chart_rounded),
@@ -107,6 +111,30 @@ class _AppShellState extends State<AppShell> {
             label: 'Settings',
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Opens the bracelet page; blue while a bracelet is connected. Absent where
+/// bracelets are unsupported, so the web build has no route to the page.
+class _BraceletButton extends StatelessWidget {
+  const _BraceletButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final (isSupported, isConnected) = context.select(
+      (BraceletManager m) => (m.isSupported, m.isConnected),
+    );
+    if (!isSupported) return const SizedBox.shrink();
+    return IconButton(
+      icon: Icon(
+        isConnected ? Icons.bluetooth_connected : Icons.bluetooth,
+        color: isConnected ? Colors.blue : null,
+      ),
+      tooltip: 'Bracelet',
+      onPressed: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const BraceletPage()),
       ),
     );
   }

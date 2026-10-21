@@ -4,6 +4,7 @@ import 'package:food_locker/features/bite/data/bite_analytics.dart';
 import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
+import 'package:food_locker/features/bracelet/data/bracelet_manager.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
 import 'package:food_locker/features/settings/data/settings_repository.dart';
@@ -11,6 +12,7 @@ import 'package:food_locker/features/weight/data/weight_manager.dart';
 import 'package:food_locker/features/weight/data/weight_repository.dart';
 import 'package:food_locker/main.dart';
 import 'package:provider/provider.dart';
+import 'helpers/fake_bracelet_connection.dart';
 import 'helpers/test_repositories.dart';
 
 void main() {
@@ -34,6 +36,9 @@ void main() {
           ),
           ChangeNotifierProvider<SettingsManager>.value(
             value: SettingsManager(settingsRepository),
+          ),
+          ChangeNotifierProvider<BraceletManager>(
+            create: (_) => BraceletManager(FakeBraceletConnection()),
           ),
         ],
         child: MainApp(isTestBuild: isTestBuild),
