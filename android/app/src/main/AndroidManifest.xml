@@ -2,13 +2,10 @@
     <!-- Bite-tracker bracelet over BLE. The bracelet is optional, so devices
          without BLE can still install the app. -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
-    <!-- Android 12+ -->
+    <!-- Android 12+ only: older versions lack these, so scanning there
+         ends in a permission error. -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <!-- Android 11 and older -->
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
     <application
         android:label="${appLabel}"
         android:name="${applicationName}"
