@@ -33,7 +33,8 @@ android {
         applicationId = "com.baskorp.food_locker"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Android 12: the bracelet relies on its BLUETOOTH_SCAN/CONNECT permissions.
+        minSdk = 31
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
