@@ -5,6 +5,8 @@ import 'package:food_locker/features/bite/data/bite_database.dart';
 import 'package:food_locker/features/bite/data/bite_manager.dart';
 import 'package:food_locker/features/bite/data/bite_repository.dart';
 import 'package:food_locker/features/bite/data/drift_bite_repository.dart';
+import 'package:food_locker/features/bracelet/data/bracelet_connection.dart';
+import 'package:food_locker/features/bracelet/data/bracelet_manager.dart';
 import 'package:food_locker/features/settings/data/preferences_settings_repository.dart';
 import 'package:food_locker/features/settings/data/serialization_service.dart';
 import 'package:food_locker/features/settings/data/settings_manager.dart';
@@ -38,6 +40,8 @@ void main() async {
   final biteManager = BiteManager(biteRepository);
   await biteManager.initialize();
 
+  final braceletManager = BraceletManager(createBraceletConnection());
+
   final settingsRepository =
       PreferencesSettingsRepository(await SharedPreferences.getInstance());
   final settingsManager = SettingsManager(settingsRepository);
@@ -54,6 +58,7 @@ void main() async {
         ChangeNotifierProvider<WeightManager>.value(value: weightManager),
         ChangeNotifierProvider<BiteManager>.value(value: biteManager),
         ChangeNotifierProvider<SettingsManager>.value(value: settingsManager),
+        ChangeNotifierProvider<BraceletManager>.value(value: braceletManager),
       ],
       child: const MainApp(),
     ),
