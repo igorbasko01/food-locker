@@ -36,8 +36,14 @@ jobs:
           PR NUMBER: ${{ github.event.pull_request.number }}
 
           Review this pull request by following .claude/skills/review-pr/SKILL.md
-          and CLAUDE.md. Use the gh CLI to read the PR and post the single
-          review comment the skill describes. Report only: never push, approve,
-          or merge.
+          and CLAUDE.md. Use the gh CLI to read the PR. Report only: never push,
+          approve, or merge.
+
+          Post each finding tied to specific lines of the diff as an inline
+          comment on those lines with mcp__github_inline_comment__create_inline_comment.
+          Before posting, read the existing inline comments and skip any finding
+          already raised on the same lines. Then post the summary comment the
+          skill describes: the verdict, a one-line pointer per inline finding,
+          and in full any finding that cannot be tied to a changed line.
         claude_args: |
-          --allowedTools "Read,Glob,Grep,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
+          --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
