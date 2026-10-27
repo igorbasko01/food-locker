@@ -52,14 +52,14 @@ The bite feature mirrors this shape (interface + manager) on Drift instead of Hi
 
 ### Bracelet (Android only)
 
-`lib/features/bracelet/data` talks to the bite-tracker bracelet (firmware: `igorbasko01/bite-tracker-bracelet`, `firmware/ble`) over BLE with `flutter_blue_plus`:
+`lib/features/bracelet/data` talks to the bite-tracker bracelet (firmware: `igorbasko01/bite-tracker-bracelet`, `firmware/ble`) over BLE with `universal_ble` (BSD-3, chosen over `flutter_blue_plus`, whose license charges for commercial use):
 
-- **`BraceletConnection`** (`bracelet_connection.dart`) — the interface (scan, connect, disconnect, shutdown, and streams for connection state, battery, charging and status), with an `isSupported` flag. `createBraceletConnection()` picks the platform's implementation through a conditional import, like `AppUpdates`: `bracelet_connection_io.dart` returns `FlutterBluePlusBraceletConnection` on Android and `UnsupportedBraceletConnection` on every other platform, and `bracelet_connection_web.dart` always returns the unsupported one.
-- **`FlutterBluePlusBraceletConnection`** is the **only** file allowed to import `flutter_blue_plus`, so no app code on web references the plugin; `test/features/bracelet/bracelet_platform_isolation_test.dart` enforces this. Flutter's web plugin registrant still registers `flutter_blue_plus_web`, which is expected and never called.
+- **`BraceletConnection`** (`bracelet_connection.dart`) — the interface (scan, connect, disconnect, shutdown, and streams for connection state, battery, charging and status), with an `isSupported` flag. `createBraceletConnection()` picks the platform's implementation through a conditional import, like `AppUpdates`: `bracelet_connection_io.dart` returns `UniversalBleBraceletConnection` on Android and `UnsupportedBraceletConnection` on every other platform, and `bracelet_connection_web.dart` always returns the unsupported one.
+- **`UniversalBleBraceletConnection`** is the **only** file allowed to import `universal_ble`, so no app code on web references the plugin; `test/features/bracelet/bracelet_platform_isolation_test.dart` enforces this. Flutter's web plugin registrant still registers the plugin's own web implementation, which is expected and never called.
 - **`BraceletManager extends ChangeNotifier`** — UI state for the link and every reading, provided on all platforms so lookups never throw. Nothing is persisted, and reconnecting is manual.
 - **`parseBraceletStatus`** (`bracelet_status.dart`) decodes the 5-byte Status payload (LE uint32 uptime seconds, uint8 `ResetReason`).
 
-UI: the Bluetooth button in the Bite tab's app bar (blue while connected) opens `BraceletPage`. It is built only when `isSupported` is true, so the web build has no route to the bracelet; never show a disabled placeholder instead. Nothing Bluetooth-related belongs under `web/`. The app's `minSdk` is 31 (Android 12), so only the `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` permissions are declared; the plugin requests them at runtime. Tests use `test/helpers/fake_bracelet_connection.dart`.
+UI: the Bluetooth button in the Bite tab's app bar (blue while connected) opens `BraceletPage`. It is built only when `isSupported` is true, so the web build has no route to the bracelet; never show a disabled placeholder instead. Nothing Bluetooth-related belongs under `web/`. The app's `minSdk` is 31 (Android 12), so only the `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` permissions are declared; the plugin requests them at runtime (`UniversalBle.requestPermissions`). Tests use `test/helpers/fake_bracelet_connection.dart`.
 
 ### Bite store on web
 
