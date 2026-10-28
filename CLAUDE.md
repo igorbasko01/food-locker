@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-FoodLocker is a Flutter (mobile, primarily Android) app with two shipped features: daily **weight** tracking + analytics, and in-meal **bite** counting + pacing. State is exposed to the UI via Provider. The two features use different local stores: weight is on Hive CE, bite is on Drift/SQLite (see Architecture). Despite the app's name, there is no food-logging feature; a former `food`/`days` feature no longer exists in `lib/`.
+FoodLocker is a Flutter (mobile, primarily Android) app with two shipped features: daily **weight** tracking + analytics, and in-meal **bite** counting + pacing. On Android it also connects to the bite-tracker **bracelet** over BLE (status and battery only, no bite data yet; see Bracelet below). State is exposed to the UI via Provider. The two features use different local stores: weight is on Hive CE, bite is on Drift/SQLite (see Architecture); the bracelet stores nothing. Despite the app's name, there is no food-logging feature; a former `food`/`days` feature no longer exists in `lib/`.
 
 ## Commands
 
@@ -29,7 +29,7 @@ Flutter is available in Claude Code cloud sessions: the cloud environment instal
 
 ## Architecture
 
-Code is organized as `lib/features/<feature>/data` (domain + persistence) and `lib/ui` (`pages/`, `widgets/`, shell, theme). The dependency wiring lives in `lib/main.dart`: Hive is initialized and the `weights` box opened, the Drift `BiteDatabase` is opened, and both features' repositories/managers are provided through a `MultiProvider` before `runApp`. `AppShell` is a four-tab `BottomNavigationBar` (Home / Weight / Bite / Settings) over an `IndexedStack`.
+Code is organized as `lib/features/<feature>/data` (domain + persistence) and `lib/ui` (`pages/`, `widgets/`, shell, theme). The dependency wiring lives in `lib/main.dart`: Hive is initialized and the `weights` box opened, the Drift `BiteDatabase` is opened, and both features' repositories/managers, plus the `BraceletManager`, are provided through a `MultiProvider` before `runApp`. `AppShell` is a four-tab `BottomNavigationBar` (Home / Weight / Bite / Settings) over an `IndexedStack`.
 
 Key layering for the weight feature:
 
@@ -49,6 +49,17 @@ The bite feature mirrors this shape (interface + manager) on Drift instead of Hi
 - **`BiteDatabase`** (`bite_database.dart`) — two tables: `bites` (append-only `at_ms` epoch-millis log; only the raw timestamp is stored) and `pacing_config` (versioned `b1_s`/`b2_s` thresholds, a slowly-changing dimension seeded with a default on first run).
 - **`BiteRepository`** — persistence interface; `DriftBiteRepository` is the production impl, injected as a `Provider<BiteRepository>`.
 - **`BiteManager extends ChangeNotifier`** — UI state for the Bite tab: owns today's count and drives the pacing ticker/zone in memory. Counts, inter-bite deltas, and pacing zones (`PacingZone`) are all **derived at read time** from the stored timestamps, never persisted.
+
+### Bracelet (Android only)
+
+`lib/features/bracelet/data` talks to the bite-tracker bracelet (firmware: `igorbasko01/bite-tracker-bracelet`, `firmware/ble`) over BLE with `universal_ble` (BSD-3, chosen over `flutter_blue_plus`, whose license charges for commercial use):
+
+- **`BraceletConnection`** (`bracelet_connection.dart`) — the interface (scan, connect, disconnect, shutdown, and streams for connection state, battery, charging and status), with an `isSupported` flag. `createBraceletConnection()` picks the platform's implementation through a conditional import, like `AppUpdates`: `bracelet_connection_io.dart` returns `UniversalBleBraceletConnection` on Android and `UnsupportedBraceletConnection` on every other platform, and `bracelet_connection_web.dart` always returns the unsupported one.
+- **`UniversalBleBraceletConnection`** is the **only** file allowed to import `universal_ble`, so no app code on web references the plugin; `test/features/bracelet/bracelet_platform_isolation_test.dart` enforces this. Flutter's web plugin registrant still registers the plugin's own web implementation, which is expected and never called.
+- **`BraceletManager extends ChangeNotifier`** — UI state for the link and every reading, provided on all platforms so lookups never throw. Nothing is persisted, and reconnecting is manual.
+- **`parseBraceletStatus`** (`bracelet_status.dart`) decodes the 5-byte Status payload (LE uint32 uptime seconds, uint8 `ResetReason`).
+
+UI: the Bluetooth button in the Bite tab's app bar (blue while connected) opens `BraceletPage`. It is built only when `isSupported` is true, so the web build has no route to the bracelet; never show a disabled placeholder instead. Nothing Bluetooth-related belongs under `web/`. The app's `minSdk` is 31 (Android 12), so only the `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` permissions are declared; the plugin requests them at runtime (`UniversalBle.requestPermissions`). Tests use `test/helpers/fake_bracelet_connection.dart`.
 
 ### Bite store on web
 
