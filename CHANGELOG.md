@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/igorbasko01/food-locker/compare/v1.25.0...v1.26.0) (2026-10-28)
+
+
+### Features
+
+* connect to the bite-tracker bracelet over BLE on Android ([#169](https://github.com/igorbasko01/food-locker/issues/169)) ([70415f5](https://github.com/igorbasko01/food-locker/commit/70415f55ba5a839dbee87f1925e32801d59cd66b))
+
 ## [1.25.0](https://github.com/igorbasko01/food-locker/compare/v1.24.0...v1.25.0) (2026-10-21)
 
 
