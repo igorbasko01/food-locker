@@ -56,18 +56,18 @@ void main() {
   });
 
   group('averagePerDay', () {
-    test('averages only days at or above the 40-bite threshold', () async {
-      await logBites(DateTime(2026, 7, 13), 40); // qualifies (== threshold)
-      await logBites(DateTime(2026, 7, 14), 60); // qualifies
-      await logBites(DateTime(2026, 7, 15), 39); // below — excluded
+    test('averages only days at or above the 5-bite threshold', () async {
+      await logBites(DateTime(2026, 7, 13), 5); // qualifies (== threshold)
+      await logBites(DateTime(2026, 7, 14), 25); // qualifies
+      await logBites(DateTime(2026, 7, 15), 4); // below — excluded
 
       final avg = await analytics.averagePerDay(
         DateTime(2026, 7, 13),
         DateTime(2026, 7, 16),
       );
 
-      // (40 + 60) / 2 — the 39-bite day is out of both sum and count.
-      expect(avg, 50);
+      // (5 + 25) / 2 — the 4-bite day is out of both sum and count.
+      expect(avg, 15);
     });
 
     test('excludes zero days by construction (they carry no entry)', () async {
@@ -83,8 +83,8 @@ void main() {
     });
 
     test('is 0 when no day reaches the threshold', () async {
-      await logBites(DateTime(2026, 7, 13), 39);
-      await logBites(DateTime(2026, 7, 14), 10);
+      await logBites(DateTime(2026, 7, 13), 4);
+      await logBites(DateTime(2026, 7, 14), 1);
 
       final avg = await analytics.averagePerDay(
         DateTime(2026, 7, 13),

@@ -141,14 +141,14 @@ void main() {
   });
 
   testWidgets('tiles show a dash when no day qualifies', (tester) async {
-    // A handful of bites today, all below the 40-bite average threshold and the
+    // A handful of bites today, all below the 5-bite average threshold and the
     // only bites ever logged → averages have no qualifying day, max is that day.
     final now = DateTime.now();
-    await logBites(DateTime(now.year, now.month, now.day), 5);
+    await logBites(DateTime(now.year, now.month, now.day), 4);
 
     await pumpPage(tester);
 
-    // Both average tiles read '—'; the max still surfaces the 5-bite day.
+    // Both average tiles read '—'; the max still surfaces the 4-bite day.
     expect(
       find.descendant(
         of: find.widgetWithText(StatTile, '30-day average'),
@@ -166,7 +166,7 @@ void main() {
     expect(
       find.descendant(
         of: find.widgetWithText(StatTile, '30-day max'),
-        matching: find.text('5'),
+        matching: find.text('4'),
       ),
       findsOneWidget,
     );
