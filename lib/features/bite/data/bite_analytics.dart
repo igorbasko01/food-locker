@@ -97,7 +97,7 @@ class BiteAnalytics {
 
   /// Days below this bite count don't count toward [averagePerDay]: a day you
   /// forgot to log — or only logged a few bites on — never dilutes the mean.
-  static const int minBitesForAverage = 40;
+  static const int minBitesForAverage = 5;
 
   /// A cluster is only promoted to a meal at this many bites; smaller clusters
   /// are snacking and their bites roll into the day's snack total.

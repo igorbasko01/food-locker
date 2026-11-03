@@ -90,12 +90,12 @@ void main() {
     expect(data.barGroups[2].barRods.single.toY, 20);
   });
 
-  testWidgets('bars below 40 are muted, bars at or above 40 are full colour', (
+  testWidgets('bars below 5 are muted, bars at or above 5 are full colour', (
     tester,
   ) async {
     final data = await pumpChart(tester, [
-      DailyBiteCount(day: DateTime(2026, 1, 1), count: 60), // ≥ 40
-      DailyBiteCount(day: DateTime(2026, 1, 2), count: 25), // < 40
+      DailyBiteCount(day: DateTime(2026, 1, 1), count: 5), // ≥ 5
+      DailyBiteCount(day: DateTime(2026, 1, 2), count: 4), // < 5
     ]);
 
     final fullColor = appTheme.colorScheme.primary;
@@ -105,18 +105,6 @@ void main() {
 
     expect(data.barGroups[0].barRods.single.color, fullColor);
     expect(data.barGroups[1].barRods.single.color, mutedColor);
-  });
-
-  testWidgets('a reference line marks the average threshold at 40', (
-    tester,
-  ) async {
-    final data = await pumpChart(tester, [
-      DailyBiteCount(day: DateTime(2026, 1, 1), count: 60),
-    ]);
-
-    final lines = data.extraLinesData.horizontalLines;
-    expect(lines, hasLength(1));
-    expect(lines.single.y, BiteAnalytics.minBitesForAverage.toDouble());
   });
 
   testWidgets('an imperial preference converts axis, legend and semantics', (

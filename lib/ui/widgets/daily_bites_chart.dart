@@ -9,9 +9,8 @@ import 'package:food_locker/features/weight/data/weight.dart';
 ///
 /// One bar per day between the first and last logged day, with zero-height
 /// gaps for days that had no bites. Days below [BiteAnalytics.minBitesForAverage]
-/// — the ones excluded from the average — are drawn muted and sit under a faint
-/// reference line at that threshold, so the chart visibly explains why they
-/// don't count. Themed like `weight_chart.dart`.
+/// — the ones excluded from the average — are drawn muted, so the chart visibly
+/// explains why they don't count. Themed like `weight_chart.dart`.
 ///
 /// When [weights] is non-empty a weight trend line is overlaid on a secondary
 /// right-hand kg axis fitted to the weight range (not from zero, which would
@@ -262,16 +261,6 @@ class DailyBitesChart extends StatelessWidget {
               },
             ),
           ),
-        ),
-        extraLinesData: ExtraLinesData(
-          horizontalLines: [
-            HorizontalLine(
-              y: BiteAnalytics.minBitesForAverage.toDouble(),
-              color: theme.colorScheme.outline.withValues(alpha: 0.5),
-              strokeWidth: 1,
-              dashArray: const [4, 4],
-            ),
-          ],
         ),
         barTouchData: BarTouchData(
           touchCallback: (event, response) {
