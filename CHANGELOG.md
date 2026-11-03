@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/igorbasko01/food-locker/compare/v1.26.0...v1.27.0) (2026-11-03)
+
+
+### Features
+
+* count days with 5+ bites in the daily average ([#174](https://github.com/igorbasko01/food-locker/issues/174)) ([c37c22b](https://github.com/igorbasko01/food-locker/commit/c37c22bf3577ab4572dc53ee7a5eadf1e128b91a)), closes [#173](https://github.com/igorbasko01/food-locker/issues/173)
+
 ## [1.26.0](https://github.com/igorbasko01/food-locker/compare/v1.25.0...v1.26.0) (2026-10-28)
 
 
